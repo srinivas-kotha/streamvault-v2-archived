@@ -44,6 +44,12 @@ function FocusableInput({ id, type = 'text', placeholder, autoComplete, error, r
           registerRef(el);
           inputRef.current = el;
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            inputRef.current?.blur();
+          }
+        }}
         {...registerRest}
       />
       {error && <p className="text-error text-xs mt-1">{error}</p>}
