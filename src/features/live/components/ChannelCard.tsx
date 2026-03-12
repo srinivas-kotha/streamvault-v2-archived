@@ -2,6 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useEPG } from '../api';
 import type { XtreamLiveStream } from '@shared/types/api';
 import { Badge } from '@shared/components/Badge';
+import { usePlayerStore } from '@lib/store';
 
 interface ChannelCardProps {
   channel: XtreamLiveStream;
@@ -9,6 +10,7 @@ interface ChannelCardProps {
 
 export function ChannelCard({ channel }: ChannelCardProps) {
   const navigate = useNavigate();
+  const playStream = usePlayerStore((s) => s.playStream);
   const { data: epg } = useEPG(channel.stream_id);
 
   const nowPlaying = epg?.find((item) => {
@@ -18,7 +20,10 @@ export function ChannelCard({ channel }: ChannelCardProps) {
 
   return (
     <div
-      onClick={() => navigate({ to: '/live', search: { play: String(channel.stream_id) } })}
+      onClick={() => {
+        playStream(String(channel.stream_id), 'live', channel.name);
+        navigate({ to: '/live', search: { play: String(channel.stream_id) } });
+      }}
       className="group cursor-pointer rounded-lg overflow-hidden bg-surface-raised border border-border-subtle hover:border-teal/30 transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,212,191,0.15)]"
     >
       {/* Icon */}

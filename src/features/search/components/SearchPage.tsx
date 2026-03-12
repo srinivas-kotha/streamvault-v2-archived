@@ -40,7 +40,7 @@ export function SearchPage() {
 
   const handleLiveClick = (stream: { stream_id: number; name: string; stream_icon: string }) => {
     playStream(String(stream.stream_id), 'live', stream.name);
-    navigate({ to: '/live' as string });
+    navigate({ to: '/live', search: { play: String(stream.stream_id) } });
   };
 
   const handleVodClick = (vodId: number) => {

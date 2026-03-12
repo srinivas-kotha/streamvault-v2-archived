@@ -24,10 +24,10 @@ export function useRecentlyAdded<T extends RecentlyAddedType>(type: T) {
     queryFn: async () => {
       const endpoint =
         type === 'live'
-          ? '/live/streams/all'
+          ? '/live/streams/0'
           : type === 'vod'
-            ? '/vod/streams/all'
-            : '/series/list/all';
+            ? '/vod/streams/0'
+            : '/series/list/0';
       const data = await api<RecentlyAddedResult<T>>(endpoint);
       // Sort by added/last_modified DESC and take top 20
       const sorted = [...data].sort((a, b) => {

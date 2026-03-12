@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useVODInfo } from '../api';
 import { StarRating } from '@shared/components/StarRating';
@@ -6,11 +7,13 @@ import { Button } from '@shared/components/Button';
 import { Skeleton } from '@shared/components/Skeleton';
 import { formatDuration } from '@shared/utils/formatDuration';
 import { parseGenres } from '@shared/utils/parseGenres';
+import { PlayerPage } from '@features/player/components/PlayerPage';
 
 export function MovieDetail() {
   const { vodId } = useParams({ from: '/_authenticated/vod/$vodId' });
   const navigate = useNavigate();
   const { data, isLoading } = useVODInfo(vodId);
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -38,6 +41,26 @@ export function MovieDetail() {
         </svg>
         Back to Movies
       </button>
+
+      {/* Inline Player */}
+      {isPlayerOpen && (
+        <div className="relative mb-6">
+          <button
+            onClick={() => setIsPlayerOpen(false)}
+            className="absolute top-3 right-3 z-20 p-2 bg-obsidian/80 rounded-full text-text-muted hover:text-text-primary transition-colors"
+            title="Close player"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <PlayerPage
+            streamType="vod"
+            streamId={vodId}
+            streamName={info.name}
+          />
+        </div>
+      )}
 
       {/* Hero */}
       <div className="relative rounded-xl overflow-hidden mb-6">
@@ -69,7 +92,7 @@ export function MovieDetail() {
               <Badge key={g} variant="teal">{g}</Badge>
             ))}
           </div>
-          <Button size="lg" onClick={() => {/* Player navigation will be added in Phase C */}}>
+          <Button size="lg" onClick={() => setIsPlayerOpen(true)}>
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>

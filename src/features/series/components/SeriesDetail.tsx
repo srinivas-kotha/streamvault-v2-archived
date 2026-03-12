@@ -6,12 +6,15 @@ import { Badge } from '@shared/components/Badge';
 import { Skeleton } from '@shared/components/Skeleton';
 import { formatDuration } from '@shared/utils/formatDuration';
 import { parseGenres } from '@shared/utils/parseGenres';
+import { PlayerPage } from '@features/player/components/PlayerPage';
 
 export function SeriesDetail() {
   const { seriesId } = useParams({ from: '/_authenticated/series/$seriesId' });
   const navigate = useNavigate();
   const { data, isLoading } = useSeriesInfo(seriesId);
   const [activeSeason, setActiveSeason] = useState<number>(1);
+  const [playingEpisodeId, setPlayingEpisodeId] = useState<string | null>(null);
+  const [playingEpisodeName, setPlayingEpisodeName] = useState<string>('');
 
   const episodes = useMemo(() => {
     if (!data?.episodes) return [];
@@ -77,6 +80,26 @@ export function SeriesDetail() {
         </div>
       </div>
 
+      {/* Inline Player */}
+      {playingEpisodeId && (
+        <div className="relative mb-6">
+          <button
+            onClick={() => setPlayingEpisodeId(null)}
+            className="absolute top-3 right-3 z-20 p-2 bg-obsidian/80 rounded-full text-text-muted hover:text-text-primary transition-colors"
+            title="Close player"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <PlayerPage
+            streamType="series"
+            streamId={playingEpisodeId}
+            streamName={playingEpisodeName}
+          />
+        </div>
+      )}
+
       {/* Plot */}
       {info.plot && (
         <p className="text-text-secondary text-sm leading-relaxed mb-6">{info.plot}</p>
@@ -121,7 +144,11 @@ export function SeriesDetail() {
           <div
             key={ep.id}
             className="flex gap-4 p-3 rounded-lg bg-surface-raised border border-border-subtle hover:border-teal/30 transition-all group cursor-pointer"
-            onClick={() => {/* Player will be added in Phase C */}}
+            onClick={() => {
+              setPlayingEpisodeId(String(ep.id));
+              setPlayingEpisodeName(`${info.name} - S${activeSeason}E${ep.episode_num} - ${ep.title}`);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           >
             {/* Thumbnail */}
             <div className="w-40 flex-shrink-0 aspect-video rounded-md overflow-hidden bg-surface relative">
