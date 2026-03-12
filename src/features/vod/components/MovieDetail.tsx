@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useVODInfo } from '../api';
+import { useWatchHistory } from '@features/history/api';
 import { StarRating } from '@shared/components/StarRating';
 import { Badge } from '@shared/components/Badge';
 import { Button } from '@shared/components/Button';
@@ -13,7 +14,17 @@ export function MovieDetail() {
   const { vodId } = useParams({ from: '/_authenticated/vod/$vodId' });
   const navigate = useNavigate();
   const { data, isLoading } = useVODInfo(vodId);
+  const { data: watchHistory } = useWatchHistory();
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+
+  // Find saved progress for this movie
+  const savedProgress = useMemo(() => {
+    if (!watchHistory) return 0;
+    const entry = watchHistory.find(
+      (h) => h.content_type === 'vod' && String(h.content_id) === vodId
+    );
+    return entry?.progress_seconds ?? 0;
+  }, [watchHistory, vodId]);
 
   if (isLoading) {
     return (
@@ -58,6 +69,7 @@ export function MovieDetail() {
             streamType="vod"
             streamId={vodId}
             streamName={info.name}
+            startTime={savedProgress}
             onClose={() => setIsPlayerOpen(false)}
           />
         </div>
@@ -97,7 +109,7 @@ export function MovieDetail() {
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
-            Play
+            {savedProgress > 0 ? 'Resume' : 'Play'}
           </Button>
         </div>
       </div>

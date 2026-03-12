@@ -2,7 +2,7 @@
 // Minimal SW to enable PWA install on Samsung TV, Fire Stick, mobile, etc.
 // Does NOT cache aggressively — streaming content should always be live.
 
-const CACHE_NAME = 'streamvault-shell-v1';
+const CACHE_NAME = 'streamvault-shell-v2';
 const SHELL_ASSETS = [
   '/',
   '/manifest.json',
@@ -48,8 +48,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For static assets, try cache first, then network
+  // For static assets, try cache first, then network, then offline fallback
   event.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request))
+    caches.match(request).then((cached) =>
+      cached || fetch(request).catch(() => new Response('', { status: 408, statusText: 'Offline' }))
+    )
   );
 });
