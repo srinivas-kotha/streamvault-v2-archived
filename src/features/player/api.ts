@@ -7,7 +7,7 @@ export function useStreamUrl(type: string, id: string) {
   const data: StreamUrlResponse | undefined = enabled
     ? {
         url: `/api/stream/${type}/${id}`,
-        format: type === 'live' ? 'm3u8' : 'mp4',
+        format: type === 'live' ? 'ts' : 'mp4',
         isLive: type === 'live',
       }
     : undefined;

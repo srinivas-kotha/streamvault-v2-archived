@@ -5,7 +5,7 @@ import { HeroBanner, type HeroItem } from '@shared/components/HeroBanner';
 import { ContentRail } from '@shared/components/ContentRail';
 import { FocusableCard } from '@shared/components/FocusableCard';
 import { ContinueWatching } from './ContinueWatching';
-import { useRecentlyAdded } from '../api';
+import { useRecentlyAdded, useLatestMoviesByLanguage } from '../api';
 import { usePlayerStore } from '@lib/store';
 import type { XtreamVODStream, XtreamSeriesItem, XtreamLiveStream } from '@shared/types/api';
 
@@ -13,17 +13,18 @@ export function HomePage() {
   const navigate = useNavigate();
   const playStream = usePlayerStore((s) => s.playStream);
 
-  const { data: recentMovies, isLoading: moviesLoading } = useRecentlyAdded('vod');
+  const { rails: languageRails, isLoading: moviesLoading } = useLatestMoviesByLanguage();
   const { data: recentSeries, isLoading: seriesLoading } = useRecentlyAdded('series');
   const { data: recentLive, isLoading: liveLoading } = useRecentlyAdded('live');
 
-  // Build hero items from recent movies/series with images
+  // Build hero items from first language rail's movies + series
   const heroItems = useMemo<HeroItem[]>(() => {
     const items: HeroItem[] = [];
 
-    // Add top-rated movies
-    if (recentMovies) {
-      for (const m of recentMovies.slice(0, 3)) {
+    // Add top movies from the first language rail
+    const firstRail = languageRails[0];
+    if (firstRail) {
+      for (const m of firstRail.items.slice(0, 3)) {
         if (m.stream_icon) {
           items.push({
             id: m.stream_id,
@@ -56,7 +57,7 @@ export function HomePage() {
     }
 
     return items.slice(0, 5);
-  }, [recentMovies, recentSeries]);
+  }, [languageRails, recentSeries]);
 
   const handleVodClick = (item: XtreamVODStream) => {
     navigate({ to: '/vod/$vodId', params: { vodId: String(item.stream_id) } });
@@ -81,23 +82,27 @@ export function HomePage() {
         {/* Continue Watching */}
         <ContinueWatching />
 
-        {/* Recently Added Movies */}
-        <ContentRail
-          title="Recently Added Movies"
-          isLoading={moviesLoading}
-          isEmpty={!recentMovies?.length}
-        >
-          {(recentMovies ?? []).map((item) => (
-            <FocusableCard
-              key={item.stream_id}
-              image={item.stream_icon}
-              title={item.name}
-              subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
-              aspectRatio="poster"
-              onClick={() => handleVodClick(item)}
-            />
-          ))}
-        </ContentRail>
+        {/* Language-grouped Latest Movies */}
+        {languageRails.map((rail) => (
+          <ContentRail
+            key={rail.languageKey}
+            title={`Latest ${rail.language} Movies`}
+            seeAllTo={`/language/${rail.languageKey}`}
+            isLoading={moviesLoading}
+            isEmpty={!rail.items.length}
+          >
+            {rail.items.map((item) => (
+              <FocusableCard
+                key={item.stream_id}
+                image={item.stream_icon}
+                title={item.name}
+                subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
+                aspectRatio="poster"
+                onClick={() => handleVodClick(item)}
+              />
+            ))}
+          </ContentRail>
+        ))}
 
         {/* Recently Added Series */}
         <ContentRail

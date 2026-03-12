@@ -55,43 +55,47 @@ export function SeriesPage() {
             <div key={i} className="h-8 w-20 bg-surface-raised rounded-lg animate-pulse" />
           ))}
         </div>
+      ) : !categories?.length ? (
+        <EmptyState title="No series available" message="Your provider doesn't include series content" icon="content" />
       ) : (
-        <div className="mb-4">
-          <CategoryGrid categories={categories || []} selectedId={selectedCategory || null} onSelect={setSelectedCategory} />
-        </div>
-      )}
+        <>
+          <div className="mb-4">
+            <CategoryGrid categories={categories || []} selectedId={selectedCategory || null} onSelect={setSelectedCategory} />
+          </div>
 
-      <div className="flex items-center gap-4 mb-4">
-        <input
-          type="text"
-          placeholder="Search series..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full max-w-xs px-4 py-2 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
-        />
-      </div>
-
-      <SortFilterBar sort={sort} onSortChange={setSort} filters={filters} onFiltersChange={setFilters} genres={genres} />
-
-      {listLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          <SkeletonGrid count={12} aspectRatio="poster" />
-        </div>
-      ) : processedSeries.length === 0 ? (
-        <EmptyState title="No series found" message="Try adjusting your filters" icon="content" />
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {processedSeries.map((series) => (
-            <ContentCard
-              key={series.series_id}
-              image={series.cover}
-              title={series.name}
-              subtitle={series.releaseDate ? series.releaseDate.slice(0, 4) : undefined}
-              badge={series.rating_5based > 0 ? <Badge variant="warning">{series.rating_5based.toFixed(1)} ★</Badge> : undefined}
-              onClick={() => navigate({ to: '/series/$seriesId', params: { seriesId: String(series.series_id) } })}
+          <div className="flex items-center gap-4 mb-4">
+            <input
+              type="text"
+              placeholder="Search series..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full max-w-xs px-4 py-2 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
             />
-          ))}
-        </div>
+          </div>
+
+          <SortFilterBar sort={sort} onSortChange={setSort} filters={filters} onFiltersChange={setFilters} genres={genres} />
+
+          {listLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <SkeletonGrid count={12} aspectRatio="poster" />
+            </div>
+          ) : processedSeries.length === 0 ? (
+            <EmptyState title="No series found" message="Try a different category" icon="content" />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {processedSeries.map((series) => (
+                <ContentCard
+                  key={series.series_id}
+                  image={series.cover}
+                  title={series.name}
+                  subtitle={series.releaseDate ? series.releaseDate.slice(0, 4) : undefined}
+                  badge={series.rating_5based > 0 ? <Badge variant="warning">{series.rating_5based.toFixed(1)} ★</Badge> : undefined}
+                  onClick={() => navigate({ to: '/series/$seriesId', params: { seriesId: String(series.series_id) } })}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
     </PageTransition>

@@ -128,6 +128,7 @@ export function LanguageHubPage() {
               <ContentRail
                 key={rail.category.id}
                 title={rail.category.name || rail.category.originalName}
+                seeAllTo={`/language/${lang}/category/${rail.category.id}`}
               >
                 {rail.items.map((item) => (
                   <FocusableCard
@@ -161,6 +162,7 @@ export function LanguageHubPage() {
               <ContentRail
                 key={rail.category.id}
                 title={rail.category.name || rail.category.originalName}
+                seeAllTo={`/language/${lang}/category/${rail.category.id}`}
               >
                 {rail.items.map((item) => (
                   <FocusableCard
@@ -194,6 +196,7 @@ export function LanguageHubPage() {
               <ContentRail
                 key={rail.category.id}
                 title={rail.category.name || rail.category.originalName}
+                seeAllTo={`/language/${lang}/category/${rail.category.id}`}
               >
                 {rail.items.map((item) => (
                   <FocusableCard

@@ -76,8 +76,31 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
 
       setIsReady(false);
       const isHls = format === 'm3u8' || url.endsWith('.m3u8');
+      let hlsRetryCount = 0;
+      const HLS_MAX_RETRIES = 3;
+      let fallbackAttempted = false;
 
-      if (isHls && Hls.isSupported()) {
+      const startDirectPlayback = () => {
+        destroyHls();
+        video.src = url;
+        video.onloadeddata = () => {
+          setIsReady(true);
+          if (startTime > 0 && !isLive) video.currentTime = startTime;
+          if (autoPlay) video.play().catch(() => {});
+        };
+        video.onerror = () => {
+          // If direct playback fails and we haven't tried HLS yet, attempt HLS fallback
+          if (!fallbackAttempted && !isHls && Hls.isSupported()) {
+            fallbackAttempted = true;
+            startHlsPlayback();
+          } else {
+            onError?.('Channel unavailable');
+          }
+        };
+        if (autoPlay) video.play().catch(() => {});
+      };
+
+      const startHlsPlayback = () => {
         destroyHls();
         const hls = new Hls({
           enableWorker: true,
@@ -112,32 +135,50 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
             if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
               hls.recoverMediaError();
             } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-              onError?.('Network error - retrying...');
-              hls.startLoad();
+              hlsRetryCount++;
+              if (hlsRetryCount <= HLS_MAX_RETRIES) {
+                onError?.(`Network error - retry ${hlsRetryCount}/${HLS_MAX_RETRIES}...`);
+                hls.startLoad();
+              } else {
+                // HLS retries exhausted -- fall back to direct playback
+                if (!fallbackAttempted) {
+                  fallbackAttempted = true;
+                  startDirectPlayback();
+                } else {
+                  onError?.('Channel unavailable');
+                }
+              }
             } else {
-              onError?.(`Playback error: ${data.details}`);
-              destroyHls();
+              // Non-recoverable HLS error -- fall back to direct playback
+              if (!fallbackAttempted) {
+                fallbackAttempted = true;
+                startDirectPlayback();
+              } else {
+                onError?.('Channel unavailable');
+              }
             }
           }
         });
+      };
 
-        return () => destroyHls();
+      if (isHls && Hls.isSupported()) {
+        startHlsPlayback();
       } else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Native HLS support (Safari)
         video.src = url;
         setIsReady(true);
         if (startTime > 0 && !isLive) video.currentTime = startTime;
         if (autoPlay) video.play().catch(() => {});
       } else {
-        video.src = url;
-        video.onloadeddata = () => {
-          setIsReady(true);
-          if (startTime > 0) video.currentTime = startTime;
-          if (autoPlay) video.play().catch(() => {});
-        };
-        video.onerror = () => onError?.('Failed to load video');
+        // Direct playback for .ts, .mp4, or non-HLS streams
+        startDirectPlayback();
       }
 
-      return () => destroyHls();
+      return () => {
+        destroyHls();
+        video.onloadeddata = null;
+        video.onerror = null;
+      };
     }, [url, format, isLive, autoPlay, startTime, onError, onQualityLevelsReady, destroyHls]);
 
     useEffect(() => {
