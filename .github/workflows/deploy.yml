@@ -22,7 +22,8 @@ jobs:
             set -e
             echo "Pulling latest code..."
             cd ~/streamvault-frontend
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
 
             echo "Rebuilding frontend container..."
             cd ~/ai-orchestration
