@@ -58,6 +58,53 @@ export function useLanguageMovieRails(language: string, limit = 20) {
 }
 
 /**
+ * Fetch ALL movies for a language (for grid/filter mode).
+ */
+export function useLanguageAllMovies(language: string) {
+  const { movies, isReady } = useLanguageCategories(language);
+
+  const queries = useQueries({
+    queries: movies.slice(0, 10).map((cat) => ({
+      queryKey: ['vod', 'streams', cat.id],
+      queryFn: () => api<XtreamVODStream[]>(`/vod/streams/${cat.id}`),
+      enabled: isReady,
+      staleTime: 2 * 60 * 60 * 1000,
+    })),
+  });
+
+  const allMovies = useMemo(() => {
+    return queries
+      .filter((q) => q.data)
+      .flatMap((q, idx) =>
+        (q.data || []).map((item) => ({
+          ...item,
+          category_id: movies[idx]?.id || '',
+          category_name: movies[idx]?.name || movies[idx]?.originalName || '',
+        })),
+      );
+  }, [queries, movies]);
+
+  const categories = useMemo(
+    () =>
+      movies
+        .slice(0, 10)
+        .map((cat, idx) => ({
+          id: cat.id,
+          name: cat.name || cat.originalName,
+          count: queries[idx]?.data?.length || 0,
+        }))
+        .filter((c) => c.count > 0),
+    [movies, queries],
+  );
+
+  return {
+    allMovies,
+    categories,
+    isLoading: queries.some((q) => q.isLoading),
+  };
+}
+
+/**
  * Fetch series for a language.
  */
 export function useLanguageSeriesRails(language: string, limit = 20) {
