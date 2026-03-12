@@ -18,12 +18,7 @@ const tabs: { key: TabKey; label: string }[] = [
 
 export function LanguageHubPage() {
   const { lang } = useParams({ strict: false }) as { lang?: string };
-
-  if (!lang) {
-    return <PageTransition><div className="px-6 lg:px-10 py-20 text-center"><p className="text-text-muted text-lg">Language not found</p></div></PageTransition>;
-  }
-
-  const language = lang.charAt(0).toUpperCase() + lang.slice(1);
+  const language = lang ? lang.charAt(0).toUpperCase() + lang.slice(1) : '';
   const navigate = useNavigate();
   const playStream = usePlayerStore((s) => s.playStream);
   const [activeTab, setActiveTab] = useState<TabKey>('movies');
@@ -56,6 +51,10 @@ export function LanguageHubPage() {
     }
     return [];
   }, [activeTab, movieRails, seriesRails]);
+
+  if (!lang) {
+    return <PageTransition><div className="px-6 lg:px-10 py-20 text-center"><p className="text-text-muted text-lg">Language not found</p></div></PageTransition>;
+  }
 
   const handleVodClick = (item: XtreamVODStream) => {
     navigate({ to: '/vod/$vodId', params: { vodId: String(item.stream_id) } });

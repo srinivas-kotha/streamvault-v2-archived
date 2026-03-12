@@ -32,6 +32,7 @@ export function ContentRail({
         </h2>
         {seeAllTo && (
           <Link
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             to={seeAllTo as any}
             className="text-sm text-teal hover:text-teal/80 transition-colors whitespace-nowrap min-h-[44px] flex items-center"
           >

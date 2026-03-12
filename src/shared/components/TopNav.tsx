@@ -79,6 +79,7 @@ export function TopNav() {
               key={lang}
               to={`/language/${lang.toLowerCase()}`}
               label={lang}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               isActive={!!matchRoute({ to: `/language/${lang.toLowerCase()}` as any, fuzzy: true })}
             />
           ))}
@@ -147,6 +148,7 @@ interface NavItemProps {
 function NavItem({ to, label, isActive, icon }: NavItemProps) {
   return (
     <Link
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       to={to as any}
       className={`relative flex items-center gap-1.5 px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap min-h-[48px] transition-all ${
         isActive
