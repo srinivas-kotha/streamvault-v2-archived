@@ -1,14 +1,17 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { api } from '@lib/api';
 import type { StreamUrlResponse, HistoryUpdateRequest } from '@shared/types/api';
 
 export function useStreamUrl(type: string, id: string) {
-  return useQuery({
-    queryKey: ['stream', 'url', type, id],
-    queryFn: () => api<StreamUrlResponse>(`/stream/url/${type}/${id}`),
-    enabled: !!type && !!id,
-    staleTime: 5 * 60 * 1000,
-  });
+  const enabled = !!type && !!id;
+  const data: StreamUrlResponse | undefined = enabled
+    ? {
+        url: `/api/stream/${type}/${id}`,
+        format: type === 'live' ? 'm3u8' : 'mp4',
+        isLive: type === 'live',
+      }
+    : undefined;
+  return { data, isLoading: false, error: null };
 }
 
 export function useUpdateHistory() {
