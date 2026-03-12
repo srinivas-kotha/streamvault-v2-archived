@@ -5,6 +5,7 @@ import { HeroBanner, type HeroItem } from '@shared/components/HeroBanner';
 import { ContentRail } from '@shared/components/ContentRail';
 import { FocusableCard } from '@shared/components/FocusableCard';
 import { ContinueWatching } from './ContinueWatching';
+import { usePageFocus } from '@shared/hooks/usePageFocus';
 import {
   useLanguageMovieRail,
   useLanguageSeriesRail,
@@ -15,6 +16,7 @@ import type { XtreamVODStream } from '@shared/types/api';
 
 export function HomePage() {
   const navigate = useNavigate();
+  usePageFocus('hero-banner');
 
   // Data hooks -- Telugu & Hindi movies and series
   const { items: teluguMovies, isLoading: teluguMoviesLoading } = useLanguageMovieRail('Telugu');

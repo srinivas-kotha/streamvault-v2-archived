@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
 import { useRouter } from '@tanstack/react-router';
+import { usePlayerStore } from '@lib/store';
 
 /**
  * Handles Escape and Backspace as "Back" navigation.
- * Skips when focus is in input/textarea elements.
+ * Skips when:
+ * - Focus is in input/textarea elements
+ * - A player is currently active (usePlayerKeyboard handles those keys instead)
  */
 export function useBackNavigation() {
   const router = useRouter();
@@ -17,6 +20,9 @@ export function useBackNavigation() {
         e.target instanceof HTMLSelectElement ||
         (e.target as HTMLElement).isContentEditable
       ) return;
+
+      // Don't intercept when player is active — usePlayerKeyboard handles it
+      if (usePlayerStore.getState().currentStreamId) return;
 
       if (e.key === 'Escape' || e.key === 'Backspace') {
         e.preventDefault();

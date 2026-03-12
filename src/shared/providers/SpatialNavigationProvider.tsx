@@ -1,5 +1,5 @@
-import { useEffect, type ReactNode } from 'react';
-import { init } from '@noriginmedia/norigin-spatial-navigation';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { init, setFocus } from '@noriginmedia/norigin-spatial-navigation';
 import { useUIStore } from '@lib/store';
 
 // Initialize spatial navigation
@@ -15,11 +15,20 @@ interface Props {
 
 export function SpatialNavigationProvider({ children }: Props) {
   const setInputMode = useUIStore((s) => s.setInputMode);
+  const hasAutoFocused = useRef(false);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape', 'Backspace'].includes(e.key)) {
+      const isNavKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape', 'Backspace'].includes(e.key);
+      if (isNavKey) {
         setInputMode('keyboard');
+
+        // Auto-focus the first focusable element on first D-pad press
+        if (!hasAutoFocused.current) {
+          hasAutoFocused.current = true;
+          // Try hero banner first, then top nav
+          try { setFocus('hero-banner'); } catch { try { setFocus('top-nav'); } catch { /* noop */ } }
+        }
       }
     }
     function handleMouseMove() {
