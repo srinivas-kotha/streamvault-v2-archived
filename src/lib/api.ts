@@ -13,7 +13,7 @@ class ApiError extends Error {
 
 function getCsrfToken(): string | null {
   const match = document.cookie.match(/(?:^|;\s*)sv_csrf=([^;]*)/);
-  return match ? decodeURIComponent(match[1]) : null;
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
 }
 
 let isRefreshing = false;

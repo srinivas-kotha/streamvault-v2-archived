@@ -60,7 +60,7 @@ describe('usePlayerKeyboard', () => {
     );
 
     fireKey(' ');
-    expect(playerRef.current.play).toHaveBeenCalled();
+    expect(playerRef.current!.play).toHaveBeenCalled();
   });
 
   it('Space toggles pause when playing', () => {
@@ -78,7 +78,7 @@ describe('usePlayerKeyboard', () => {
     );
 
     fireKey(' ');
-    expect(playerRef.current.pause).toHaveBeenCalled();
+    expect(playerRef.current!.pause).toHaveBeenCalled();
   });
 
   it('K toggles play/pause', () => {
@@ -96,7 +96,7 @@ describe('usePlayerKeyboard', () => {
     );
 
     fireKey('k');
-    expect(playerRef.current.play).toHaveBeenCalled();
+    expect(playerRef.current!.play).toHaveBeenCalled();
   });
 
   it('F triggers fullscreen toggle', () => {
@@ -114,7 +114,7 @@ describe('usePlayerKeyboard', () => {
     );
 
     fireKey('f');
-    expect(playerRef.current.toggleFullscreen).toHaveBeenCalled();
+    expect(playerRef.current!.toggleFullscreen).toHaveBeenCalled();
   });
 
   it('M triggers mute toggle', () => {
@@ -150,7 +150,7 @@ describe('usePlayerKeyboard', () => {
     );
 
     fireKey('ArrowLeft');
-    expect(playerRef.current.seek).toHaveBeenCalledWith(40);
+    expect(playerRef.current!.seek).toHaveBeenCalledWith(40);
   });
 
   it('ArrowRight seeks +10s when not live', () => {
@@ -168,7 +168,7 @@ describe('usePlayerKeyboard', () => {
     );
 
     fireKey('ArrowRight');
-    expect(playerRef.current.seek).toHaveBeenCalledWith(60);
+    expect(playerRef.current!.seek).toHaveBeenCalledWith(60);
   });
 
   it('ArrowLeft does NOT seek when isLive=true', () => {
@@ -186,7 +186,7 @@ describe('usePlayerKeyboard', () => {
     );
 
     fireKey('ArrowLeft');
-    expect(playerRef.current.seek).not.toHaveBeenCalled();
+    expect(playerRef.current!.seek).not.toHaveBeenCalled();
   });
 
   it('ArrowRight does NOT seek when isLive=true', () => {
@@ -204,7 +204,7 @@ describe('usePlayerKeyboard', () => {
     );
 
     fireKey('ArrowRight');
-    expect(playerRef.current.seek).not.toHaveBeenCalled();
+    expect(playerRef.current!.seek).not.toHaveBeenCalled();
   });
 
   it('N calls onNext', () => {
@@ -261,7 +261,7 @@ describe('usePlayerKeyboard', () => {
     document.body.appendChild(input);
     fireKey(' ', input);
 
-    expect(playerRef.current.play).not.toHaveBeenCalled();
+    expect(playerRef.current!.play).not.toHaveBeenCalled();
     document.body.removeChild(input);
   });
 
@@ -283,7 +283,7 @@ describe('usePlayerKeyboard', () => {
     document.body.appendChild(textarea);
     fireKey(' ', textarea);
 
-    expect(playerRef.current.play).not.toHaveBeenCalled();
+    expect(playerRef.current!.play).not.toHaveBeenCalled();
     document.body.removeChild(textarea);
   });
 });

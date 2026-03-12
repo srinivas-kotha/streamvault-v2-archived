@@ -18,7 +18,7 @@ beforeEach(() => {
   // Mock window.location.href setter
   Object.defineProperty(window, 'location', {
     writable: true,
-    value: { href: '/', ...window.location },
+    value: { ...window.location, href: '/' },
   });
   Object.defineProperty(window.location, 'href', {
     set: locationHrefSetter,
@@ -119,7 +119,7 @@ describe('api()', () => {
 
     await api('/test');
 
-    const callHeaders = mockFetch.mock.calls[0][1].headers;
+    const callHeaders = mockFetch.mock.calls[0]![1]!.headers as Record<string, string>;
     expect(callHeaders['x-csrf-token']).toBeUndefined();
   });
 
@@ -139,8 +139,8 @@ describe('api()', () => {
     // 3 calls: original, refresh, retry
     expect(mockFetch).toHaveBeenCalledTimes(3);
     // Second call should be to refresh endpoint
-    expect(mockFetch.mock.calls[1][0]).toBe('/api/auth/refresh');
-    expect(mockFetch.mock.calls[1][1]).toEqual(
+    expect(mockFetch.mock.calls[1]![0]).toBe('/api/auth/refresh');
+    expect(mockFetch.mock.calls[1]![1]).toEqual(
       expect.objectContaining({ method: 'POST', credentials: 'include' }),
     );
   });

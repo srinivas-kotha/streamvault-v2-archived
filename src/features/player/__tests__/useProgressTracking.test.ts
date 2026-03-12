@@ -22,7 +22,7 @@ describe('useProgressTracking', () => {
 
   const defaultOptions = {
     contentId: 'ch-123',
-    contentType: 'live' as const,
+    contentType: 'channel' as const,
     contentName: 'Test Channel',
     contentIcon: 'icon.png',
     isLive: false,

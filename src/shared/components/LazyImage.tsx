@@ -33,6 +33,7 @@ export function LazyImage({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
+        if (!entry) return;
         if (entry.isIntersecting) {
           setState('loading');
           observer.disconnect();

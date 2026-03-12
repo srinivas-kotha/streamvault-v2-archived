@@ -17,7 +17,7 @@ export function SeriesPage() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sort, setSort] = useState<SortOption>(SORT_OPTIONS[0]);
+  const [sort, setSort] = useState<SortOption>(SORT_OPTIONS[0]!);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const debouncedSearch = useDebounce(searchQuery);
 

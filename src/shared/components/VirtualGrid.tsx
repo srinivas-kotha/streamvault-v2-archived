@@ -83,11 +83,12 @@ export function VirtualGrid<T>({
             >
               {Array.from({ length: columns }).map((_, colIndex) => {
                 const itemIndex = rowStart + colIndex;
-                if (itemIndex >= items.length) return null;
+                const item = items[itemIndex];
+                if (itemIndex >= items.length || !item) return null;
 
                 return (
                   <div key={itemIndex}>
-                    {renderItem(items[itemIndex], itemIndex)}
+                    {renderItem(item, itemIndex)}
                   </div>
                 );
               })}

@@ -22,7 +22,7 @@ export function SeriesDetail() {
   // Auto-set first season when data loads
   useEffect(() => {
     if (data?.seasons?.length) {
-      setActiveSeason(data.seasons[0].season_number);
+      setActiveSeason(data.seasons![0]!.season_number);
     }
   }, [data?.seasons]);
 
