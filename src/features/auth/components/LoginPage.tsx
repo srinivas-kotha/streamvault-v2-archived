@@ -1,14 +1,78 @@
+import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
+import { init, useFocusable, FocusContext, setFocus } from '@noriginmedia/norigin-spatial-navigation';
 import { useLogin } from '../hooks/useAuth';
+
+// Initialize spatial navigation for login page (safe to call multiple times)
+init({
+  debug: false,
+  visualDebug: false,
+  distanceCalculationMethod: 'center',
+});
 
 interface LoginForm {
   username: string;
   password: string;
 }
 
+function FocusableInput({ id, type = 'text', placeholder, autoComplete, error, register }: {
+  id: string;
+  type?: string;
+  placeholder: string;
+  autoComplete: string;
+  error?: string;
+  register: ReturnType<typeof useForm<LoginForm>>['register'];
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const { ref: focusRef, focused } = useFocusable({
+    onEnterPress: () => inputRef.current?.focus(),
+  });
+
+  const { ref: registerRef, ...registerRest } = register(id as keyof LoginForm, {
+    required: `${id.charAt(0).toUpperCase() + id.slice(1)} is required`,
+  });
+
+  return (
+    <div ref={focusRef}>
+      <input
+        id={id}
+        type={type}
+        autoComplete={autoComplete}
+        className={`w-full px-4 py-2.5 bg-surface-raised border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all ${focused ? 'border-teal ring-2 ring-teal/50' : 'border-border'}`}
+        placeholder={placeholder}
+        ref={(el) => {
+          registerRef(el);
+          inputRef.current = el;
+        }}
+        {...registerRest}
+      />
+      {error && <p className="text-error text-xs mt-1">{error}</p>}
+    </div>
+  );
+}
+
 export function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
   const loginMutation = useLogin();
+
+  const { ref: containerRef, focusKey } = useFocusable({
+    focusKey: 'login-form',
+    trackChildren: true,
+    saveLastFocusedChild: true,
+  });
+
+  const { ref: buttonRef, focused: buttonFocused } = useFocusable({
+    onEnterPress: () => {
+      document.querySelector<HTMLButtonElement>('#login-submit')?.click();
+    },
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try { setFocus('login-form'); } catch { /* noop */ }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const onSubmit = (data: LoginForm) => {
     loginMutation.mutate(data);
@@ -32,65 +96,63 @@ export function LoginPage() {
             <p className="text-text-muted mt-2 text-sm">Sign in to your account</p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-text-secondary mb-1.5">
-                Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                autoComplete="username"
-                className="w-full px-4 py-2.5 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
-                placeholder="Enter username"
-                {...register('username', { required: 'Username is required' })}
-              />
-              {errors.username && (
-                <p className="text-error text-xs mt-1">{errors.username.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-1.5">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                className="w-full px-4 py-2.5 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
-                placeholder="Enter password"
-                {...register('password', { required: 'Password is required' })}
-              />
-              {errors.password && (
-                <p className="text-error text-xs mt-1">{errors.password.message}</p>
-              )}
-            </div>
-
-            {loginMutation.isError && (
-              <div className="bg-error/10 border border-error/30 rounded-lg px-4 py-2.5 text-error text-sm">
-                {loginMutation.error?.message || 'Invalid credentials'}
+          <FocusContext.Provider value={focusKey}>
+            <form ref={containerRef} onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-text-secondary mb-1.5">
+                  Username
+                </label>
+                <FocusableInput
+                  id="username"
+                  placeholder="Enter username"
+                  autoComplete="username"
+                  error={errors.username?.message}
+                  register={register}
+                />
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={loginMutation.isPending}
-              className="w-full py-2.5 px-4 bg-gradient-to-r from-teal-dim to-teal rounded-lg font-medium text-obsidian hover:opacity-90 disabled:opacity-50 transition-all focus:outline-none focus:ring-2 focus:ring-teal/50 focus:ring-offset-2 focus:ring-offset-obsidian"
-            >
-              {loginMutation.isPending ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Signing in...
-                </span>
-              ) : (
-                'Sign In'
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-1.5">
+                  Password
+                </label>
+                <FocusableInput
+                  id="password"
+                  type="password"
+                  placeholder="Enter password"
+                  autoComplete="current-password"
+                  error={errors.password?.message}
+                  register={register}
+                />
+              </div>
+
+              {loginMutation.isError && (
+                <div className="bg-error/10 border border-error/30 rounded-lg px-4 py-2.5 text-error text-sm">
+                  {loginMutation.error?.message || 'Invalid credentials'}
+                </div>
               )}
-            </button>
-          </form>
+
+              <div ref={buttonRef}>
+                <button
+                  id="login-submit"
+                  type="submit"
+                  disabled={loginMutation.isPending}
+                  className={`w-full py-2.5 px-4 bg-gradient-to-r from-teal-dim to-teal rounded-lg font-medium text-obsidian hover:opacity-90 disabled:opacity-50 transition-all focus:outline-none focus:ring-2 focus:ring-teal/50 focus:ring-offset-2 focus:ring-offset-obsidian ${buttonFocused ? 'ring-2 ring-teal/50 ring-offset-2 ring-offset-obsidian opacity-90' : ''}`}
+                >
+                  {loginMutation.isPending ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Signing in...
+                    </span>
+                  ) : (
+                    'Sign In'
+                  )}
+                </button>
+              </div>
+            </form>
+          </FocusContext.Provider>
         </div>
       </div>
     </div>
