@@ -1,14 +1,56 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useSearch } from '../api';
 import { useDebounce } from '@shared/hooks/useDebounce';
 import { ContentCard } from '@shared/components/ContentCard';
 import { SkeletonGrid } from '@shared/components/Skeleton';
 import { EmptyState } from '@shared/components/EmptyState';
-import { usePlayerStore } from '@lib/store';
+import { usePlayerStore, useUIStore } from '@lib/store';
 import { PageTransition } from '@shared/components/PageTransition';
+import { useFocusable, FocusContext } from '@noriginmedia/norigin-spatial-navigation';
 
 type TabType = 'all' | 'live' | 'vod' | 'series';
+
+function FocusableTab({
+  label,
+  count,
+  isActive,
+  showCount,
+  onSelect,
+}: {
+  label: string;
+  count: number;
+  isActive: boolean;
+  showCount: boolean;
+  onSelect: () => void;
+}) {
+  const inputMode = useUIStore((s) => s.inputMode);
+  const { ref, focused } = useFocusable({
+    onEnterPress: onSelect,
+  });
+  const showFocus = focused && inputMode === 'keyboard';
+
+  return (
+    <button
+      ref={ref}
+      onClick={onSelect}
+      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all min-h-[44px] ${
+        isActive
+          ? 'text-teal border-b-2 border-teal bg-teal/5'
+          : showFocus
+            ? 'text-text-primary bg-surface-raised ring-2 ring-teal/50'
+            : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised'
+      }`}
+    >
+      {label}
+      {showCount && (
+        <span className={`ml-1.5 text-xs ${isActive ? 'text-teal/70' : 'text-text-muted'}`}>
+          ({count})
+        </span>
+      )}
+    </button>
+  );
+}
 
 export function SearchPage() {
   const [query, setQuery] = useState('');
@@ -51,11 +93,22 @@ export function SearchPage() {
     navigate({ to: '/series/$seriesId', params: { seriesId: String(seriesId) } });
   };
 
+  const handleTabSelect = useCallback((key: TabType) => {
+    setActiveTab(key);
+  }, []);
+
   const hasQuery = debouncedQuery.length >= 2;
   const showLoading = hasQuery && (isLoading || isFetching);
   const showResults = hasQuery && data && !isLoading;
   const showEmpty = showResults && counts.all === 0;
   const showPrompt = !hasQuery;
+
+  // Spatial nav context for search tabs
+  const { ref: tabsRef, focusKey: tabsFocusKey } = useFocusable({
+    focusKey: 'search-tabs',
+    trackChildren: true,
+    saveLastFocusedChild: true,
+  });
 
   return (
     <PageTransition>
@@ -92,28 +145,22 @@ export function SearchPage() {
         )}
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — wrapped in spatial nav context */}
       {hasQuery && (
-        <div className="flex gap-1 border-b border-white/10 pb-px">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all ${
-                activeTab === tab.key
-                  ? 'text-teal border-b-2 border-teal bg-teal/5'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised'
-              }`}
-            >
-              {tab.label}
-              {showResults && (
-                <span className={`ml-1.5 text-xs ${activeTab === tab.key ? 'text-teal/70' : 'text-text-muted'}`}>
-                  ({tab.count})
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        <FocusContext.Provider value={tabsFocusKey}>
+          <div ref={tabsRef} className="flex gap-1 border-b border-white/10 pb-px">
+            {tabs.map((tab) => (
+              <FocusableTab
+                key={tab.key}
+                label={tab.label}
+                count={tab.count}
+                isActive={activeTab === tab.key}
+                showCount={!!showResults}
+                onSelect={() => handleTabSelect(tab.key)}
+              />
+            ))}
+          </div>
+        </FocusContext.Provider>
       )}
 
       {/* Loading */}
