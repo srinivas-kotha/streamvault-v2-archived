@@ -29,6 +29,7 @@ export function SeriesDetail() {
   const [activeSeason, setActiveSeason] = useState<number | null>(null);
   const [playingEpisodeId, setPlayingEpisodeId] = useState<string | null>(null);
   const [playingEpisodeName, setPlayingEpisodeName] = useState<string>('');
+  const [resumeStartTime, setResumeStartTime] = useState(0);
   const [episodeSort, setEpisodeSort] = useState<EpisodeSortKey>('latest');
   const [episodeSearch, setEpisodeSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(EPISODES_PER_PAGE);
@@ -154,11 +155,12 @@ export function SeriesDetail() {
   }, [playingEpisodeId, allEpisodes]);
 
   const playEpisode = useCallback(
-    (ep: (typeof allEpisodes)[0]) => {
+    (ep: (typeof allEpisodes)[0], startTime = 0) => {
       setPlayingEpisodeId(String(ep.id));
       setPlayingEpisodeName(
         `${data?.info.name || 'Series'} - S${activeSeason}E${ep.episode_num} - ${ep.title}`
       );
+      setResumeStartTime(startTime);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     [data?.info.name, activeSeason]
@@ -300,6 +302,7 @@ export function SeriesDetail() {
               streamType="series"
               streamId={playingEpisodeId}
               streamName={playingEpisodeName}
+              startTime={resumeStartTime}
               hasNext={currentEpisodeIndex < allEpisodes.length - 1}
               hasPrev={currentEpisodeIndex > 0}
               onNext={playNext}
@@ -316,6 +319,7 @@ export function SeriesDetail() {
               onClick={() => {
                 setPlayingEpisodeId(String(lastWatchedEpisode.content_id));
                 setPlayingEpisodeName(lastWatchedEpisode.content_name || info.name);
+                setResumeStartTime(lastWatchedEpisode.progress_seconds ?? 0);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-teal/10 to-indigo/10 border border-teal/20 hover:border-teal/40 transition-all group"

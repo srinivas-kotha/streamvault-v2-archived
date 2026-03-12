@@ -28,7 +28,7 @@
         fill="none" stroke="url(#brand-gradient)" stroke-width="3" opacity="0.25"/>
 
   <!-- Play triangle (bold, centered, teal-indigo gradient with glow) -->
-  <path d="M208 168 L208 344 L368 256 Z"
+  <path d="M192 168 L192 344 L352 256 Z"
         fill="url(#brand-gradient)" filter="url(#glow)" opacity="0.95"/>
 
   <!-- Subtle keyhole accent at top of shield (vault detail) -->
