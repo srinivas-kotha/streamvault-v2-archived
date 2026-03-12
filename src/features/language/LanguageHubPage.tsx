@@ -1,13 +1,12 @@
-import { useState, useMemo } from 'react';
-import { useParams, useNavigate } from '@tanstack/react-router';
+import { useMemo } from 'react';
+import { useParams, useNavigate, useSearch } from '@tanstack/react-router';
 import { PageTransition } from '@shared/components/PageTransition';
 import { HeroBanner, type HeroItem } from '@shared/components/HeroBanner';
-import { ContentRail } from '@shared/components/ContentRail';
-import { FocusableCard } from '@shared/components/FocusableCard';
-import { useLanguageMovieRails, useLanguageLiveChannels } from './api';
-import { useSeriesByLanguage, type SeriesWithChannel } from '@features/series/api';
-import { usePlayerStore } from '@lib/store';
-import type { XtreamVODStream, XtreamLiveStream } from '@shared/types/api';
+import { useLanguageMovieRails } from './api';
+import { useSeriesByLanguage } from '@features/series/api';
+import { MoviesTabContent } from './components/MoviesTabContent';
+import { SeriesTabContent } from './components/SeriesTabContent';
+import { LiveTabContent } from './components/LiveTabContent';
 
 type TabKey = 'movies' | 'series' | 'live';
 
@@ -21,32 +20,21 @@ export function LanguageHubPage() {
   const { lang } = useParams({ strict: false }) as { lang?: string };
   const language = lang ? lang.charAt(0).toUpperCase() + lang.slice(1) : '';
   const navigate = useNavigate();
-  const playStream = usePlayerStore((s) => s.playStream);
-  const [activeTab, setActiveTab] = useState<TabKey>('movies');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { tab } = useSearch({ from: '/_authenticated/language/$lang' as any });
+  const activeTab: TabKey = (tab as TabKey) || 'movies';
+  const setActiveTab = (newTab: TabKey) => {
+    navigate({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      search: { tab: newTab === 'movies' ? undefined : newTab } as any,
+    });
+  };
 
-  const { rails: movieRails, isLoading: moviesLoading } = useLanguageMovieRails(language);
-  const { allSeries, channels: seriesChannels, isLoading: seriesLoading } = useSeriesByLanguage(language);
-  const { rails: liveRails, isLoading: liveLoading } = useLanguageLiveChannels(language);
+  // Data for hero banner only
+  const { rails: movieRails } = useLanguageMovieRails(language);
+  const { allSeries } = useSeriesByLanguage(language);
 
-  // Group series by channel for rails display
-  const seriesRails = useMemo(() => {
-    if (!allSeries.length) return [];
-    const byChannel = new Map<string, SeriesWithChannel[]>();
-    for (const s of allSeries) {
-      const list = byChannel.get(s.channelId) || [];
-      list.push(s);
-      byChannel.set(s.channelId, list);
-    }
-    return seriesChannels
-      .filter((ch) => byChannel.has(ch.id))
-      .map((ch) => ({
-        channelId: ch.id,
-        channelName: ch.name,
-        items: (byChannel.get(ch.id) || []).slice(0, 20),
-      }));
-  }, [allSeries, seriesChannels]);
-
-  // Hero items from top movies
+  // Hero items from top movies or series
   const heroItems = useMemo<HeroItem[]>(() => {
     if (activeTab === 'movies' && movieRails.length > 0) {
       return (movieRails[0]?.items ?? []).slice(0, 5).map((m) => ({
@@ -72,20 +60,14 @@ export function LanguageHubPage() {
   }, [activeTab, movieRails, allSeries]);
 
   if (!lang) {
-    return <PageTransition><div className="px-6 lg:px-10 py-20 text-center"><p className="text-text-muted text-lg">Language not found</p></div></PageTransition>;
+    return (
+      <PageTransition>
+        <div className="px-6 lg:px-10 py-20 text-center">
+          <p className="text-text-muted text-lg">Language not found</p>
+        </div>
+      </PageTransition>
+    );
   }
-
-  const handleVodClick = (item: XtreamVODStream) => {
-    navigate({ to: '/vod/$vodId', params: { vodId: String(item.stream_id) } });
-  };
-
-  const handleSeriesClick = (item: SeriesWithChannel) => {
-    navigate({ to: '/series/$seriesId', params: { seriesId: String(item.series_id) } });
-  };
-
-  const handleLiveClick = (item: XtreamLiveStream) => {
-    playStream(String(item.stream_id), 'live', item.name);
-  };
 
   // Keyboard tab switching
   const handleTabKeyDown = (e: React.KeyboardEvent) => {
@@ -114,20 +96,20 @@ export function LanguageHubPage() {
             onKeyDown={handleTabKeyDown}
             role="tablist"
           >
-            {tabs.map((tab) => (
+            {tabs.map((t) => (
               <button
-                key={tab.key}
+                key={t.key}
                 role="tab"
-                aria-selected={activeTab === tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                aria-selected={activeTab === t.key}
+                onClick={() => setActiveTab(t.key)}
                 className={`relative px-5 py-3 text-sm font-medium transition-all min-h-[48px] ${
-                  activeTab === tab.key
+                  activeTab === t.key
                     ? 'text-text-primary'
                     : 'text-text-muted hover:text-text-secondary'
                 }`}
               >
-                {tab.label}
-                {activeTab === tab.key && (
+                {t.label}
+                {activeTab === t.key && (
                   <span className="absolute bottom-0 left-1 right-1 h-0.5 bg-gradient-to-r from-teal to-indigo rounded-full" />
                 )}
               </button>
@@ -135,105 +117,10 @@ export function LanguageHubPage() {
           </div>
         </div>
 
-        {/* Movies Tab */}
-        {activeTab === 'movies' && (
-          <div className="space-y-8">
-            {moviesLoading && (
-              <ContentRail title="Loading..." isLoading={true}>
-                <div />
-              </ContentRail>
-            )}
-            {movieRails.map((rail) => (
-              <ContentRail
-                key={rail.category.id}
-                title={rail.category.name || rail.category.originalName}
-                seeAllTo={`/language/${lang}/category/${rail.category.id}`}
-              >
-                {rail.items.map((item) => (
-                  <FocusableCard
-                    key={item.stream_id}
-                    image={item.stream_icon}
-                    title={item.name}
-                    subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
-                    aspectRatio="poster"
-                    onClick={() => handleVodClick(item)}
-                  />
-                ))}
-              </ContentRail>
-            ))}
-            {!moviesLoading && movieRails.length === 0 && (
-              <div className="px-6 lg:px-10 py-12 text-center">
-                <p className="text-text-muted text-lg">No {language} movies found</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Series Tab */}
-        {activeTab === 'series' && (
-          <div className="space-y-8">
-            {seriesLoading && (
-              <ContentRail title="Loading..." isLoading={true}>
-                <div />
-              </ContentRail>
-            )}
-            {seriesRails.map((rail) => (
-              <ContentRail
-                key={rail.channelId}
-                title={rail.channelName}
-              >
-                {rail.items.map((item) => (
-                  <FocusableCard
-                    key={item.series_id}
-                    image={item.cover}
-                    title={item.name}
-                    subtitle={item.genre || undefined}
-                    aspectRatio="poster"
-                    onClick={() => handleSeriesClick(item)}
-                  />
-                ))}
-              </ContentRail>
-            ))}
-            {!seriesLoading && seriesRails.length === 0 && (
-              <div className="px-6 lg:px-10 py-12 text-center">
-                <p className="text-text-muted text-lg">No {language} series found</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Live TV Tab */}
-        {activeTab === 'live' && (
-          <div className="space-y-8">
-            {liveLoading && (
-              <ContentRail title="Loading..." isLoading={true}>
-                <div />
-              </ContentRail>
-            )}
-            {liveRails.map((rail) => (
-              <ContentRail
-                key={rail.category.id}
-                title={rail.category.name || rail.category.originalName}
-                seeAllTo={`/language/${lang}/category/${rail.category.id}`}
-              >
-                {rail.items.map((item) => (
-                  <FocusableCard
-                    key={item.stream_id}
-                    image={item.stream_icon}
-                    title={item.name}
-                    aspectRatio="square"
-                    onClick={() => handleLiveClick(item)}
-                  />
-                ))}
-              </ContentRail>
-            ))}
-            {!liveLoading && liveRails.length === 0 && (
-              <div className="px-6 lg:px-10 py-12 text-center">
-                <p className="text-text-muted text-lg">No {language} live channels found</p>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Tab Content */}
+        {activeTab === 'movies' && <MoviesTabContent language={language} lang={lang} />}
+        {activeTab === 'series' && <SeriesTabContent language={language} />}
+        {activeTab === 'live' && <LiveTabContent language={language} lang={lang} />}
       </div>
     </PageTransition>
   );
