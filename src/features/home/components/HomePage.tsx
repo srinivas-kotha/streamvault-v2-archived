@@ -12,6 +12,7 @@ import {
   type SeriesWithChannel,
 } from '../api';
 
+import { isNewContent } from '@shared/utils/isNewContent';
 import type { XtreamVODStream } from '@shared/types/api';
 
 export function HomePage() {
@@ -93,6 +94,7 @@ export function HomePage() {
               image={item.stream_icon}
               title={item.name}
               subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
+              isNew={isNewContent(item.added)}
               aspectRatio="poster"
               onClick={() => handleVodClick(item)}
             />
@@ -112,6 +114,7 @@ export function HomePage() {
               image={item.cover}
               title={item.name}
               subtitle={item.channelName ? `via ${item.channelName}` : (item.genre || undefined)}
+              isNew={isNewContent(item.last_modified)}
               aspectRatio="poster"
               onClick={() => handleSeriesClick(item)}
             />
@@ -131,6 +134,7 @@ export function HomePage() {
               image={item.stream_icon}
               title={item.name}
               subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
+              isNew={isNewContent(item.added)}
               aspectRatio="poster"
               onClick={() => handleVodClick(item)}
             />
@@ -150,6 +154,7 @@ export function HomePage() {
               image={item.cover}
               title={item.name}
               subtitle={item.channelName ? `via ${item.channelName}` : (item.genre || undefined)}
+              isNew={isNewContent(item.last_modified)}
               aspectRatio="poster"
               onClick={() => handleSeriesClick(item)}
             />

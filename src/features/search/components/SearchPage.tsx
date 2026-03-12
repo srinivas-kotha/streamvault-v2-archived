@@ -8,6 +8,10 @@ import { EmptyState } from '@shared/components/EmptyState';
 import { usePlayerStore, useUIStore } from '@lib/store';
 import { PageTransition } from '@shared/components/PageTransition';
 import { useFocusable, FocusContext } from '@noriginmedia/norigin-spatial-navigation';
+import { useLiveCategories } from '@features/live/api';
+import { useVODCategories } from '@features/vod/api';
+import { useSeriesCategories } from '@features/series/api';
+import { getDetectedLanguages, getLiveCategoriesForLanguage, getMovieCategoriesForLanguage, getSeriesCategoriesForLanguage } from '@shared/utils/categoryParser';
 
 type TabType = 'all' | 'live' | 'vod' | 'series';
 
@@ -55,6 +59,7 @@ function FocusableTab({
 export function SearchPage() {
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('all');
+  const [activeLang, setActiveLang] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const playStream = usePlayerStore((s) => s.playStream);
@@ -62,16 +67,46 @@ export function SearchPage() {
   const debouncedQuery = useDebounce(query, 300);
   const { data, isLoading, isFetching } = useSearch(debouncedQuery);
 
+  const { data: liveCategories } = useLiveCategories();
+  const { data: vodCategories } = useVODCategories();
+  const { data: seriesCategories } = useSeriesCategories();
+
+  const languages = getDetectedLanguages(
+    liveCategories ?? [],
+    vodCategories ?? [],
+    seriesCategories ?? [],
+  );
+
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
+  const filteredData = useMemo(() => {
+    if (!data || !activeLang) return data;
+
+    const liveCatIds = new Set(
+      getLiveCategoriesForLanguage(activeLang, liveCategories ?? []).map(c => c.id)
+    );
+    const vodCatIds = new Set(
+      getMovieCategoriesForLanguage(activeLang, vodCategories ?? []).map(c => c.id)
+    );
+    const seriesCatIds = new Set(
+      getSeriesCategoriesForLanguage(activeLang, seriesCategories ?? []).map(c => c.id)
+    );
+
+    return {
+      live: data.live.filter(s => liveCatIds.has(s.category_id)),
+      vod: data.vod.filter(m => vodCatIds.has(m.category_id)),
+      series: data.series.filter(s => seriesCatIds.has(s.category_id)),
+    };
+  }, [data, activeLang, liveCategories, vodCategories, seriesCategories]);
+
   const counts = useMemo(() => ({
-    live: data?.live?.length ?? 0,
-    vod: data?.vod?.length ?? 0,
-    series: data?.series?.length ?? 0,
-    all: (data?.live?.length ?? 0) + (data?.vod?.length ?? 0) + (data?.series?.length ?? 0),
-  }), [data]);
+    live: filteredData?.live?.length ?? 0,
+    vod: filteredData?.vod?.length ?? 0,
+    series: filteredData?.series?.length ?? 0,
+    all: (filteredData?.live?.length ?? 0) + (filteredData?.vod?.length ?? 0) + (filteredData?.series?.length ?? 0),
+  }), [filteredData]);
 
   const tabs: { key: TabType; label: string; count: number }[] = [
     { key: 'all', label: 'All', count: counts.all },
@@ -99,7 +134,7 @@ export function SearchPage() {
 
   const hasQuery = debouncedQuery.length >= 2;
   const showLoading = hasQuery && (isLoading || isFetching);
-  const showResults = hasQuery && data && !isLoading;
+  const showResults = hasQuery && filteredData && !isLoading;
   const showEmpty = showResults && counts.all === 0;
   const showPrompt = !hasQuery;
 
@@ -144,6 +179,35 @@ export function SearchPage() {
           </button>
         )}
       </div>
+
+      {/* Language Filter Pills */}
+      {hasQuery && languages.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          <button
+            onClick={() => setActiveLang(null)}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all min-h-[36px] ${
+              activeLang === null
+                ? 'bg-teal/15 text-teal border border-teal/30'
+                : 'bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border'
+            }`}
+          >
+            All Languages
+          </button>
+          {languages.map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setActiveLang(activeLang === lang ? null : lang)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all min-h-[36px] ${
+                activeLang === lang
+                  ? 'bg-teal/15 text-teal border border-teal/30'
+                  : 'bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border'
+              }`}
+            >
+              {lang}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Tabs — wrapped in spatial nav context */}
       {hasQuery && (
@@ -192,16 +256,16 @@ export function SearchPage() {
       {showResults && !showEmpty && (
         <div className="space-y-8">
           {/* Live TV */}
-          {(activeTab === 'all' || activeTab === 'live') && data.live.length > 0 && (
+          {(activeTab === 'all' || activeTab === 'live') && filteredData.live.length > 0 && (
             <section>
               {activeTab === 'all' && (
                 <h2 className="font-display text-lg font-bold text-text-primary mb-3">
                   Live TV
-                  <span className="ml-2 text-sm font-normal text-text-secondary">({data.live.length})</span>
+                  <span className="ml-2 text-sm font-normal text-text-secondary">({filteredData.live.length})</span>
                 </h2>
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                {data.live.map((stream) => (
+                {filteredData.live.map((stream) => (
                   <ContentCard
                     key={`live-${stream.stream_id}`}
                     image={stream.stream_icon}
@@ -220,16 +284,16 @@ export function SearchPage() {
           )}
 
           {/* Movies / VOD */}
-          {(activeTab === 'all' || activeTab === 'vod') && data.vod.length > 0 && (
+          {(activeTab === 'all' || activeTab === 'vod') && filteredData.vod.length > 0 && (
             <section>
               {activeTab === 'all' && (
                 <h2 className="font-display text-lg font-bold text-text-primary mb-3">
                   Movies
-                  <span className="ml-2 text-sm font-normal text-text-secondary">({data.vod.length})</span>
+                  <span className="ml-2 text-sm font-normal text-text-secondary">({filteredData.vod.length})</span>
                 </h2>
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                {data.vod.map((movie) => (
+                {filteredData.vod.map((movie) => (
                   <ContentCard
                     key={`vod-${movie.stream_id}`}
                     image={movie.stream_icon}
@@ -244,16 +308,16 @@ export function SearchPage() {
           )}
 
           {/* Series */}
-          {(activeTab === 'all' || activeTab === 'series') && data.series.length > 0 && (
+          {(activeTab === 'all' || activeTab === 'series') && filteredData.series.length > 0 && (
             <section>
               {activeTab === 'all' && (
                 <h2 className="font-display text-lg font-bold text-text-primary mb-3">
                   Series
-                  <span className="ml-2 text-sm font-normal text-text-secondary">({data.series.length})</span>
+                  <span className="ml-2 text-sm font-normal text-text-secondary">({filteredData.series.length})</span>
                 </h2>
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                {data.series.map((show) => (
+                {filteredData.series.map((show) => (
                   <ContentCard
                     key={`series-${show.series_id}`}
                     image={show.cover}

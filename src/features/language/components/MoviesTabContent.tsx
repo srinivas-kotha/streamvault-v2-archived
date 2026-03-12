@@ -7,6 +7,7 @@ import { ContentCard } from '@shared/components/ContentCard';
 import { SkeletonGrid } from '@shared/components/Skeleton';
 import { EmptyState } from '@shared/components/EmptyState';
 import { useDebounce } from '@shared/hooks/useDebounce';
+import { isNewContent } from '@shared/utils/isNewContent';
 import type { XtreamVODStream } from '@shared/types/api';
 
 type SortKey = 'name_asc' | 'name_desc' | 'recent' | 'rating';
@@ -225,6 +226,7 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
                   image={item.stream_icon}
                   title={item.name}
                   subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
+                  isNew={isNewContent(item.added)}
                   aspectRatio="poster"
                   onClick={() =>
                     navigate({
