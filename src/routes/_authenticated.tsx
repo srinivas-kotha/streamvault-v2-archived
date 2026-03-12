@@ -1,8 +1,9 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
-import { Navbar } from '@shared/components/Navbar';
-import { Sidebar } from '@shared/components/Sidebar';
+import { TopNav } from '@shared/components/TopNav';
+import { SpatialNavigationProvider } from '@shared/providers/SpatialNavigationProvider';
 import { useAuthStore } from '@lib/store';
 import { useAuthCheck } from '@features/auth/hooks/useAuth';
+import { useBackNavigation } from '@shared/hooks/useBackNavigation';
 
 export const Route = createFileRoute('/_authenticated')({
   beforeLoad: () => {
@@ -15,18 +16,17 @@ export const Route = createFileRoute('/_authenticated')({
 });
 
 function AuthenticatedLayout() {
-  // Re-validate session with server on mount (handles cookie-valid but store-stale case)
   useAuthCheck();
+  useBackNavigation();
 
   return (
-    <div className="min-h-screen bg-obsidian flex flex-col">
-      <Navbar />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto p-6">
+    <SpatialNavigationProvider>
+      <div className="min-h-screen bg-obsidian">
+        <TopNav />
+        <main className="min-h-screen pt-16 overflow-y-auto">
           <Outlet />
         </main>
       </div>
-    </div>
+    </SpatialNavigationProvider>
   );
 }

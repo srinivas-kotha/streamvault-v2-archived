@@ -26,12 +26,16 @@ interface UIState {
   sidebarOpen: boolean;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
+  inputMode: 'mouse' | 'keyboard';
+  setInputMode: (mode: 'mouse' | 'keyboard') => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
   sidebarOpen: true,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  inputMode: 'mouse' as const,
+  setInputMode: (mode) => set({ inputMode: mode }),
 }));
 
 export type StreamType = 'live' | 'vod' | 'series';

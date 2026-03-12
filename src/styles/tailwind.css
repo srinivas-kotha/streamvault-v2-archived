@@ -85,3 +85,58 @@
   outline: none;
   box-shadow: 0 0 0 2px var(--color-obsidian), 0 0 0 4px rgba(45, 212, 191, 0.5);
 }
+
+/* TV-optimized focus ring (thicker, more visible at distance) */
+.tv-focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-obsidian), 0 0 0 5px rgba(45, 212, 191, 0.6), 0 0 30px rgba(45, 212, 191, 0.2);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* TV safe zone (5% inset for overscan) */
+.tv-safe-zone {
+  padding-left: 5%;
+  padding-right: 5%;
+}
+
+/* TV text sizes (readable at 10-foot distance) */
+.tv-text-body {
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  line-height: 1.5;
+}
+
+.tv-text-title {
+  font-size: clamp(1.5rem, 2.5vw, 2.5rem);
+  line-height: 1.2;
+}
+
+.tv-text-hero {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.1;
+}
+
+/* Content rail item sizing */
+.rail-item {
+  min-width: 160px;
+  max-width: 200px;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 1536px) {
+  .rail-item {
+    min-width: 200px;
+    max-width: 240px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .rail-item {
+    min-width: 220px;
+    max-width: 260px;
+  }
+
+  .tv-safe-zone {
+    padding-left: 3%;
+    padding-right: 3%;
+  }
+}
