@@ -159,6 +159,7 @@ export function LivePage() {
             streamType="live"
             streamId={play}
             streamName={currentStreamName || undefined}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TanStack Router search params type requires cast
             onClose={() => navigate({ search: { ...searchParams, play: undefined } } as any)}
           />
         </div>

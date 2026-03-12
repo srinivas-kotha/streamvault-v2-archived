@@ -53,7 +53,9 @@ export function SeriesDetail() {
   const computedSeasons = useMemo(() => {
     const seasonsMap = new Map<number, { season_number: number; name: string; episode_count: number }>();
     if (data?.seasons) {
-      const explicitSeasons = Array.isArray(data.seasons) ? data.seasons : Object.values(data.seasons) as any[];
+      const explicitSeasons = Array.isArray(data.seasons)
+        ? data.seasons
+        : (Object.values(data.seasons) as typeof data.seasons);
       explicitSeasons.forEach((s) => {
         if (s && typeof s.season_number === 'number') {
           seasonsMap.set(s.season_number, s);
