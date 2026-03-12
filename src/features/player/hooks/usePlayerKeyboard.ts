@@ -29,6 +29,20 @@ export function usePlayerKeyboard({
       const video = playerRef.current?.getVideo();
       if (!video) return;
 
+      // For arrow keys: only handle if no specific UI control is focused.
+      // This lets spatial navigation work for D-pad users navigating player controls.
+      // When focus is on body, video, or the player container, arrows control playback.
+      const isArrowKey = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key);
+      if (isArrowKey) {
+        const active = document.activeElement;
+        const isGenericFocus =
+          !active ||
+          active === document.body ||
+          active === video ||
+          active.tagName === 'VIDEO';
+        if (!isGenericFocus) return; // Let spatial nav handle it
+      }
+
       switch (e.key) {
         case ' ':
         case 'k':
