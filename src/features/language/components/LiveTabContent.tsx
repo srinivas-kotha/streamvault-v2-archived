@@ -6,6 +6,7 @@ import { ContentCard } from '@shared/components/ContentCard';
 import { SkeletonGrid } from '@shared/components/Skeleton';
 import { EmptyState } from '@shared/components/EmptyState';
 import { useDebounce } from '@shared/hooks/useDebounce';
+import { isNewContent } from '@shared/utils/isNewContent';
 import { usePlayerStore } from '@lib/store';
 import type { XtreamLiveStream } from '@shared/types/api';
 
@@ -205,6 +206,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
                   key={item.stream_id}
                   image={item.stream_icon}
                   title={item.name}
+                  isNew={isNewContent(item.added)}
                   aspectRatio="square"
                   onClick={() => handlePlay(item)}
                 />

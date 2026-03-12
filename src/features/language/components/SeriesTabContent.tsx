@@ -8,6 +8,7 @@ import { SkeletonGrid } from '@shared/components/Skeleton';
 import { EmptyState } from '@shared/components/EmptyState';
 import { Badge } from '@shared/components/Badge';
 import { useDebounce } from '@shared/hooks/useDebounce';
+import { isNewContent } from '@shared/utils/isNewContent';
 
 type SortKey = 'name_asc' | 'name_desc' | 'recent' | 'rating';
 
@@ -204,6 +205,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
                   image={item.cover}
                   title={item.name}
                   subtitle={item.genre || undefined}
+                  isNew={isNewContent(item.last_modified)}
                   aspectRatio="poster"
                   onClick={() =>
                     navigate({
