@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import type { QualityLevel, VideoPlayerHandle } from './VideoPlayer';
 import { formatDuration } from '@shared/utils/formatDuration';
 import { useUIStore, usePlayerStore } from '@lib/store';
@@ -154,6 +154,7 @@ export function PlayerControls({
   const [showQuality, setShowQuality] = useState(false);
   const toggleMiniPlayer = usePlayerStore((s) => s.toggleMiniPlayer);
   const progressRef = useRef<HTMLDivElement>(null);
+  const isStandalone = useMemo(() => window.matchMedia('(display-mode: standalone)').matches, []);
 
   const handleSeek = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -307,21 +308,23 @@ export function PlayerControls({
           </div>
         )}
 
-        {/* Mini-player */}
-        <FocusableButton onClick={toggleMiniPlayer} className="p-1.5 text-white/70 hover:text-white transition-colors" title="Mini player">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <rect x="2" y="3" width="20" height="14" rx="2" />
-            <rect x="11" y="9" width="9" height="7" rx="1" />
-          </svg>
-        </FocusableButton>
-
-        {/* PiP */}
-        <FocusableButton onClick={() => playerRef.current?.togglePiP()} className="p-1.5 text-white/70 hover:text-white transition-colors" title="Picture-in-Picture">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <rect x="2" y="3" width="20" height="14" rx="2" />
-            <rect x="11" y="9" width="9" height="7" rx="1" fill="currentColor" opacity="0.3" />
-          </svg>
-        </FocusableButton>
+        {/* Mini-player + PiP — hidden in standalone/TV mode */}
+        {!isStandalone && (
+          <>
+            <FocusableButton onClick={toggleMiniPlayer} className="p-1.5 text-white/70 hover:text-white transition-colors" title="Mini player">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <rect x="11" y="9" width="9" height="7" rx="1" />
+              </svg>
+            </FocusableButton>
+            <FocusableButton onClick={() => playerRef.current?.togglePiP()} className="p-1.5 text-white/70 hover:text-white transition-colors" title="Picture-in-Picture">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <rect x="11" y="9" width="9" height="7" rx="1" fill="currentColor" opacity="0.3" />
+              </svg>
+            </FocusableButton>
+          </>
+        )}
 
         {/* Fullscreen */}
         <FocusableButton onClick={() => playerRef.current?.toggleFullscreen()} className="p-1.5 text-white/70 hover:text-white transition-colors" title="Fullscreen">
