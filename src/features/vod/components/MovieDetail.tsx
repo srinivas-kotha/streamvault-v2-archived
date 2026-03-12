@@ -58,6 +58,7 @@ export function MovieDetail() {
             streamType="vod"
             streamId={vodId}
             streamName={info.name}
+            onClose={() => setIsPlayerOpen(false)}
           />
         </div>
       )}

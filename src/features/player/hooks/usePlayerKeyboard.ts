@@ -9,6 +9,7 @@ interface UsePlayerKeyboardOptions {
   onMuteToggle: () => void;
   onVolumeUp: () => void;
   onVolumeDown: () => void;
+  onClose?: () => void;
 }
 
 export function usePlayerKeyboard({
@@ -19,6 +20,7 @@ export function usePlayerKeyboard({
   onMuteToggle,
   onVolumeUp,
   onVolumeDown,
+  onClose,
 }: UsePlayerKeyboardOptions) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -64,14 +66,19 @@ export function usePlayerKeyboard({
         case 'p':
           if (onPrev) { e.preventDefault(); onPrev(); }
           break;
+        case 'Backspace':
         case 'Escape':
           e.preventDefault();
-          if (document.fullscreenElement) document.exitFullscreen();
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else if (onClose) {
+            onClose();
+          }
           break;
       }
     }
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [playerRef, isLive, onNext, onPrev, onMuteToggle, onVolumeUp, onVolumeDown]);
+  }, [playerRef, isLive, onNext, onPrev, onMuteToggle, onVolumeUp, onVolumeDown, onClose]);
 }

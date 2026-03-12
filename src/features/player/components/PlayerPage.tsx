@@ -5,6 +5,7 @@ import { PlayerControls } from './PlayerControls';
 import { usePlayerKeyboard } from '../hooks/usePlayerKeyboard';
 import { useProgressTracking } from '../hooks/useProgressTracking';
 import { usePlayerStore } from '@lib/store';
+import { FocusContext, useFocusable } from '@noriginmedia/norigin-spatial-navigation';
 
 interface PlayerPageProps {
   streamType: string;
@@ -15,6 +16,7 @@ interface PlayerPageProps {
   hasPrev?: boolean;
   onNext?: () => void;
   onPrev?: () => void;
+  onClose?: () => void;
 }
 
 export function PlayerPage({
@@ -26,6 +28,7 @@ export function PlayerPage({
   hasPrev,
   onNext,
   onPrev,
+  onClose,
 }: PlayerPageProps) {
   const playerRef = useRef<VideoPlayerHandle>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -34,6 +37,9 @@ export function PlayerPage({
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
   const [currentQuality, setCurrentQuality] = useState(-1);
   const [error, setError] = useState<string | null>(null);
+
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const volume = usePlayerStore((s) => s.volume);
   const isMuted = usePlayerStore((s) => s.isMuted);
@@ -67,6 +73,29 @@ export function PlayerPage({
   const handleVolumeUp = useCallback(() => setVolume(Math.min(1, volume + 0.1)), [volume, setVolume]);
   const handleVolumeDown = useCallback(() => setVolume(Math.max(0, volume - 0.1)), [volume, setVolume]);
 
+  const showControls = useCallback(() => {
+    setControlsVisible(true);
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    controlsTimeoutRef.current = setTimeout(() => {
+      setControlsVisible(false);
+    }, 4000);
+  }, []);
+
+  // Show controls when paused
+  useEffect(() => {
+    if (!isPlaying) showControls();
+  }, [isPlaying, showControls]);
+
+  // Spatial Navigation wrapper
+  const { ref, focusKey, hasFocusedChild } = useFocusable({
+    focusKey: 'player',
+  });
+
+  // Keep controls visible if user is navigating controls with D-pad
+  useEffect(() => {
+    if (hasFocusedChild) showControls();
+  }, [hasFocusedChild, showControls]);
+
   usePlayerKeyboard({
     playerRef,
     isLive,
@@ -75,6 +104,7 @@ export function PlayerPage({
     onMuteToggle: toggleMute,
     onVolumeUp: handleVolumeUp,
     onVolumeDown: handleVolumeDown,
+    onClose,
   });
 
   // Sync volume to video element
@@ -118,8 +148,14 @@ export function PlayerPage({
   }
 
   return (
-    <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-      <VideoPlayer
+    <FocusContext.Provider value={focusKey}>
+      <div 
+        ref={ref}
+        className="relative aspect-video bg-black rounded-xl overflow-hidden focus:outline-none"
+        onMouseMove={showControls}
+        onMouseLeave={() => isPlaying && setControlsVisible(false)}
+      >
+        <VideoPlayer
         ref={playerRef}
         url={streamData.url}
         isLive={streamData.isLive}
@@ -148,12 +184,14 @@ export function PlayerPage({
         hasPrev={hasPrev}
         onNext={onNext}
         onPrev={onPrev}
+        visible={controlsVisible}
       />
       {streamName && (
         <div className="absolute top-4 left-4 text-white/80 text-sm font-medium bg-obsidian/50 px-3 py-1 rounded-lg backdrop-blur-sm">
           {streamName}
         </div>
       )}
-    </div>
+      </div>
+    </FocusContext.Provider>
   );
 }

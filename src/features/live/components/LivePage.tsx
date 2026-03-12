@@ -104,7 +104,8 @@ function SidebarNav({ categories, activeCatId, isLoading, onSelect }: SidebarNav
 }
 
 export function LivePage() {
-  const { play } = useSearch({ from: '/_authenticated/live' });
+  const searchParams = useSearch({ from: '/_authenticated/live' });
+  const play = searchParams.play;
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -158,6 +159,7 @@ export function LivePage() {
             streamType="live"
             streamId={play}
             streamName={currentStreamName || undefined}
+            onClose={() => navigate({ search: { ...searchParams, play: undefined } } as any)}
           />
         </div>
       )}

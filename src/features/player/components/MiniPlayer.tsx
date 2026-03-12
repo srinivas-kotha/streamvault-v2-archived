@@ -24,6 +24,7 @@ export function MiniPlayer() {
         streamType={currentStreamType}
         streamId={currentStreamId}
         streamName={currentStreamName || undefined}
+        onClose={stop}
       />
     </div>
   );

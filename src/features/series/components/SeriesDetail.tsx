@@ -302,6 +302,7 @@ export function SeriesDetail() {
               hasPrev={currentEpisodeIndex > 0}
               onNext={playNext}
               onPrev={playPrev}
+              onClose={() => setPlayingEpisodeId(null)}
             />
           </div>
         )}
