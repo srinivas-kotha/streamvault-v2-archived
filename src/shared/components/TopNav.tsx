@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link, useMatchRoute } from '@tanstack/react-router';
-import { useAuthStore } from '@lib/store';
+import { Link, useMatchRoute, useNavigate } from '@tanstack/react-router';
+import { useFocusable, FocusContext } from '@noriginmedia/norigin-spatial-navigation';
+import { useAuthStore, useUIStore } from '@lib/store';
 import { useLogout } from '@features/auth/hooks/useAuth';
 import { useLiveCategories } from '@features/live/api';
 import { useVODCategories } from '@features/vod/api';
@@ -49,11 +50,10 @@ export function TopNav() {
     };
   }, [profileOpen]);
 
-  const isHome = matchRoute({ to: '/', fuzzy: false });
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
           ? 'bg-obsidian/90 backdrop-blur-xl border-b border-border-subtle shadow-lg'
           : 'bg-gradient-to-b from-obsidian/80 to-transparent'
@@ -68,29 +68,8 @@ export function TopNav() {
           Stream<span className="text-teal">Vault</span>
         </Link>
 
-        {/* Nav items */}
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1">
-          {/* Home */}
-          <NavItem to="/" label="Home" isActive={!!isHome} />
-
-          {/* Language tabs */}
-          {languages.map((lang) => (
-            <NavItem
-              key={lang}
-              to={`/language/${lang.toLowerCase()}`}
-              label={lang}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              isActive={!!matchRoute({ to: `/language/${lang.toLowerCase()}` as any, fuzzy: true })}
-            />
-          ))}
-
-          {/* Search */}
-          <NavItem to="/search" label="Search" isActive={!!matchRoute({ to: '/search', fuzzy: true })} icon={
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          } />
-        </div>
+        {/* Nav items — wrapped in FocusContext for spatial nav */}
+        <TopNavFocusGroup languages={languages} matchRoute={matchRoute} />
 
         {/* Profile */}
         <div className="relative ml-4 flex-shrink-0">
@@ -107,7 +86,7 @@ export function TopNav() {
           </button>
 
           {profileOpen && (
-            <div role="menu" className="absolute right-0 top-full mt-2 w-48 py-2 bg-surface-raised border border-border rounded-lg shadow-xl">
+            <div role="menu" className="absolute right-0 top-full mt-2 w-48 py-2 bg-surface-raised border border-border rounded-lg shadow-xl z-[60]">
               <Link
                 to="/favorites"
                 role="menuitem"
@@ -146,14 +125,32 @@ interface NavItemProps {
 }
 
 function NavItem({ to, label, isActive, icon }: NavItemProps) {
+  const navigate = useNavigate();
+  const inputMode = useUIStore((s) => s.inputMode);
+
+  const { ref, focused } = useFocusable({
+    onEnterPress: () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      navigate({ to: to as any });
+    },
+    onFocus: ({ node }) => {
+      node?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+    },
+  });
+
+  const showFocus = focused && inputMode === 'keyboard';
+
   return (
     <Link
+      ref={ref}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       to={to as any}
       className={`relative flex items-center gap-1.5 px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap min-h-[48px] transition-all ${
         isActive
           ? 'text-text-primary'
-          : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised/30'
+          : showFocus
+            ? 'text-text-primary bg-surface-raised/50 ring-2 ring-teal/50'
+            : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised/30'
       }`}
     >
       {icon}
@@ -162,5 +159,39 @@ function NavItem({ to, label, isActive, icon }: NavItemProps) {
         <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-teal to-indigo rounded-full" />
       )}
     </Link>
+  );
+}
+
+function TopNavFocusGroup({ languages, matchRoute }: { languages: string[]; matchRoute: ReturnType<typeof useMatchRoute> }) {
+  const isHome = matchRoute({ to: '/', fuzzy: false });
+
+  const { ref, focusKey } = useFocusable({
+    focusKey: 'top-nav',
+    saveLastFocusedChild: true,
+    trackChildren: true,
+    isFocusBoundary: true,
+    focusBoundaryDirections: ['up'],
+  });
+
+  return (
+    <FocusContext.Provider value={focusKey}>
+      <div ref={ref} className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1">
+        <NavItem to="/" label="Home" isActive={!!isHome} />
+        {languages.map((lang) => (
+          <NavItem
+            key={lang}
+            to={`/language/${lang.toLowerCase()}`}
+            label={lang}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            isActive={!!matchRoute({ to: `/language/${lang.toLowerCase()}` as any, fuzzy: true })}
+          />
+        ))}
+        <NavItem to="/search" label="Search" isActive={!!matchRoute({ to: '/search', fuzzy: true })} icon={
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        } />
+      </div>
+    </FocusContext.Provider>
   );
 }

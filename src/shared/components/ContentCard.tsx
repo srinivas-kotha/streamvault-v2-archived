@@ -1,5 +1,7 @@
-import { type ReactNode } from 'react';
+import { useCallback, type ReactNode } from 'react';
+import { useFocusable } from '@noriginmedia/norigin-spatial-navigation';
 import { LazyImage } from './LazyImage';
+import { useUIStore } from '@lib/store';
 
 interface ContentCardProps {
   image: string;
@@ -11,6 +13,7 @@ interface ContentCardProps {
   onFavoriteToggle?: () => void;
   onClick?: () => void;
   aspectRatio?: 'poster' | 'landscape' | 'square';
+  focusKey?: string;
 }
 
 const aspectClasses = {
@@ -29,11 +32,33 @@ export function ContentCard({
   onFavoriteToggle,
   onClick,
   aspectRatio = 'poster',
+  focusKey: propFocusKey,
 }: ContentCardProps) {
+  const inputMode = useUIStore((s) => s.inputMode);
+
+  const onEnterPress = useCallback(() => {
+    onClick?.();
+  }, [onClick]);
+
+  const { ref, focused } = useFocusable({
+    focusKey: propFocusKey,
+    onEnterPress,
+    onFocus: ({ node }) => {
+      node?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+    },
+  });
+
+  const showFocusRing = focused && inputMode === 'keyboard';
+
   return (
     <div
+      ref={ref}
       onClick={onClick}
-      className="group relative cursor-pointer rounded-lg overflow-hidden bg-surface-raised border border-border-subtle hover:border-teal/30 transition-all duration-200 hover:scale-[1.03] ambient-glow"
+      className={`group relative cursor-pointer rounded-lg overflow-hidden bg-surface-raised border transition-all duration-200 ambient-glow ${
+        showFocusRing
+          ? 'border-teal scale-[1.05] z-10 ring-2 ring-teal/60 ring-offset-2 ring-offset-obsidian shadow-[0_0_24px_rgba(45,212,191,0.3)]'
+          : 'border-border-subtle hover:border-teal/30 hover:scale-[1.03]'
+      }`}
     >
       {/* Image */}
       <div className={`relative ${aspectClasses[aspectRatio]} overflow-hidden`}>
@@ -92,3 +117,4 @@ export function ContentCard({
     </div>
   );
 }
+

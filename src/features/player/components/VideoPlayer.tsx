@@ -105,10 +105,20 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
         const hls = new Hls({
           enableWorker: true,
           capLevelToPlayerSize: true,
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60,
+          maxBufferLength: isLive ? 10 : 30,
+          maxMaxBufferLength: isLive ? 30 : 120,
+          maxBufferSize: 60 * 1000 * 1000, // 60MB
+          maxBufferHole: 0.5,
           startLevel: -1,
-          ...(isLive ? { lowLatencyMode: true, liveSyncDuration: 3, liveMaxLatencyDuration: 10 } : {}),
+          ...(isLive ? {
+            lowLatencyMode: true,
+            liveSyncDuration: 3,
+            liveMaxLatencyDuration: 10,
+            liveBackBufferLength: 30,
+            backBufferLength: 30,
+          } : {
+            backBufferLength: 60,
+          }),
         });
         hlsRef.current = hls;
         hls.attachMedia(video);

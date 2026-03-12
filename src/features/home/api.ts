@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
-import { useQuery, useQueries } from '@tanstack/react-query';
+import { useQueries } from '@tanstack/react-query';
 import { api } from '@lib/api';
 import { useVODCategories } from '@features/vod/api';
+import { useSeriesCategories } from '@features/series/api';
 import { groupCategoriesByLanguage } from '@shared/utils/categoryParser';
 import type {
-  XtreamLiveStream,
   XtreamVODStream,
   XtreamSeriesItem,
 } from '@shared/types/api';
@@ -13,38 +13,7 @@ import type {
 export { useWatchHistory } from '@features/history/api';
 export { useFavorites } from '@features/favorites/api';
 
-type RecentlyAddedType = 'live' | 'vod' | 'series';
-
-type RecentlyAddedResult<T extends RecentlyAddedType> = T extends 'live'
-  ? XtreamLiveStream[]
-  : T extends 'vod'
-    ? XtreamVODStream[]
-    : XtreamSeriesItem[];
-
-export function useRecentlyAdded<T extends RecentlyAddedType>(type: T) {
-  return useQuery({
-    queryKey: ['home', 'recentlyAdded', type],
-    queryFn: async () => {
-      const endpoint =
-        type === 'live'
-          ? '/live/streams/0'
-          : type === 'vod'
-            ? '/vod/streams/0'
-            : '/series/list/0';
-      const data = await api<RecentlyAddedResult<T>>(endpoint);
-      // Sort by added/last_modified DESC and take top 20
-      const sorted = [...data].sort((a, b) => {
-        const aDate = 'added' in a ? a.added : (a as XtreamSeriesItem).last_modified;
-        const bDate = 'added' in b ? b.added : (b as XtreamSeriesItem).last_modified;
-        return Number(bDate) - Number(aDate);
-      });
-      return sorted.slice(0, 20) as RecentlyAddedResult<T>;
-    },
-    staleTime: 5 * 60 * 1000, // 5 min
-  });
-}
-
-// --- Language-grouped latest movies ---
+// --- Helpers ---
 
 function parseAdded(val: string): number {
   const num = Number(val);
@@ -53,88 +22,119 @@ function parseAdded(val: string): number {
   return isNaN(parsed) ? 0 : parsed / 1000;
 }
 
-export interface LanguageMovieRail {
-  language: string;
-  languageKey: string;
-  items: XtreamVODStream[];
-}
+const ITEMS_PER_RAIL = 20;
 
-const MAX_LANGUAGES = 6;
-const CATEGORIES_PER_LANGUAGE = 2;
-const ITEMS_PER_LANGUAGE = 15;
+// --- Language Movie Rail ---
 
-export function useLatestMoviesByLanguage() {
+export function useLanguageMovieRail(language: string) {
   const { data: vodCategories, isLoading: categoriesLoading } = useVODCategories();
 
-  // Group VOD categories by language (priority-sorted)
-  const languageGroups = useMemo(
-    () => groupCategoriesByLanguage(vodCategories ?? [], 'movies').slice(0, MAX_LANGUAGES),
-    [vodCategories],
-  );
+  // Find ALL VOD category IDs for this language
+  const categoryIds = useMemo(() => {
+    if (!vodCategories) return [];
+    const groups = groupCategoriesByLanguage(vodCategories, 'movies');
+    const group = groups.find((g) => g.languageKey === language.toLowerCase());
+    if (!group) return [];
+    return group.movies.map((c) => c.id);
+  }, [vodCategories, language]);
 
-  // Build a flat list of queries: up to 2 category fetches per language
-  const queryDefs = useMemo(() => {
-    const defs: { languageKey: string; language: string; categoryId: string }[] = [];
-    for (const group of languageGroups) {
-      for (const cat of group.movies.slice(0, CATEGORIES_PER_LANGUAGE)) {
-        defs.push({ languageKey: group.languageKey, language: group.language, categoryId: cat.id });
-      }
-    }
-    return defs;
-  }, [languageGroups]);
-
+  // Fetch ALL categories for this language in parallel
   const queries = useQueries({
-    queries: queryDefs.map((def) => ({
-      queryKey: ['vod', 'streams', def.categoryId],
-      queryFn: () => api<XtreamVODStream[]>(`/vod/streams/${def.categoryId}`),
-      enabled: !categoriesLoading && queryDefs.length > 0,
+    queries: categoryIds.map((catId) => ({
+      queryKey: ['vod', 'streams', catId],
+      queryFn: () => api<XtreamVODStream[]>(`/vod/streams/${catId}`),
+      enabled: !categoriesLoading && categoryIds.length > 0,
       staleTime: 2 * 60 * 60 * 1000,
     })),
   });
 
   const isLoading = categoriesLoading || queries.some((q) => q.isLoading);
 
-  // Merge streams per language, sort by added DESC, take top N
-  const rails = useMemo<LanguageMovieRail[]>(() => {
-    if (queries.length === 0) return [];
+  // Merge, dedupe by stream_id, sort by added DESC, take top N
+  const items = useMemo<XtreamVODStream[]>(() => {
+    const all: XtreamVODStream[] = [];
+    for (const q of queries) {
+      if (q.data) all.push(...q.data);
+    }
+    if (all.length === 0) return [];
 
-    const byLanguage = new Map<string, { language: string; languageKey: string; items: XtreamVODStream[] }>();
+    const seen = new Set<number>();
+    const unique = all.filter((item) => {
+      if (seen.has(item.stream_id)) return false;
+      seen.add(item.stream_id);
+      return true;
+    });
 
-    for (let i = 0; i < queryDefs.length; i++) {
-      const def = queryDefs[i]!;
+    unique.sort((a, b) => parseAdded(b.added) - parseAdded(a.added));
+    return unique.slice(0, ITEMS_PER_RAIL);
+  }, [queries]);
+
+  return { items, isLoading };
+}
+
+// --- Language Series Rail ---
+
+export interface SeriesWithChannel extends XtreamSeriesItem {
+  channelName?: string;
+}
+
+export function useLanguageSeriesRail(language: string) {
+  const { data: seriesCategories, isLoading: categoriesLoading } = useSeriesCategories();
+
+  // Find ALL series category IDs for this language, with channel name info
+  const categoryDefs = useMemo(() => {
+    if (!seriesCategories) return [];
+    const groups = groupCategoriesByLanguage(seriesCategories, 'series');
+    const group = groups.find((g) => g.languageKey === language.toLowerCase());
+    if (!group) return [];
+    return group.series.map((c) => ({
+      id: c.id,
+      // The sub-category name is the channel name (e.g., "STAR MAA", "ZEE TELUGU")
+      channelName: c.name,
+    }));
+  }, [seriesCategories, language]);
+
+  // Fetch ALL categories for this language in parallel
+  const queries = useQueries({
+    queries: categoryDefs.map((def) => ({
+      queryKey: ['series', 'list', def.id],
+      queryFn: () => api<XtreamSeriesItem[]>(`/series/list/${def.id}`),
+      enabled: !categoriesLoading && categoryDefs.length > 0,
+      staleTime: 2 * 60 * 60 * 1000,
+    })),
+  });
+
+  const isLoading = categoriesLoading || queries.some((q) => q.isLoading);
+
+  // Merge, dedupe by series_id, sort by last_modified DESC, take top N
+  // Attach channelName from the category definition
+  const items = useMemo<SeriesWithChannel[]>(() => {
+    const all: SeriesWithChannel[] = [];
+    for (let i = 0; i < categoryDefs.length; i++) {
       const data = queries[i]?.data;
       if (!data) continue;
-
-      if (!byLanguage.has(def.languageKey)) {
-        byLanguage.set(def.languageKey, { language: def.language, languageKey: def.languageKey, items: [] });
+      const channelName = categoryDefs[i]!.channelName;
+      for (const item of data) {
+        all.push({ ...item, channelName });
       }
-      byLanguage.get(def.languageKey)!.items.push(...data);
     }
+    if (all.length === 0) return [];
 
-    // Maintain priority order from languageGroups
-    const result: LanguageMovieRail[] = [];
-    for (const group of languageGroups) {
-      const entry = byLanguage.get(group.languageKey);
-      if (!entry || entry.items.length === 0) continue;
+    const seen = new Set<number>();
+    const unique = all.filter((item) => {
+      if (seen.has(item.series_id)) return false;
+      seen.add(item.series_id);
+      return true;
+    });
 
-      // Sort by added DESC and dedupe by stream_id
-      const seen = new Set<number>();
-      const unique = entry.items.filter((item) => {
-        if (seen.has(item.stream_id)) return false;
-        seen.add(item.stream_id);
-        return true;
-      });
+    unique.sort((a, b) => {
+      const aDate = Number(a.last_modified) || 0;
+      const bDate = Number(b.last_modified) || 0;
+      return bDate - aDate;
+    });
 
-      unique.sort((a, b) => parseAdded(b.added) - parseAdded(a.added));
-      result.push({
-        language: entry.language,
-        languageKey: entry.languageKey,
-        items: unique.slice(0, ITEMS_PER_LANGUAGE),
-      });
-    }
+    return unique.slice(0, ITEMS_PER_RAIL);
+  }, [queries, categoryDefs]);
 
-    return result;
-  }, [queries, queryDefs, languageGroups]);
-
-  return { rails, isLoading };
+  return { items, isLoading };
 }

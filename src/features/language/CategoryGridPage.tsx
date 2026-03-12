@@ -178,6 +178,7 @@ export function CategoryGridPage() {
 
         {/* Sort/Filter bar (only for vod/series, not live) */}
         {contentType !== 'live' && (
+          <div className="relative z-10">
           <SortFilterBar
             sort={sort}
             onSortChange={setSort}
@@ -185,6 +186,7 @@ export function CategoryGridPage() {
             onFiltersChange={setFilters}
             genres={genres}
           />
+          </div>
         )}
 
         {/* Grid */}
@@ -199,7 +201,7 @@ export function CategoryGridPage() {
             icon="content"
           />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="isolate grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {/* VOD items */}
             {processedVod.map((movie) => (
               <ContentCard

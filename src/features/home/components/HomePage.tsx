@@ -5,70 +5,66 @@ import { HeroBanner, type HeroItem } from '@shared/components/HeroBanner';
 import { ContentRail } from '@shared/components/ContentRail';
 import { FocusableCard } from '@shared/components/FocusableCard';
 import { ContinueWatching } from './ContinueWatching';
-import { useRecentlyAdded, useLatestMoviesByLanguage } from '../api';
-import { usePlayerStore } from '@lib/store';
-import type { XtreamVODStream, XtreamSeriesItem, XtreamLiveStream } from '@shared/types/api';
+import {
+  useLanguageMovieRail,
+  useLanguageSeriesRail,
+  type SeriesWithChannel,
+} from '../api';
+
+import type { XtreamVODStream } from '@shared/types/api';
 
 export function HomePage() {
   const navigate = useNavigate();
-  const playStream = usePlayerStore((s) => s.playStream);
 
-  const { rails: languageRails, isLoading: moviesLoading } = useLatestMoviesByLanguage();
-  const { data: recentSeries, isLoading: seriesLoading } = useRecentlyAdded('series');
-  const { data: recentLive, isLoading: liveLoading } = useRecentlyAdded('live');
+  // Data hooks -- Telugu & Hindi movies and series
+  const { items: teluguMovies, isLoading: teluguMoviesLoading } = useLanguageMovieRail('Telugu');
+  const { items: teluguSeries, isLoading: teluguSeriesLoading } = useLanguageSeriesRail('Telugu');
+  const { items: hindiMovies, isLoading: hindiMoviesLoading } = useLanguageMovieRail('Hindi');
+  const { items: hindiSeries, isLoading: hindiSeriesLoading } = useLanguageSeriesRail('Hindi');
 
-  // Build hero items from first language rail's movies + series
+  // Hero banner: top 5 from Telugu movies + Telugu series (mixed)
   const heroItems = useMemo<HeroItem[]>(() => {
     const items: HeroItem[] = [];
 
-    // Add top movies from the first language rail
-    const firstRail = languageRails[0];
-    if (firstRail) {
-      for (const m of firstRail.items.slice(0, 3)) {
-        if (m.stream_icon) {
-          items.push({
-            id: m.stream_id,
-            type: 'vod',
-            title: m.name,
-            image: m.stream_icon,
-            rating: m.rating || undefined,
-          });
-        }
+    // Add top Telugu movies
+    for (const m of teluguMovies.slice(0, 3)) {
+      if (m.stream_icon) {
+        items.push({
+          id: m.stream_id,
+          type: 'vod',
+          title: m.name,
+          image: m.stream_icon,
+          rating: m.rating || undefined,
+        });
       }
     }
 
-    // Add top series
-    if (recentSeries) {
-      for (const s of recentSeries.slice(0, 2)) {
-        const backdrop = s.backdrop_path?.[0] || s.cover;
-        if (backdrop) {
-          items.push({
-            id: s.series_id,
-            type: 'series',
-            title: s.name,
-            description: s.plot || undefined,
-            image: backdrop,
-            rating: s.rating || undefined,
-            genre: s.genre || undefined,
-            year: s.releaseDate?.slice(0, 4) || undefined,
-          });
-        }
+    // Add top Telugu series
+    for (const s of teluguSeries.slice(0, 2)) {
+      const backdrop = s.backdrop_path?.[0] || s.cover;
+      if (backdrop) {
+        items.push({
+          id: s.series_id,
+          type: 'series',
+          title: s.name,
+          description: s.plot || undefined,
+          image: backdrop,
+          rating: s.rating || undefined,
+          genre: s.genre || undefined,
+          year: s.releaseDate?.slice(0, 4) || undefined,
+        });
       }
     }
 
     return items.slice(0, 5);
-  }, [languageRails, recentSeries]);
+  }, [teluguMovies, teluguSeries]);
 
   const handleVodClick = (item: XtreamVODStream) => {
     navigate({ to: '/vod/$vodId', params: { vodId: String(item.stream_id) } });
   };
 
-  const handleSeriesClick = (item: XtreamSeriesItem) => {
+  const handleSeriesClick = (item: SeriesWithChannel) => {
     navigate({ to: '/series/$seriesId', params: { seriesId: String(item.series_id) } });
-  };
-
-  const handleLiveClick = (item: XtreamLiveStream) => {
-    playStream(String(item.stream_id), 'live', item.name);
   };
 
   return (
@@ -82,59 +78,78 @@ export function HomePage() {
         {/* Continue Watching */}
         <ContinueWatching />
 
-        {/* Language-grouped Latest Movies */}
-        {languageRails.map((rail) => (
-          <ContentRail
-            key={rail.languageKey}
-            title={`Latest ${rail.language} Movies`}
-            seeAllTo={`/language/${rail.languageKey}`}
-            isLoading={moviesLoading}
-            isEmpty={!rail.items.length}
-          >
-            {rail.items.map((item) => (
-              <FocusableCard
-                key={item.stream_id}
-                image={item.stream_icon}
-                title={item.name}
-                subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
-                aspectRatio="poster"
-                onClick={() => handleVodClick(item)}
-              />
-            ))}
-          </ContentRail>
-        ))}
-
-        {/* Recently Added Series */}
+        {/* Latest Telugu Movies */}
         <ContentRail
-          title="Recently Added Series"
-          isLoading={seriesLoading}
-          isEmpty={!recentSeries?.length}
+          title="Latest Telugu Movies"
+          seeAllTo="/language/telugu"
+          isLoading={teluguMoviesLoading}
+          isEmpty={!teluguMovies.length}
         >
-          {(recentSeries ?? []).map((item) => (
+          {teluguMovies.map((item) => (
+            <FocusableCard
+              key={item.stream_id}
+              image={item.stream_icon}
+              title={item.name}
+              subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
+              aspectRatio="poster"
+              onClick={() => handleVodClick(item)}
+            />
+          ))}
+        </ContentRail>
+
+        {/* Telugu Series */}
+        <ContentRail
+          title="Telugu Series"
+          seeAllTo="/language/telugu"
+          isLoading={teluguSeriesLoading}
+          isEmpty={!teluguSeries.length}
+        >
+          {teluguSeries.map((item) => (
             <FocusableCard
               key={item.series_id}
               image={item.cover}
               title={item.name}
-              subtitle={item.genre || undefined}
+              subtitle={item.channelName ? `via ${item.channelName}` : (item.genre || undefined)}
               aspectRatio="poster"
               onClick={() => handleSeriesClick(item)}
             />
           ))}
         </ContentRail>
 
-        {/* Recently Added Live */}
+        {/* Latest Hindi Movies */}
         <ContentRail
-          title="Live Channels"
-          isLoading={liveLoading}
-          isEmpty={!recentLive?.length}
+          title="Latest Hindi Movies"
+          seeAllTo="/language/hindi"
+          isLoading={hindiMoviesLoading}
+          isEmpty={!hindiMovies.length}
         >
-          {(recentLive ?? []).map((item) => (
+          {hindiMovies.map((item) => (
             <FocusableCard
               key={item.stream_id}
               image={item.stream_icon}
               title={item.name}
-              aspectRatio="square"
-              onClick={() => handleLiveClick(item)}
+              subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
+              aspectRatio="poster"
+              onClick={() => handleVodClick(item)}
+            />
+          ))}
+        </ContentRail>
+
+        {/* Hindi Series */}
+        <ContentRail
+          title="Hindi Series"
+          seeAllTo="/language/hindi"
+          isLoading={hindiSeriesLoading}
+          isEmpty={!hindiSeries.length}
+        >
+          {hindiSeries.map((item) => (
+            <FocusableCard
+              key={item.series_id}
+              image={item.cover}
+              title={item.name}
+              subtitle={item.channelName ? `via ${item.channelName}` : (item.genre || undefined)}
+              aspectRatio="poster"
+              onClick={() => handleSeriesClick(item)}
             />
           ))}
         </ContentRail>

@@ -4,9 +4,10 @@ import { PageTransition } from '@shared/components/PageTransition';
 import { HeroBanner, type HeroItem } from '@shared/components/HeroBanner';
 import { ContentRail } from '@shared/components/ContentRail';
 import { FocusableCard } from '@shared/components/FocusableCard';
-import { useLanguageMovieRails, useLanguageSeriesRails, useLanguageLiveChannels } from './api';
+import { useLanguageMovieRails, useLanguageLiveChannels } from './api';
+import { useSeriesByLanguage, type SeriesWithChannel } from '@features/series/api';
 import { usePlayerStore } from '@lib/store';
-import type { XtreamVODStream, XtreamSeriesItem, XtreamLiveStream } from '@shared/types/api';
+import type { XtreamVODStream, XtreamLiveStream } from '@shared/types/api';
 
 type TabKey = 'movies' | 'series' | 'live';
 
@@ -24,8 +25,26 @@ export function LanguageHubPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('movies');
 
   const { rails: movieRails, isLoading: moviesLoading } = useLanguageMovieRails(language);
-  const { rails: seriesRails, isLoading: seriesLoading } = useLanguageSeriesRails(language);
+  const { allSeries, channels: seriesChannels, isLoading: seriesLoading } = useSeriesByLanguage(language);
   const { rails: liveRails, isLoading: liveLoading } = useLanguageLiveChannels(language);
+
+  // Group series by channel for rails display
+  const seriesRails = useMemo(() => {
+    if (!allSeries.length) return [];
+    const byChannel = new Map<string, SeriesWithChannel[]>();
+    for (const s of allSeries) {
+      const list = byChannel.get(s.channelId) || [];
+      list.push(s);
+      byChannel.set(s.channelId, list);
+    }
+    return seriesChannels
+      .filter((ch) => byChannel.has(ch.id))
+      .map((ch) => ({
+        channelId: ch.id,
+        channelName: ch.name,
+        items: (byChannel.get(ch.id) || []).slice(0, 20),
+      }));
+  }, [allSeries, seriesChannels]);
 
   // Hero items from top movies
   const heroItems = useMemo<HeroItem[]>(() => {
@@ -38,8 +57,8 @@ export function LanguageHubPage() {
         rating: m.rating || undefined,
       }));
     }
-    if (activeTab === 'series' && seriesRails.length > 0) {
-      return (seriesRails[0]?.items ?? []).slice(0, 5).map((s) => ({
+    if (activeTab === 'series' && allSeries.length > 0) {
+      return allSeries.slice(0, 5).map((s) => ({
         id: s.series_id,
         type: 'series' as const,
         title: s.name,
@@ -50,7 +69,7 @@ export function LanguageHubPage() {
       }));
     }
     return [];
-  }, [activeTab, movieRails, seriesRails]);
+  }, [activeTab, movieRails, allSeries]);
 
   if (!lang) {
     return <PageTransition><div className="px-6 lg:px-10 py-20 text-center"><p className="text-text-muted text-lg">Language not found</p></div></PageTransition>;
@@ -60,7 +79,7 @@ export function LanguageHubPage() {
     navigate({ to: '/vod/$vodId', params: { vodId: String(item.stream_id) } });
   };
 
-  const handleSeriesClick = (item: XtreamSeriesItem) => {
+  const handleSeriesClick = (item: SeriesWithChannel) => {
     navigate({ to: '/series/$seriesId', params: { seriesId: String(item.series_id) } });
   };
 
@@ -89,7 +108,7 @@ export function LanguageHubPage() {
         {heroItems.length > 0 && <HeroBanner items={heroItems} />}
 
         {/* Content Tabs */}
-        <div className="px-6 lg:px-10">
+        <div className="px-6 lg:px-10 relative z-10">
           <div
             className="flex items-center gap-1 border-b border-border-subtle"
             onKeyDown={handleTabKeyDown}
@@ -160,9 +179,8 @@ export function LanguageHubPage() {
             )}
             {seriesRails.map((rail) => (
               <ContentRail
-                key={rail.category.id}
-                title={rail.category.name || rail.category.originalName}
-                seeAllTo={`/language/${lang}/category/${rail.category.id}`}
+                key={rail.channelId}
+                title={rail.channelName}
               >
                 {rail.items.map((item) => (
                   <FocusableCard

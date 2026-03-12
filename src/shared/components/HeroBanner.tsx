@@ -56,7 +56,7 @@ export function HeroBanner({ items, autoRotateMs = 8000 }: HeroBannerProps) {
   };
 
   return (
-    <div className="relative w-full" style={{ height: 'clamp(300px, 60vh, 600px)' }}>
+    <div className="relative w-full -mt-16" style={{ height: 'clamp(300px, 60vh, 600px)' }}>
       {/* Backdrop image */}
       <div className="absolute inset-0 overflow-hidden">
         <img
@@ -73,7 +73,7 @@ export function HeroBanner({ items, autoRotateMs = 8000 }: HeroBannerProps) {
       </div>
 
       {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-10 pb-8 lg:pb-12">
+      <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-10 pb-8 lg:pb-12 z-10">
         <div className="max-w-2xl">
           {/* Meta badges */}
           <div className="flex items-center gap-3 mb-3">

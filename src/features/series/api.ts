@@ -1,7 +1,93 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { api } from '@lib/api';
 import type { XtreamCategory, XtreamSeriesItem, XtreamSeriesInfo } from '@shared/types/api';
 
+// ── Channel-to-language mapping (fallback until category parser is rewritten) ──
+
+const SERIES_CHANNEL_LANGUAGE: Record<string, string> = {
+  '453': 'Telugu', // STAR MAA
+  '455': 'Telugu', // ZEE TELUGU
+  '494': 'Telugu', // GEMINI
+  '493': 'Telugu', // ETV
+  '552': 'Telugu', // SONY TELUGU
+  '469': 'Telugu', // AHA
+  '442': 'Hindi', // COLORS HINDI
+  '443': 'Hindi', // SONY (SET)
+  '444': 'Hindi', // STAR PLUS
+  '446': 'Hindi', // STAR BHARAT
+  '445': 'Hindi', // ZEE TV
+  '447': 'Hindi', // SAB
+  '448': 'Hindi', // AND TV
+  '491': 'Hindi', // MTV HINDI
+  '596': 'Hindi', // SUN NEO HINDI
+  '161': 'Hindi', // HINDI TV SERIES
+  '276': 'Hindi', // INDIAN Reality Shows
+  '200': 'Hindi', // BIGG BOSS OTT
+};
+
+const CHANNEL_NAMES: Record<string, string> = {
+  '453': 'Star Maa',
+  '455': 'Zee Telugu',
+  '494': 'Gemini',
+  '493': 'ETV',
+  '552': 'Sony Telugu',
+  '469': 'Aha',
+  '442': 'Colors Hindi',
+  '443': 'Sony SET',
+  '444': 'Star Plus',
+  '446': 'Star Bharat',
+  '445': 'Zee TV',
+  '447': 'SAB',
+  '448': 'And TV',
+  '491': 'MTV Hindi',
+  '596': 'Sun Neo Hindi',
+  '161': 'Hindi TV',
+  '276': 'Reality Shows',
+  '200': 'Bigg Boss OTT',
+};
+
+// ── Types ──
+
+export interface SeriesWithChannel extends XtreamSeriesItem {
+  channelName: string;
+  channelId: string;
+}
+
+export interface ChannelInfo {
+  id: string;
+  name: string;
+  count: number;
+}
+
+// ── Helpers ──
+
+/** Get all category IDs for a given language. */
+export function getChannelIdsForLanguage(language: string): string[] {
+  return Object.entries(SERIES_CHANNEL_LANGUAGE)
+    .filter(([, lang]) => lang.toLowerCase() === language.toLowerCase())
+    .map(([id]) => id);
+}
+
+/** Get all supported languages. */
+export function getSupportedLanguages(): string[] {
+  const langs = new Set(Object.values(SERIES_CHANNEL_LANGUAGE));
+  return ['Telugu', 'Hindi'].filter((l) => langs.has(l));
+}
+
+/** Get channel name for a category ID. */
+export function getChannelName(categoryId: string): string {
+  return CHANNEL_NAMES[categoryId] || `Channel ${categoryId}`;
+}
+
+/** Get language for a category ID, or null if unknown. */
+export function getChannelLanguage(categoryId: string): string | null {
+  return SERIES_CHANNEL_LANGUAGE[categoryId] || null;
+}
+
+// ── Hooks ──
+
+/** Fetch raw series categories from API. */
 export function useSeriesCategories() {
   return useQuery({
     queryKey: ['series', 'categories'],
@@ -10,6 +96,7 @@ export function useSeriesCategories() {
   });
 }
 
+/** Fetch a single category's series list. */
 export function useSeriesList(categoryId: string) {
   return useQuery({
     queryKey: ['series', 'list', categoryId],
@@ -19,6 +106,7 @@ export function useSeriesList(categoryId: string) {
   });
 }
 
+/** Fetch series info/detail for a given series ID. */
 export function useSeriesInfo(seriesId: string) {
   return useQuery({
     queryKey: ['series', 'info', seriesId],
@@ -26,4 +114,66 @@ export function useSeriesInfo(seriesId: string) {
     enabled: !!seriesId,
     staleTime: 2 * 60 * 60 * 1000,
   });
+}
+
+/**
+ * Fetch ALL series from all channels for a given language in parallel.
+ * Merges results and enriches each item with channelName / channelId.
+ * If language is 'all', fetches every known channel.
+ */
+export function useSeriesByLanguage(language: string) {
+  const channelIds =
+    language.toLowerCase() === 'all'
+      ? Object.keys(SERIES_CHANNEL_LANGUAGE)
+      : getChannelIdsForLanguage(language);
+
+  const queries = useQueries({
+    queries: channelIds.map((catId) => ({
+      queryKey: ['series', 'list', catId],
+      queryFn: () => api<XtreamSeriesItem[]>(`/series/list/${catId}`),
+      staleTime: 2 * 60 * 60 * 1000,
+    })),
+  });
+
+  const isLoading = queries.some((q) => q.isLoading);
+  const isFetching = queries.some((q) => q.isFetching);
+
+  const allSeries = useMemo<SeriesWithChannel[]>(() => {
+    const result: SeriesWithChannel[] = [];
+    const seen = new Set<number>();
+
+    queries.forEach((q, idx) => {
+      if (!q.data) return;
+      const catId = channelIds[idx]!;
+      for (const item of q.data) {
+        // Deduplicate by series_id (some series appear in multiple categories)
+        if (seen.has(item.series_id)) continue;
+        seen.add(item.series_id);
+        result.push({
+          ...item,
+          channelName: getChannelName(catId),
+          channelId: catId,
+        });
+      }
+    });
+
+    return result;
+  }, [queries, channelIds]);
+
+  // Compute channel list with counts
+  const channels = useMemo<ChannelInfo[]>(() => {
+    const countMap = new Map<string, number>();
+    for (const s of allSeries) {
+      countMap.set(s.channelId, (countMap.get(s.channelId) || 0) + 1);
+    }
+    return channelIds
+      .filter((id) => countMap.has(id))
+      .map((id) => ({
+        id,
+        name: getChannelName(id),
+        count: countMap.get(id) || 0,
+      }));
+  }, [allSeries, channelIds]);
+
+  return { allSeries, channels, isLoading, isFetching };
 }

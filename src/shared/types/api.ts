@@ -114,6 +114,7 @@ export interface XtreamSeriesInfo {
       episode_num: number;
       title: string;
       container_extension: string;
+      added: string; // unix timestamp
       info: {
         duration_secs: number;
         duration: string;
