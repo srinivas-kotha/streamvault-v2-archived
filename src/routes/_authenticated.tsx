@@ -4,11 +4,18 @@ import { SpatialNavigationProvider } from '@shared/providers/SpatialNavigationPr
 import { useAuthStore } from '@lib/store';
 import { useAuthCheck } from '@features/auth/hooks/useAuth';
 import { useBackNavigation } from '@shared/hooks/useBackNavigation';
+import { autoLogin } from '@features/auth/api';
 
 export const Route = createFileRoute('/_authenticated')({
-  beforeLoad: () => {
-    const { isAuthenticated } = useAuthStore.getState();
+  beforeLoad: async () => {
+    const { isAuthenticated, setAuth } = useAuthStore.getState();
     if (!isAuthenticated) {
+      // Try IP-based auto-login (LAN bypass)
+      const result = await autoLogin();
+      if (result) {
+        setAuth(result.username);
+        return;
+      }
       throw redirect({ to: '/login' });
     }
   },

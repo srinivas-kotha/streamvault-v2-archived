@@ -25,3 +25,16 @@ export async function checkAuth(): Promise<boolean> {
     return false;
   }
 }
+
+export async function autoLogin(): Promise<{ username: string } | null> {
+  try {
+    const res = await fetch('/api/auth/auto-login', { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      return { username: data.username };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
