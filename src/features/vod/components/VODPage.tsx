@@ -23,7 +23,7 @@ function FocusableSearchInput({ searchQuery, setSearchQuery }: {
   const inputMode = useUIStore((s) => s.inputMode);
   const { ref: focusRef, isFocused, focusProps } = useLRUD({
     id: 'vod-search-input',
-    parent: 'root',
+    parent: 'vod-controls',
     onEnter: () => inputRef.current?.focus(),
   });
   const showFocus = isFocused && inputMode === 'keyboard';
@@ -51,6 +51,28 @@ export function VODPage() {
   const [sort, setSort] = useState<SortOption>(SORT_OPTIONS[0]!);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const debouncedSearch = useDebounce(searchQuery);
+
+  const { ref: contentRef } = useLRUD({
+    id: 'vod-content',
+    parent: 'root',
+    orientation: 'vertical',
+    isFocusable: false,
+  });
+
+  useLRUD({
+    id: 'vod-controls',
+    parent: 'vod-content',
+    orientation: 'horizontal',
+    isFocusable: false,
+  });
+
+  useLRUD({
+    id: 'vod-grid',
+    parent: 'vod-content',
+    orientation: 'horizontal',
+    isWrapping: true,
+    isFocusable: false,
+  });
 
   const { data: categories, isLoading: catLoading } = useVODCategories();
   const firstCatId = categories?.[0]?.category_id || '';
@@ -84,7 +106,7 @@ export function VODPage() {
 
   return (
     <PageTransition>
-    <div>
+    <div ref={contentRef}>
       <h1 className="font-display text-2xl font-bold text-text-primary mb-4">Movies</h1>
 
       {/* Categories */}
@@ -130,6 +152,7 @@ export function VODPage() {
               image={movie.stream_icon}
               title={movie.name}
               subtitle={parseGenres(movie.container_extension).length > 0 ? movie.container_extension.toUpperCase() : undefined}
+              parentFocusKey="vod-grid"
               badge={
                 movie.rating_5based > 0 ? (
                   <Badge variant="warning">{movie.rating_5based.toFixed(1)} ★</Badge>

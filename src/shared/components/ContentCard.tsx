@@ -2,6 +2,7 @@ import { useCallback, type ReactNode } from 'react';
 import { useLRUD } from '@shared/hooks/useLRUD';
 import { LazyImage } from './LazyImage';
 import { useUIStore } from '@lib/store';
+import { useRailParent } from './ContentRail';
 
 interface ContentCardProps {
   image: string;
@@ -67,6 +68,7 @@ export function ContentCard({
   parentFocusKey,
 }: ContentCardProps) {
   const inputMode = useUIStore((s) => s.inputMode);
+  const railParent = useRailParent();
 
   const onEnterPress = useCallback(() => {
     onClick?.();
@@ -74,7 +76,7 @@ export function ContentCard({
 
   const { ref, isFocused, focusProps } = useLRUD({
     id: propFocusKey || `card-${title.replace(/\s+/g, '-').toLowerCase()}`,
-    parent: parentFocusKey || 'root',
+    parent: parentFocusKey || railParent,
     onEnter: onEnterPress,
   });
 

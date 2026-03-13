@@ -71,7 +71,7 @@ function FocusableSearchInput({ inputRef, query, setQuery }: {
   const inputMode = useUIStore((s) => s.inputMode);
   const { ref: focusRef, isFocused, focusProps } = useLRUD({
     id: 'search-input',
-    parent: 'root',
+    parent: 'search-bar',
     onEnter: () => inputRef.current?.focus(),
   });
   const showFocus = isFocused && inputMode === 'keyboard';
@@ -149,6 +149,35 @@ export function SearchPage() {
   const navigate = useNavigate();
   const playStream = usePlayerStore((s) => s.playStream);
 
+  const { ref: contentRef } = useLRUD({
+    id: 'search-content',
+    parent: 'root',
+    orientation: 'vertical',
+    isFocusable: false,
+  });
+
+  useLRUD({
+    id: 'search-bar',
+    parent: 'search-content',
+    orientation: 'horizontal',
+    isFocusable: false,
+  });
+
+  useLRUD({
+    id: 'search-tabs',
+    parent: 'search-content',
+    orientation: 'horizontal',
+    isFocusable: false,
+  });
+
+  useLRUD({
+    id: 'search-results',
+    parent: 'search-content',
+    orientation: 'horizontal',
+    isWrapping: true,
+    isFocusable: false,
+  });
+
   const debouncedQuery = useDebounce(query, 300);
   const { data, isLoading, isFetching } = useSearch(debouncedQuery);
 
@@ -225,7 +254,7 @@ export function SearchPage() {
 
   return (
     <PageTransition>
-    <div className="space-y-6">
+    <div ref={contentRef} className="space-y-6">
       {/* Search Input */}
       <FocusableSearchInput inputRef={inputRef} query={query} setQuery={setQuery} />
 
@@ -234,7 +263,7 @@ export function SearchPage() {
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           <FocusablePill
             id="search-lang-all"
-            parent="root"
+            parent="search-bar"
             label="All Languages"
             isActive={activeLang === null}
             onSelect={() => setActiveLang(null)}
@@ -242,7 +271,7 @@ export function SearchPage() {
           {languages.map((lang) => (
             <FocusablePill
               id={`search-lang-${lang}`}
-              parent="root"
+              parent="search-bar"
               key={lang}
               label={lang}
               isActive={activeLang === lang}
@@ -258,7 +287,7 @@ export function SearchPage() {
           {tabs.map((tab) => (
             <FocusableTab
               id={`search-tab-${tab.key}`}
-              parent="root"
+              parent="search-tabs"
               key={tab.key}
               label={tab.label}
               count={tab.count}
@@ -314,6 +343,7 @@ export function SearchPage() {
                     image={stream.stream_icon}
                     title={stream.name}
                     aspectRatio="square"
+                    parentFocusKey="search-results"
                     badge={
                       <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase bg-red-500/90 text-white rounded">
                         Live
@@ -343,6 +373,7 @@ export function SearchPage() {
                     title={movie.name}
                     subtitle={movie.rating ? `${movie.rating}/10` : undefined}
                     aspectRatio="poster"
+                    parentFocusKey="search-results"
                     onClick={() => handleVodClick(movie.stream_id)}
                   />
                 ))}
@@ -367,6 +398,7 @@ export function SearchPage() {
                     title={show.name}
                     subtitle={show.genre || undefined}
                     aspectRatio="poster"
+                    parentFocusKey="search-results"
                     onClick={() => handleSeriesClick(show.series_id)}
                   />
                 ))}

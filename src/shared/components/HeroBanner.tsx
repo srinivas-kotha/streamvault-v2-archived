@@ -17,6 +17,7 @@ export interface HeroItem {
 interface HeroBannerProps {
   items: HeroItem[];
   autoRotateMs?: number;
+  parentFocusKey?: string;
 }
 
 function HeroButton({
@@ -52,7 +53,7 @@ function HeroButton({
   );
 }
 
-export function HeroBanner({ items, autoRotateMs = 8000 }: HeroBannerProps) {
+export function HeroBanner({ items, autoRotateMs = 8000, parentFocusKey = 'root' }: HeroBannerProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const navigate = useNavigate();
   const playStream = usePlayerStore((s) => s.playStream);
@@ -62,7 +63,7 @@ export function HeroBanner({ items, autoRotateMs = 8000 }: HeroBannerProps) {
 
   const { ref: heroRef } = useLRUD({
     id: 'hero-banner',
-    parent: 'root',
+    parent: parentFocusKey,
     isFocusable: false,
     orientation: 'horizontal',
   });

@@ -29,21 +29,35 @@ export function MovieDetail() {
     return entry?.progress_seconds ?? 0;
   }, [watchHistory, vodId]);
 
+  const { ref: contentRef } = useLRUD({
+    id: `movie-content-${vodId}`,
+    parent: 'root',
+    orientation: 'vertical',
+    isFocusable: false,
+  });
+
+  useLRUD({
+    id: `movie-actions-${vodId}`,
+    parent: `movie-content-${vodId}`,
+    orientation: 'horizontal',
+    isFocusable: false,
+  });
+
   const { ref: backRef, isFocused: backFocused, focusProps: backFocusProps } = useLRUD({
     id: `vod-back-${vodId}`,
-    parent: 'root',
+    parent: `movie-actions-${vodId}`,
     onEnter: () => navigate({ to: '/vod' }),
   });
 
   const { ref: closeRef, isFocused: closeFocused, focusProps: closeFocusProps } = useLRUD({
     id: `vod-close-${vodId}`,
-    parent: 'root',
+    parent: `movie-actions-${vodId}`,
     onEnter: () => setIsPlayerOpen(false),
   });
 
   const { ref: playRef, isFocused: playFocused, focusProps: playFocusProps } = useLRUD({
     id: `vod-play-${vodId}`,
-    parent: 'root',
+    parent: `movie-actions-${vodId}`,
     onEnter: () => setIsPlayerOpen(true),
   });
 
@@ -71,7 +85,7 @@ export function MovieDetail() {
   const { info, movie_data } = data;
 
   return (
-    <div>
+    <div ref={contentRef}>
       {/* Back button */}
       <button
         ref={backRef}

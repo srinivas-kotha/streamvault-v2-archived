@@ -6,6 +6,7 @@ import { ContentRail } from '@shared/components/ContentRail';
 import { FocusableCard } from '@shared/components/FocusableCard';
 import { ContinueWatching } from './ContinueWatching';
 import { usePageFocus } from '@shared/hooks/usePageFocus';
+import { useLRUD } from '@shared/hooks/useLRUD';
 import {
   useLanguageMovieRail,
   useLanguageSeriesRail,
@@ -18,6 +19,14 @@ import type { XtreamVODStream } from '@shared/types/api';
 export function HomePage() {
   const navigate = useNavigate();
   usePageFocus('hero-banner');
+
+  const { ref: contentRef } = useLRUD({
+    id: 'home-content',
+    parent: 'root',
+    orientation: 'vertical',
+    isIndexAlign: true,
+    isFocusable: false,
+  });
 
   // Data hooks -- Telugu & Hindi movies and series
   const { items: teluguMovies, isLoading: teluguMoviesLoading } = useLanguageMovieRail('Telugu');
@@ -72,10 +81,10 @@ export function HomePage() {
 
   return (
     <PageTransition>
-      <div className="space-y-8 pb-12">
+      <div ref={contentRef} className="space-y-8 pb-12">
         {/* Hero Banner */}
         {heroItems.length > 0 && (
-          <HeroBanner items={heroItems} />
+          <HeroBanner items={heroItems} parentFocusKey="home-content" />
         )}
 
         {/* Continue Watching */}
@@ -87,6 +96,7 @@ export function HomePage() {
           seeAllTo="/language/telugu"
           isLoading={teluguMoviesLoading}
           isEmpty={!teluguMovies.length}
+          parentFocusKey="home-content"
         >
           {teluguMovies.map((item) => (
             <FocusableCard
@@ -107,6 +117,7 @@ export function HomePage() {
           seeAllTo="/language/telugu"
           isLoading={teluguSeriesLoading}
           isEmpty={!teluguSeries.length}
+          parentFocusKey="home-content"
         >
           {teluguSeries.map((item) => (
             <FocusableCard
@@ -127,6 +138,7 @@ export function HomePage() {
           seeAllTo="/language/hindi"
           isLoading={hindiMoviesLoading}
           isEmpty={!hindiMovies.length}
+          parentFocusKey="home-content"
         >
           {hindiMovies.map((item) => (
             <FocusableCard
@@ -147,6 +159,7 @@ export function HomePage() {
           seeAllTo="/language/hindi"
           isLoading={hindiSeriesLoading}
           isEmpty={!hindiSeries.length}
+          parentFocusKey="home-content"
         >
           {hindiSeries.map((item) => (
             <FocusableCard
