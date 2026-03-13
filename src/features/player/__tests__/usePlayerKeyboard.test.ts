@@ -7,10 +7,11 @@ vi.mock('@shared/utils/isTVMode', () => ({ isTVMode: false }));
 import { usePlayerKeyboard } from '../hooks/usePlayerKeyboard';
 import type { VideoPlayerHandle } from '../components/VideoPlayer';
 
-function createMockPlayer(overrides: Partial<{ paused: boolean; currentTime: number }> = {}) {
+function createMockPlayer(overrides: Partial<{ paused: boolean; currentTime: number; duration: number }> = {}) {
   const video = {
     paused: overrides.paused ?? true,
     currentTime: overrides.currentTime ?? 50,
+    duration: overrides.duration ?? 300,
   } as unknown as HTMLVideoElement;
   return {
     current: {

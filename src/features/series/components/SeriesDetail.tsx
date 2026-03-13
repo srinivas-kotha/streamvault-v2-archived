@@ -523,7 +523,7 @@ export function SeriesDetail() {
       const timer = setTimeout(() => {
         try { setFocus(`series-resume-${seriesId}`); return; } catch { /* not mounted */ }
         // Try first season tab
-        if (computedSeasons.length > 0) {
+        if (computedSeasons.length > 0 && computedSeasons[0]) {
           try { setFocus(`series-season-${computedSeasons[0].season_number}`); return; } catch { /* noop */ }
         }
         try { setFocus(`series-back-${seriesId}`); } catch { /* noop */ }

@@ -115,10 +115,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     });
   },
   playNextEpisode: () => {
-    const { episodeList, episodeIndex, seasonNumber, seriesId } = get();
+    const { episodeList, episodeIndex } = get();
     if (episodeIndex === null || !episodeList.length || episodeIndex >= episodeList.length - 1) return;
     const nextIdx = episodeIndex + 1;
     const next = episodeList[nextIdx];
+    if (!next) return;
     set({
       currentStreamId: next.id,
       currentStreamName: next.name,
@@ -132,6 +133,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     if (episodeIndex === null || !episodeList.length || episodeIndex <= 0) return;
     const prevIdx = episodeIndex - 1;
     const prev = episodeList[prevIdx];
+    if (!prev) return;
     set({
       currentStreamId: prev.id,
       currentStreamName: prev.name,
