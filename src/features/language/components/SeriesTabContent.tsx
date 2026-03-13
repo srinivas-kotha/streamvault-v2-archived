@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useSeriesByLanguage, type SeriesWithChannel } from '@features/series/api';
 import { ContentRail } from '@shared/components/ContentRail';
@@ -8,6 +8,7 @@ import { SkeletonGrid } from '@shared/components/Skeleton';
 import { EmptyState } from '@shared/components/EmptyState';
 import { Badge } from '@shared/components/Badge';
 import { useDebounce } from '@shared/hooks/useDebounce';
+import { useSpatialFocusable } from '@shared/hooks/useSpatialNav';
 import { isNewContent } from '@shared/utils/isNewContent';
 
 type SortKey = 'name_asc' | 'name_desc' | 'recent' | 'rating';
@@ -37,6 +38,110 @@ function sortSeries(items: SeriesWithChannel[], sortKey: SortKey): SeriesWithCha
     default:
       return sorted;
   }
+}
+
+function FocusableChip({ id, label, isActive, onSelect }: { id: string; label: string; isActive: boolean; onSelect: () => void }) {
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: id,
+    onEnterPress: onSelect,
+  });
+
+  return (
+    <button
+      ref={ref}
+      {...focusProps}
+      onClick={onSelect}
+      className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all min-h-[36px] whitespace-nowrap ${
+        isActive
+          ? 'bg-teal/15 text-teal border border-teal/30'
+          : showFocusRing
+            ? 'bg-surface-raised text-text-primary border border-teal/50 ring-2 ring-teal/40'
+            : 'bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function FocusableSortButton({ id, label, isActive, onSelect }: { id: string; label: string; isActive: boolean; onSelect: () => void }) {
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: id,
+    onEnterPress: onSelect,
+  });
+
+  return (
+    <button
+      ref={ref}
+      {...focusProps}
+      onClick={onSelect}
+      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all min-h-[36px] ${
+        isActive
+          ? 'bg-teal/15 text-teal'
+          : showFocusRing
+            ? 'text-text-primary ring-2 ring-teal/40'
+            : 'text-text-muted hover:text-text-secondary'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { value: string; onChange: (v: string) => void; placeholder: string; focusKey: string }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey,
+    onEnterPress: () => inputRef.current?.focus(),
+  });
+
+  return (
+    <div ref={ref} {...focusProps} className={`relative flex-1 min-w-[200px] max-w-sm ${showFocusRing ? 'ring-2 ring-teal/50 rounded-lg' : ''}`}>
+      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full pl-10 pr-4 py-2.5 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
+      />
+      {value && (
+        <button
+          onClick={() => onChange('')}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function FocusableClearButton({ id, onSelect }: { id: string; onSelect: () => void }) {
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: id,
+    onEnterPress: onSelect,
+  });
+
+  return (
+    <button
+      ref={ref}
+      {...focusProps}
+      onClick={onSelect}
+      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all min-h-[36px] ${
+        showFocusRing
+          ? 'text-red-300 ring-2 ring-teal/40'
+          : 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
+      }`}
+    >
+      Clear filters
+    </button>
+  );
 }
 
 interface SeriesTabContentProps {
@@ -98,86 +203,50 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
       {/* Channel Filter Pills */}
       {channels.length > 1 && (
         <div className="flex gap-2 px-6 lg:px-10 overflow-x-auto scrollbar-hide pb-1">
-          <button
-            onClick={() => setActiveChannel(null)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all min-h-[36px] ${
-              activeChannel === null
-                ? 'bg-teal/15 text-teal border border-teal/30'
-                : 'bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border'
-            }`}
-          >
-            All ({totalCount})
-          </button>
+          <FocusableChip
+            id="series-chip-all"
+            label={`All (${totalCount})`}
+            isActive={activeChannel === null}
+            onSelect={() => setActiveChannel(null)}
+          />
           {channels.map((ch) => (
-            <button
+            <FocusableChip
               key={ch.id}
-              onClick={() => setActiveChannel(ch.id === activeChannel ? null : ch.id)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all min-h-[36px] whitespace-nowrap ${
-                activeChannel === ch.id
-                  ? 'bg-teal/15 text-teal border border-teal/30'
-                  : 'bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border'
-              }`}
-            >
-              {ch.name} ({ch.count})
-            </button>
+              id={`series-chip-${ch.id}`}
+              label={`${ch.name} (${ch.count})`}
+              isActive={activeChannel === ch.id}
+              onSelect={() => setActiveChannel(ch.id === activeChannel ? null : ch.id)}
+            />
           ))}
         </div>
       )}
 
       {/* Search + Sort Row */}
       <div className="flex items-center gap-3 px-6 lg:px-10 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search series..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
+        <FocusableSearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search series..."
+          focusKey="series-search"
+        />
 
         <div className="flex gap-1.5">
           {SORT_OPTIONS.map((opt) => (
-            <button
+            <FocusableSortButton
               key={opt.key}
-              onClick={() => setSortKey(opt.key)}
-              className={`px-3 py-2 rounded-lg text-xs font-medium transition-all min-h-[36px] ${
-                sortKey === opt.key
-                  ? 'bg-teal/15 text-teal'
-                  : 'text-text-muted hover:text-text-secondary'
-              }`}
-            >
-              {opt.label}
-            </button>
+              id={`series-sort-${opt.key}`}
+              label={opt.label}
+              isActive={sortKey === opt.key}
+              onSelect={() => setSortKey(opt.key)}
+            />
           ))}
         </div>
 
         {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all min-h-[36px]"
-          >
-            Clear filters
-          </button>
+          <FocusableClearButton
+            id="series-clear-filters"
+            onSelect={clearFilters}
+          />
         )}
       </div>
 

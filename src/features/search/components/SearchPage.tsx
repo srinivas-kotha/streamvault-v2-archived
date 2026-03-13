@@ -7,7 +7,7 @@ import { SkeletonGrid } from '@shared/components/Skeleton';
 import { EmptyState } from '@shared/components/EmptyState';
 import { usePlayerStore } from '@lib/store';
 import { PageTransition } from '@shared/components/PageTransition';
-import { useSpatialFocusable, useSpatialContainer, FocusContext } from '@shared/hooks/useSpatialNav';
+import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
 import { useLiveCategories } from '@features/live/api';
 import { useVODCategories } from '@features/vod/api';
 import { useSeriesCategories } from '@features/series/api';
@@ -170,6 +170,7 @@ export function SearchPage() {
 
   const { ref: contentRef, focusKey: contentFocusKey } = useSpatialContainer({
     focusKey: 'search-content',
+    focusable: false,
   });
 
   const debouncedQuery = useDebounce(query, 300);
@@ -187,6 +188,10 @@ export function SearchPage() {
 
   useEffect(() => {
     inputRef.current?.focus();
+    const timer = setTimeout(() => {
+      try { setFocus('search-input'); } catch { /* not mounted */ }
+    }, 150);
+    return () => clearTimeout(timer);
   }, []);
 
   const filteredData = useMemo(() => {

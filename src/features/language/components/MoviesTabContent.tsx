@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useLanguageMovieRails, useLanguageAllMovies } from '../api';
 import { ContentRail } from '@shared/components/ContentRail';
@@ -7,6 +7,7 @@ import { ContentCard } from '@shared/components/ContentCard';
 import { SkeletonGrid } from '@shared/components/Skeleton';
 import { EmptyState } from '@shared/components/EmptyState';
 import { useDebounce } from '@shared/hooks/useDebounce';
+import { useSpatialFocusable } from '@shared/hooks/useSpatialNav';
 import { isNewContent } from '@shared/utils/isNewContent';
 import type { XtreamVODStream } from '@shared/types/api';
 
@@ -39,6 +40,110 @@ function sortMovies(items: MovieWithCategory[], sortKey: SortKey): MovieWithCate
     default:
       return sorted;
   }
+}
+
+function FocusableChip({ id, label, isActive, onSelect }: { id: string; label: string; isActive: boolean; onSelect: () => void }) {
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: id,
+    onEnterPress: onSelect,
+  });
+
+  return (
+    <button
+      ref={ref}
+      {...focusProps}
+      onClick={onSelect}
+      className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all min-h-[36px] whitespace-nowrap ${
+        isActive
+          ? 'bg-teal/15 text-teal border border-teal/30'
+          : showFocusRing
+            ? 'bg-surface-raised text-text-primary border border-teal/50 ring-2 ring-teal/40'
+            : 'bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function FocusableSortButton({ id, label, isActive, onSelect }: { id: string; label: string; isActive: boolean; onSelect: () => void }) {
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: id,
+    onEnterPress: onSelect,
+  });
+
+  return (
+    <button
+      ref={ref}
+      {...focusProps}
+      onClick={onSelect}
+      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all min-h-[36px] ${
+        isActive
+          ? 'bg-teal/15 text-teal'
+          : showFocusRing
+            ? 'text-text-primary ring-2 ring-teal/40'
+            : 'text-text-muted hover:text-text-secondary'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { value: string; onChange: (v: string) => void; placeholder: string; focusKey: string }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey,
+    onEnterPress: () => inputRef.current?.focus(),
+  });
+
+  return (
+    <div ref={ref} {...focusProps} className={`relative flex-1 min-w-[200px] max-w-sm ${showFocusRing ? 'ring-2 ring-teal/50 rounded-lg' : ''}`}>
+      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full pl-10 pr-4 py-2.5 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
+      />
+      {value && (
+        <button
+          onClick={() => onChange('')}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function FocusableClearButton({ id, onSelect }: { id: string; onSelect: () => void }) {
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: id,
+    onEnterPress: onSelect,
+  });
+
+  return (
+    <button
+      ref={ref}
+      {...focusProps}
+      onClick={onSelect}
+      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all min-h-[36px] border border-border-subtle hover:border-border ${
+        showFocusRing
+          ? 'text-text-primary ring-2 ring-teal/40'
+          : 'text-text-muted hover:text-text-primary'
+      }`}
+    >
+      Clear filters
+    </button>
+  );
 }
 
 interface MoviesTabContentProps {
@@ -105,102 +210,52 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
         {/* Category Chips */}
         {categoryChips.length > 1 && (
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-            <button
-              onClick={() => setActiveCategory(null)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all min-h-[36px] ${
-                activeCategory === null
-                  ? 'bg-teal/15 text-teal border border-teal/30'
-                  : 'bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border'
-              }`}
-            >
-              All ({totalCount})
-            </button>
+            <FocusableChip
+              id="movies-chip-all"
+              label={`All (${totalCount})`}
+              isActive={activeCategory === null}
+              onSelect={() => setActiveCategory(null)}
+            />
             {categoryChips.map((chip) => (
-              <button
+              <FocusableChip
                 key={chip.id}
-                onClick={() =>
+                id={`movies-chip-${chip.id}`}
+                label={`${chip.name} (${chip.count})`}
+                isActive={activeCategory === chip.id}
+                onSelect={() =>
                   setActiveCategory(chip.id === activeCategory ? null : chip.id)
                 }
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all min-h-[36px] whitespace-nowrap ${
-                  activeCategory === chip.id
-                    ? 'bg-teal/15 text-teal border border-teal/30'
-                    : 'bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border'
-                }`}
-              >
-                {chip.name} ({chip.count})
-              </button>
+              />
             ))}
           </div>
         )}
 
         {/* Search + Sort Row */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search movies..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            )}
-          </div>
+          <FocusableSearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search movies..."
+            focusKey="movies-search"
+          />
 
           <div className="flex gap-1.5">
             {SORT_OPTIONS.map((opt) => (
-              <button
+              <FocusableSortButton
                 key={opt.key}
-                onClick={() => setSortKey(opt.key)}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all min-h-[36px] ${
-                  sortKey === opt.key
-                    ? 'bg-teal/15 text-teal'
-                    : 'text-text-muted hover:text-text-secondary'
-                }`}
-              >
-                {opt.label}
-              </button>
+                id={`movies-sort-${opt.key}`}
+                label={opt.label}
+                isActive={sortKey === opt.key}
+                onSelect={() => setSortKey(opt.key)}
+              />
             ))}
           </div>
 
           {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="px-3 py-2 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary transition-all min-h-[36px] border border-border-subtle hover:border-border"
-            >
-              Clear filters
-            </button>
+            <FocusableClearButton
+              id="movies-clear-filters"
+              onSelect={clearFilters}
+            />
           )}
         </div>
       </div>

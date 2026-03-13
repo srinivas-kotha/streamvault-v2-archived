@@ -140,8 +140,8 @@ function FocusableHistoryItem({ id, item, progress, onClick }: {
 
 export function HistoryPage() {
   const navigate = useNavigate();
-  usePageFocus('HISTORY_PAGE');
-  const { ref: containerRef, focusKey } = useSpatialContainer({ focusKey: 'HISTORY_PAGE', forceFocus: true });
+  usePageFocus('history-tab-all');
+  const { ref: containerRef, focusKey } = useSpatialContainer({ focusKey: 'HISTORY_PAGE', focusable: false });
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
   const { data: history, isLoading } = useWatchHistory();
   const clearHistory = useClearHistory();

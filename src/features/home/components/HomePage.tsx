@@ -19,7 +19,7 @@ export function HomePage() {
 
   const { ref: contentRef, focusKey } = useSpatialContainer({
     focusKey: 'home-content',
-    forceFocus: true,
+    focusable: false,
     autoRestoreFocus: true,
   });
 
@@ -34,9 +34,13 @@ export function HomePage() {
 
   useEffect(() => {
     if (allLoading) return;
-    // Data loaded — focus the first rail
+    // Data loaded — focus the first available rail
     const timer = setTimeout(() => {
-      try { setFocus('home-content'); } catch { /* noop */ }
+      try { setFocus('rail-continue-watching'); } catch {
+        try { setFocus('rail-latest-telugu-movies'); } catch {
+          try { setFocus('rail-telugu-series'); } catch { /* noop */ }
+        }
+      }
     }, 150);
     return () => clearTimeout(timer);
   }, [allLoading]);

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useVODCategories, useVODStreams } from '../api';
 import { SortFilterBar } from './SortFilterBar';
@@ -12,7 +12,7 @@ import { filterContent, DEFAULT_FILTERS, type FilterState } from '@shared/utils/
 import { collectAllGenres, parseGenres } from '@shared/utils/parseGenres';
 import { useDebounce } from '@shared/hooks/useDebounce';
 import { PageTransition } from '@shared/components/PageTransition';
-import { useSpatialFocusable, useSpatialContainer, FocusContext } from '@shared/hooks/useSpatialNav';
+import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
 
 function FocusableSearchInput({ searchQuery, setSearchQuery }: {
   searchQuery: string;
@@ -50,7 +50,16 @@ export function VODPage() {
 
   const { ref: contentRef, focusKey: contentFocusKey } = useSpatialContainer({
     focusKey: 'vod-content',
+    focusable: false,
   });
+
+  // Auto-focus search input on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try { setFocus('vod-search-input'); } catch { /* not mounted */ }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
 
   const { data: categories, isLoading: catLoading } = useVODCategories();
   const firstCatId = categories?.[0]?.category_id || '';

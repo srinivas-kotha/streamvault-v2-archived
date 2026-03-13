@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useSearch, useNavigate } from '@tanstack/react-router';
 
 import { useLiveCategories, useLiveStreams } from '../api';
@@ -11,7 +11,7 @@ import { useDebounce } from '@shared/hooks/useDebounce';
 import { PageTransition } from '@shared/components/PageTransition';
 import { PlayerPage } from '@features/player/components/PlayerPage';
 import { usePlayerStore } from '@lib/store';
-import { useSpatialFocusable, useSpatialContainer, FocusContext } from '@shared/hooks/useSpatialNav';
+import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
 import type { XtreamCategory } from '@shared/types/api';
 
 type ViewMode = 'grid' | 'epg';
@@ -169,7 +169,16 @@ export function LivePage() {
   // Page container
   const { ref: contentRef, focusKey: contentFocusKey } = useSpatialContainer({
     focusKey: 'live-content',
+    focusable: false,
   });
+
+  // Auto-focus sidebar on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try { setFocus('live-sidebar'); } catch { /* not mounted */ }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Horizontal split: sidebar | main
   const { ref: layoutRef, focusKey: layoutFocusKey } = useSpatialContainer({

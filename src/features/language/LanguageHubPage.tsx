@@ -49,8 +49,8 @@ export function LanguageHubPage() {
   const { lang } = useParams({ strict: false }) as { lang?: string };
   const language = lang ? lang.charAt(0).toUpperCase() + lang.slice(1) : '';
   const navigate = useNavigate();
-  usePageFocus('LANGUAGE_HUB_PAGE');
-  const { ref: containerRef, focusKey } = useSpatialContainer({ focusKey: 'LANGUAGE_HUB_PAGE', forceFocus: true });
+  usePageFocus('langhub-tab-movies');
+  const { ref: containerRef, focusKey } = useSpatialContainer({ focusKey: 'LANGUAGE_HUB_PAGE', focusable: false });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { tab } = useSearch({ from: '/_authenticated/language/$lang' as any });
   const activeTab: TabKey = (tab as TabKey) || 'movies';

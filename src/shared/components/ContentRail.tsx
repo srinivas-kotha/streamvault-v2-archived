@@ -1,9 +1,7 @@
-import { createContext, useRef, type ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useSpatialFocusable, useSpatialContainer, FocusContext } from '@shared/hooks/useSpatialNav';
 import { HorizontalScroll } from './HorizontalScroll';
-
-const RailContext = createContext<string>('SN:ROOT');
 
 function FocusableSeeAllCard({ to, parentFocusKey }: { to: string; parentFocusKey: string }) {
   const navigate = useNavigate();
@@ -47,7 +45,6 @@ interface ContentRailProps {
   seeAllTo?: string;
   children: ReactNode;
   className?: string;
-  emptyMessage?: string;
   isEmpty?: boolean;
   isLoading?: boolean;
   focusKey?: string;
@@ -108,12 +105,10 @@ function ContentRailInner({
             </div>
           ) : (
             <HorizontalScroll ref={scrollRef}>
-              <RailContext.Provider value={focusKey}>
-                {children}
-                {seeAllTo && (
-                  <FocusableSeeAllCard to={seeAllTo} parentFocusKey={railId} />
-                )}
-              </RailContext.Provider>
+              {children}
+              {seeAllTo && (
+                <FocusableSeeAllCard to={seeAllTo} parentFocusKey={railId} />
+              )}
             </HorizontalScroll>
           )}
         </div>

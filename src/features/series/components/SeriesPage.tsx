@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useSpatialContainer, FocusContext } from '@shared/hooks/useSpatialNav';
-import { usePageFocus } from '@shared/hooks/usePageFocus';
+import { useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
 import { useSeriesByLanguage, type SeriesWithChannel } from '../api';
 import { ContentRail } from '@shared/components/ContentRail';
 import { FocusableCard } from '@shared/components/FocusableCard';
@@ -10,10 +9,20 @@ import { isNewContent } from '@shared/utils/isNewContent';
 
 export function SeriesPage() {
   const navigate = useNavigate();
-  usePageFocus('SERIES_PAGE');
-  const { ref: containerRef, focusKey } = useSpatialContainer({ focusKey: 'SERIES_PAGE', forceFocus: true });
+  const { ref: containerRef, focusKey } = useSpatialContainer({ focusKey: 'SERIES_PAGE', focusable: false });
 
   const { allSeries, channels, isLoading } = useSeriesByLanguage('Telugu');
+
+  // Auto-focus first channel rail after data loads
+  useEffect(() => {
+    if (isLoading || !channels.length) return;
+    const firstChannelId = channels[0]?.id;
+    if (!firstChannelId) return;
+    const timer = setTimeout(() => {
+      try { setFocus(`series-channel-${firstChannelId}`); } catch { /* not mounted */ }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [isLoading, channels]);
 
   // Group series by channel, preserving channel order from the API
   const seriesByChannel = useMemo(() => {

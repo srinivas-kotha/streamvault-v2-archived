@@ -29,6 +29,7 @@ export function MovieDetail() {
 
   const { ref: contentRef, focusKey: contentFocusKey } = useSpatialContainer({
     focusKey: `movie-content-${vodId}`,
+    focusable: false,
   });
 
   const { focusKey: actionsFocusKey } = useSpatialContainer({

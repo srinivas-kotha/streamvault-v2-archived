@@ -47,8 +47,8 @@ function FocusableTab({ id, label, count, isActive, onSelect }: {
 }
 
 export function FavoritesPage() {
-  usePageFocus('FAVORITES_PAGE');
-  const { ref: containerRef, focusKey } = useSpatialContainer({ focusKey: 'FAVORITES_PAGE', forceFocus: true });
+  usePageFocus('fav-tab-all');
+  const { ref: containerRef, focusKey } = useSpatialContainer({ focusKey: 'FAVORITES_PAGE', focusable: false });
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const { data: favorites, isLoading } = useFavorites();
   const removeFavorite = useRemoveFavorite();

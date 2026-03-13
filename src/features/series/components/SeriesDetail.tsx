@@ -14,6 +14,60 @@ import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus } from
 type EpisodeSortKey = 'latest' | 'oldest' | 'episode';
 const EPISODES_PER_PAGE = 50;
 
+/** Extracted so useSpatialFocusable only runs when the button is actually mounted */
+function ResumeButton({ seriesId, episode, seriesName, onResume }: {
+  seriesId: string;
+  episode: { content_id: number; content_name: string | null; progress_seconds: number; duration_seconds: number };
+  seriesName: string;
+  onResume: (contentId: number, contentName: string, progressSeconds: number) => void;
+}) {
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: `series-resume-${seriesId}`,
+    onEnterPress: () => onResume(episode.content_id, episode.content_name || seriesName, episode.progress_seconds ?? 0),
+  });
+
+  return (
+    <div className="mx-6 lg:mx-10 mb-6">
+      <button
+        ref={ref}
+        {...focusProps}
+        onClick={() => onResume(episode.content_id, episode.content_name || seriesName, episode.progress_seconds ?? 0)}
+        className={`w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-teal/10 to-indigo/10 border border-teal/20 hover:border-teal/40 transition-all group ${
+          showFocusRing ? 'ring-2 ring-teal ring-offset-2 ring-offset-obsidian' : ''
+        }`}
+      >
+        <div className="w-12 h-12 rounded-full bg-teal/20 flex items-center justify-center flex-shrink-0 group-hover:bg-teal/30 transition-colors">
+          <svg className="w-6 h-6 text-teal" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+        <div className="flex-1 text-left min-w-0">
+          <p className="text-text-primary text-sm font-medium truncate">
+            Resume: {episode.content_name}
+          </p>
+          <p className="text-text-muted text-xs">
+            {episode.progress_seconds > 0 && episode.duration_seconds > 0 && (
+              <>
+                {formatDuration(episode.progress_seconds)} / {formatDuration(episode.duration_seconds)} watched
+              </>
+            )}
+          </p>
+        </div>
+        <div className="flex-shrink-0">
+          {episode.progress_seconds > 0 && episode.duration_seconds > 0 && (
+            <div className="w-16 h-1.5 bg-surface rounded-full overflow-hidden">
+              <div
+                className="h-full bg-teal rounded-full"
+                style={{ width: `${Math.min((episode.progress_seconds / episode.duration_seconds) * 100, 100)}%` }}
+              />
+            </div>
+          )}
+        </div>
+      </button>
+    </div>
+  );
+}
+
 function formatEpisodeDate(unixTimestamp: string): string {
   const ts = parseInt(unixTimestamp, 10);
   if (!ts || isNaN(ts)) return '';
@@ -326,6 +380,7 @@ export function SeriesDetail() {
 
   const { ref: contentRef, focusKey: contentFocusKey } = useSpatialContainer({
     focusKey: `series-content-${seriesId}`,
+    focusable: false,
   });
 
   const { focusKey: actionsFocusKey } = useSpatialContainer({
@@ -351,24 +406,13 @@ export function SeriesDetail() {
     onEnterPress: handleLoadMore,
   });
 
-  const { ref: resumeRef, showFocusRing: resumeFocusRing, focusProps: resumeFocusProps } = useSpatialFocusable({
-    focusKey: `series-resume-${seriesId}`,
-    onEnterPress: () => {
-      if (!lastWatchedEpisode) return;
-      setPlayingEpisodeId(String(lastWatchedEpisode.content_id));
-      setPlayingEpisodeName(lastWatchedEpisode.content_name || data?.info.name || '');
-      setResumeStartTime(lastWatchedEpisode.progress_seconds ?? 0);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-  });
-
-  // Auto-focus resume button or first episode when page loads
+  // Auto-focus resume button or back button when page loads
   useEffect(() => {
     if (!isLoading && data && !playingEpisodeId) {
       const timer = setTimeout(() => {
         // Try resume button first, then first episode
         try { setFocus(`series-resume-${seriesId}`); } catch {
-          try { setFocus(`series-content-${seriesId}`); } catch { /* noop */ }
+          try { setFocus(`series-back-${seriesId}`); } catch { /* noop */ }
         }
       }, 150);
       return () => clearTimeout(timer);
@@ -507,61 +551,19 @@ export function SeriesDetail() {
               </div>
             )}
 
-            {/* Resume Banner */}
+            {/* Resume Banner — extracted to avoid conditional useSpatialFocusable anti-pattern */}
             {lastWatchedEpisode && !playingEpisodeId && (
-              <div className="mx-6 lg:mx-10 mb-6">
-                <button
-                  ref={resumeRef}
-                  {...resumeFocusProps}
-                  onClick={() => {
-                    setPlayingEpisodeId(String(lastWatchedEpisode.content_id));
-                    setPlayingEpisodeName(lastWatchedEpisode.content_name || info.name);
-                    setResumeStartTime(lastWatchedEpisode.progress_seconds ?? 0);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className={`w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-teal/10 to-indigo/10 border border-teal/20 hover:border-teal/40 transition-all group ${
-                    resumeFocusRing ? 'ring-2 ring-teal ring-offset-2 ring-offset-obsidian' : ''
-                  }`}
-                >
-                  <div className="w-12 h-12 rounded-full bg-teal/20 flex items-center justify-center flex-shrink-0 group-hover:bg-teal/30 transition-colors">
-                    <svg className="w-6 h-6 text-teal" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 text-left min-w-0">
-                    <p className="text-text-primary text-sm font-medium truncate">
-                      Resume: {lastWatchedEpisode.content_name}
-                    </p>
-                    <p className="text-text-muted text-xs">
-                      {lastWatchedEpisode.progress_seconds > 0 &&
-                        lastWatchedEpisode.duration_seconds > 0 && (
-                          <>
-                            {formatDuration(lastWatchedEpisode.progress_seconds)} /{' '}
-                            {formatDuration(lastWatchedEpisode.duration_seconds)} watched
-                          </>
-                        )}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    {lastWatchedEpisode.progress_seconds > 0 &&
-                      lastWatchedEpisode.duration_seconds > 0 && (
-                        <div className="w-16 h-1.5 bg-surface rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-teal rounded-full"
-                            style={{
-                              width: `${Math.min(
-                                (lastWatchedEpisode.progress_seconds /
-                                  lastWatchedEpisode.duration_seconds) *
-                                  100,
-                                100
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                      )}
-                  </div>
-                </button>
-              </div>
+              <ResumeButton
+                seriesId={seriesId}
+                episode={lastWatchedEpisode}
+                seriesName={info.name}
+                onResume={(contentId, contentName, progressSeconds) => {
+                  setPlayingEpisodeId(String(contentId));
+                  setPlayingEpisodeName(contentName);
+                  setResumeStartTime(progressSeconds);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
             )}
           </FocusContext.Provider>
 

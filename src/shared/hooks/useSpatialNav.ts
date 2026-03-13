@@ -75,6 +75,7 @@ export function useSpatialFocusable(options: UseSpatialFocusableOptions = {}) {
 
 interface UseSpatialContainerOptions {
   focusKey?: string;
+  focusable?: boolean;
   saveLastFocusedChild?: boolean;
   trackChildren?: boolean;
   autoRestoreFocus?: boolean;
@@ -95,7 +96,7 @@ interface UseSpatialContainerOptions {
 export function useSpatialContainer(options: UseSpatialContainerOptions = {}) {
   const { ref, focusSelf, focusKey, hasFocusedChild } = useFocusable({
     focusKey: options.focusKey,
-    focusable: true,
+    focusable: options.focusable ?? true,
     saveLastFocusedChild: options.saveLastFocusedChild ?? true,
     trackChildren: options.trackChildren ?? true,
     autoRestoreFocus: options.autoRestoreFocus,
