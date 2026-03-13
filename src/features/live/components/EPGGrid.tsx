@@ -5,6 +5,7 @@ import { usePlayerStore } from '@lib/store';
 import { EPGTimeAxis, useEPGTimeRange } from './EPGTimeAxis';
 import { EPGProgramBlock } from './EPGProgramBlock';
 import type { XtreamLiveStream } from '@shared/types/api';
+import { upgradeProtocol } from '@shared/components/LazyImage';
 
 interface EPGGridProps {
   channels: XtreamLiveStream[];
@@ -133,7 +134,7 @@ export function EPGGrid({ channels }: EPGGridProps) {
               >
                 {channel.stream_icon ? (
                   <img
-                    src={channel.stream_icon}
+                    src={upgradeProtocol(channel.stream_icon)}
                     alt=""
                     className="w-6 h-6 rounded object-contain flex-shrink-0"
                     onError={(e) => {

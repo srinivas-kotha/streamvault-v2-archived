@@ -6,6 +6,14 @@ interface LazyImageProps {
   className?: string;
   fallbackClassName?: string;
   aspectRatio?: 'square' | 'poster' | 'landscape';
+  /** When true, loads eagerly with high fetchPriority (use for LCP images) */
+  priority?: boolean;
+}
+
+/** Rewrite http:// image URLs to https:// to avoid mixed-content warnings */
+export function upgradeProtocol(url: string): string {
+  if (url.startsWith('http://')) return 'https://' + url.slice(7);
+  return url;
 }
 
 const aspectClasses = {
@@ -22,14 +30,22 @@ export function LazyImage({
   className = '',
   fallbackClassName = '',
   aspectRatio = 'poster',
+  priority = false,
 }: LazyImageProps) {
-  const [state, setState] = useState<LoadState>(!src ? 'error' : 'placeholder');
+  const safeSrc = src ? upgradeProtocol(src) : '';
+  const [state, setState] = useState<LoadState>(!safeSrc ? 'error' : priority ? 'loading' : 'placeholder');
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    if (!src) {
+    if (!safeSrc) {
       setState('error');
+      return;
+    }
+
+    // Priority images start loading immediately
+    if (priority) {
+      setState('loading');
       return;
     }
 
@@ -52,7 +68,7 @@ export function LazyImage({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [src]);
+  }, [safeSrc, priority]);
 
   const handleLoad = useCallback(() => {
     setState('loaded');
@@ -87,9 +103,10 @@ export function LazyImage({
       {showImage && (
         <img
           ref={imgRef}
-          src={src}
+          src={safeSrc}
           alt={alt}
-          loading="lazy"
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : undefined}
           onLoad={handleLoad}
           onError={handleError}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
