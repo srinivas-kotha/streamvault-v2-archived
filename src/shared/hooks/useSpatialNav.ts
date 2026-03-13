@@ -87,15 +87,17 @@ interface UseSpatialContainerOptions {
 }
 
 /**
- * Wrapper for non-focusable container elements (rails, pages, nav groups).
- * Always sets focusable: false. Must wrap children in FocusContext.Provider.
+ * Wrapper for container elements (rails, pages, nav groups).
+ * Containers are focusable so norigin's focus tree can traverse through them
+ * to reach leaf cards. Focus always delegates to children via getNextFocusKey.
+ * Must wrap children in FocusContext.Provider.
  */
 export function useSpatialContainer(options: UseSpatialContainerOptions = {}) {
   const { ref, focusSelf, focusKey, hasFocusedChild } = useFocusable({
     focusKey: options.focusKey,
-    focusable: false,
+    focusable: true,
     saveLastFocusedChild: options.saveLastFocusedChild ?? true,
-    trackChildren: options.trackChildren,
+    trackChildren: options.trackChildren ?? true,
     autoRestoreFocus: options.autoRestoreFocus,
     forceFocus: options.forceFocus,
     isFocusBoundary: options.isFocusBoundary,
