@@ -414,10 +414,14 @@ export function SeriesDetail() {
 
   const { ref: actionsRef, focusKey: actionsFocusKey } = useSpatialContainer({
     focusKey: `series-actions-${seriesId}`,
+    isFocusBoundary: true,
+    focusBoundaryDirections: ['left', 'right'],
   });
 
   const { ref: episodesRef, focusKey: episodesFocusKey } = useSpatialContainer({
     focusKey: `series-episodes-${seriesId}`,
+    isFocusBoundary: true,
+    focusBoundaryDirections: ['left', 'right'],
   });
 
   const { ref: backRef, showFocusRing: backFocusRing, focusProps: backFocusProps } = useSpatialFocusable({
