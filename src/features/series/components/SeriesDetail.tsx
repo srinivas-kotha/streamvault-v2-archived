@@ -14,6 +14,115 @@ import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus } from
 type EpisodeSortKey = 'latest' | 'oldest' | 'episode';
 const EPISODES_PER_PAGE = 50;
 
+/** Focusable season tab — extracted for spatial navigation */
+function FocusableSeasonTab({ seasonNumber, name, episodeCount, isActive, onSelect }: {
+  seasonNumber: number;
+  name: string;
+  episodeCount: number;
+  isActive: boolean;
+  onSelect: () => void;
+}) {
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: `series-season-${seasonNumber}`,
+    onEnterPress: onSelect,
+  });
+
+  return (
+    <button
+      ref={ref}
+      {...focusProps}
+      role="tab"
+      aria-selected={isActive}
+      onClick={onSelect}
+      className={`px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all min-h-[44px] ${
+        isActive
+          ? 'bg-teal/15 text-teal border border-teal/30'
+          : 'bg-surface-raised text-text-secondary border border-border hover:text-text-primary hover:border-teal/20'
+      } ${showFocusRing ? 'ring-2 ring-teal ring-offset-1 ring-offset-obsidian' : ''}`}
+    >
+      {name} ({episodeCount})
+    </button>
+  );
+}
+
+/** Focusable search input — Enter activates typing, arrows blur back to spatial nav */
+function FocusableSearchInput({ value, onChange, seriesId }: {
+  value: string;
+  onChange: (v: string) => void;
+  seriesId: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: `series-search-${seriesId}`,
+    onEnterPress: () => inputRef.current?.focus(),
+  });
+
+  return (
+    <div
+      ref={ref}
+      {...focusProps}
+      className={`relative flex-1 min-w-[180px] max-w-xs rounded-lg ${
+        showFocusRing ? 'ring-2 ring-teal ring-offset-1 ring-offset-obsidian' : ''
+      }`}
+    >
+      <svg
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder="Search episodes..."
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full pl-10 pr-4 py-2 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
+      />
+      {value && (
+        <button
+          onClick={() => onChange('')}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Focusable sort pill — Enter toggles sort mode */
+function FocusableSortPill({ sortKey, label, isActive, onSelect, seriesId }: {
+  sortKey: EpisodeSortKey;
+  label: string;
+  isActive: boolean;
+  onSelect: () => void;
+  seriesId: string;
+}) {
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: `series-sort-${sortKey}-${seriesId}`,
+    onEnterPress: onSelect,
+  });
+
+  return (
+    <button
+      ref={ref}
+      {...focusProps}
+      onClick={onSelect}
+      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+        isActive ? 'bg-teal/15 text-teal' : 'text-text-muted hover:text-text-secondary'
+      } ${showFocusRing ? 'ring-2 ring-teal ring-offset-1 ring-offset-obsidian' : ''}`}
+    >
+      {label}
+    </button>
+  );
+}
+
 /** Extracted so useSpatialFocusable only runs when the button is actually mounted */
 function ResumeButton({ seriesId, episode, seriesName, onResume }: {
   seriesId: string;
@@ -356,35 +465,29 @@ export function SeriesDetail() {
     return null;
   }, [data?.info]);
 
+  const playSeries = usePlayerStore((s) => s.playSeries);
 
-  const playStream = usePlayerStore((s) => s.playStream);
+  // Build episode list for next/prev navigation (in display order)
+  const episodeEntries = useMemo(() => {
+    return allEpisodes.map((ep) => ({
+      id: String(ep.id),
+      name: `${data?.info.name || 'Series'} - S${activeSeason}E${ep.episode_num} - ${ep.title}`,
+    }));
+  }, [allEpisodes, data?.info.name, activeSeason]);
 
   const playEpisode = useCallback(
     (ep: (typeof allEpisodes)[0], startTime = 0) => {
       const name = `${data?.info.name || 'Series'} - S${activeSeason}E${ep.episode_num} - ${ep.title}`;
-      playStream(String(ep.id), 'series', name, startTime);
+      const epIndex = allEpisodes.findIndex((e) => e.id === ep.id);
+      playSeries(String(ep.id), 'series', name, seriesId, activeSeason ?? 1, epIndex, startTime, episodeEntries);
     },
-    [data?.info.name, activeSeason, playStream]
+    [data?.info.name, activeSeason, playSeries, seriesId, allEpisodes, episodeEntries]
   );
 
 
   const handleLoadMore = useCallback(() => {
     setVisibleCount((prev) => prev + EPISODES_PER_PAGE);
   }, []);
-
-  // Season tab keyboard navigation
-  const handleSeasonKeyDown = (e: React.KeyboardEvent) => {
-    const currentIdx = computedSeasons.findIndex((s) => s.season_number === activeSeason);
-    if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      const next = computedSeasons[Math.min(currentIdx + 1, computedSeasons.length - 1)];
-      if (next) setActiveSeason(next.season_number);
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      const prev = computedSeasons[Math.max(currentIdx - 1, 0)];
-      if (prev) setActiveSeason(prev.season_number);
-    }
-  };
 
   const { ref: contentRef, focusKey: contentFocusKey } = useSpatialContainer({
     focusKey: `series-content-${seriesId}`,
@@ -393,6 +496,12 @@ export function SeriesDetail() {
 
   const { ref: actionsRef, focusKey: actionsFocusKey } = useSpatialContainer({
     focusKey: `series-actions-${seriesId}`,
+    isFocusBoundary: true,
+    focusBoundaryDirections: ['left', 'right'],
+  });
+
+  const { ref: controlsRef, focusKey: controlsFocusKey } = useSpatialContainer({
+    focusKey: `series-controls-${seriesId}`,
     isFocusBoundary: true,
     focusBoundaryDirections: ['left', 'right'],
   });
@@ -408,18 +517,20 @@ export function SeriesDetail() {
     onEnterPress: () => navigate({ to: '/series' }),
   });
 
-  // Auto-focus resume button or back button when page loads
+  // Auto-focus: resume button if exists, otherwise first season tab, then back button
   useEffect(() => {
     if (!isLoading && data) {
       const timer = setTimeout(() => {
-        // Try resume button first, then first episode
-        try { setFocus(`series-resume-${seriesId}`); } catch {
-          try { setFocus(`series-back-${seriesId}`); } catch { /* noop */ }
+        try { setFocus(`series-resume-${seriesId}`); return; } catch { /* not mounted */ }
+        // Try first season tab
+        if (computedSeasons.length > 0 && computedSeasons[0]) {
+          try { setFocus(`series-season-${computedSeasons[0].season_number}`); return; } catch { /* noop */ }
         }
+        try { setFocus(`series-back-${seriesId}`); } catch { /* noop */ }
       }, 150);
       return () => clearTimeout(timer);
     }
-  }, [isLoading, data, seriesId]);
+  }, [isLoading, data, seriesId, computedSeasons]);
 
   if (isLoading) {
     return (
@@ -531,7 +642,8 @@ export function SeriesDetail() {
                 episode={lastWatchedEpisode}
                 seriesName={info.name}
                 onResume={(contentId, contentName, progressSeconds) => {
-                  playStream(String(contentId), 'series', contentName, progressSeconds);
+                  const epIndex = allEpisodes.findIndex((e) => String(e.id) === String(contentId));
+                  playSeries(String(contentId), 'series', contentName, seriesId, activeSeason ?? 1, Math.max(epIndex, 0), progressSeconds, episodeEntries);
                 }}
               />
             )}
@@ -561,107 +673,66 @@ export function SeriesDetail() {
             )}
           </div>
 
-          {/* Season Tabs */}
-          <div className="px-6 lg:px-10 mb-4">
-            <div
-              className="flex gap-2 overflow-x-auto scrollbar-hide pb-2"
-              onKeyDown={handleSeasonKeyDown}
-              role="tablist"
-            >
-              {computedSeasons.map((season) => (
-                <button
-                  key={season.season_number}
-                  role="tab"
-                  aria-selected={activeSeason === season.season_number}
-                  onClick={() => {
-                    setActiveSeason(season.season_number);
-                    setEpisodeSearch('');
-                  }}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all min-h-[44px] ${
-                    activeSeason === season.season_number
-                      ? 'bg-teal/15 text-teal border border-teal/30'
-                      : 'bg-surface-raised text-text-secondary border border-border hover:text-text-primary hover:border-teal/20'
-                  }`}
-                >
-                  {season.name} ({season.episode_count})
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Season Tabs + Episode Controls — wrapped in spatial container */}
+          <FocusContext.Provider value={controlsFocusKey}>
+            <div ref={controlsRef}>
+              {/* Season Tabs */}
+              <div className="px-6 lg:px-10 mb-4">
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2" role="tablist">
+                  {computedSeasons.map((season) => (
+                    <FocusableSeasonTab
+                      key={season.season_number}
+                      seasonNumber={season.season_number}
+                      name={season.name}
+                      episodeCount={season.episode_count}
+                      isActive={activeSeason === season.season_number}
+                      onSelect={() => {
+                        setActiveSeason(season.season_number);
+                        setEpisodeSearch('');
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
 
-          {/* Episode Controls: Search + Sort + Count */}
-          <div className="px-6 lg:px-10 mb-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              {/* Episode search */}
-              <div className="relative flex-1 min-w-[180px] max-w-xs">
-                <svg
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              {/* Episode Controls: Search + Sort + Count */}
+              <div className="px-6 lg:px-10 mb-4">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <FocusableSearchInput
+                    value={episodeSearch}
+                    onChange={setEpisodeSearch}
+                    seriesId={seriesId}
                   />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search episodes..."
-                  value={episodeSearch}
-                  onChange={(e) => setEpisodeSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
-                />
-                {episodeSearch && (
-                  <button
-                    onClick={() => setEpisodeSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-              </div>
 
-              {/* Sort pills */}
-              <div className="flex gap-1.5">
-                {(
-                  [
-                    { key: 'latest', label: 'Latest First' },
-                    { key: 'oldest', label: 'Oldest First' },
-                    { key: 'episode', label: 'Episode #' },
-                  ] as { key: EpisodeSortKey; label: string }[]
-                ).map((opt) => (
-                  <button
-                    key={opt.key}
-                    onClick={() => setEpisodeSort(opt.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      episodeSort === opt.key
-                        ? 'bg-teal/15 text-teal'
-                        : 'text-text-muted hover:text-text-secondary'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+                  {/* Sort pills */}
+                  <div className="flex gap-1.5">
+                    {(
+                      [
+                        { key: 'latest', label: 'Latest First' },
+                        { key: 'oldest', label: 'Oldest First' },
+                        { key: 'episode', label: 'Episode #' },
+                      ] as { key: EpisodeSortKey; label: string }[]
+                    ).map((opt) => (
+                      <FocusableSortPill
+                        key={opt.key}
+                        sortKey={opt.key}
+                        label={opt.label}
+                        isActive={episodeSort === opt.key}
+                        onSelect={() => setEpisodeSort(opt.key)}
+                        seriesId={seriesId}
+                      />
+                    ))}
+                  </div>
 
-              {/* Count */}
-              <span className="text-text-muted text-xs ml-auto">
-                {filteredEpisodes.length} episode{filteredEpisodes.length !== 1 ? 's' : ''}
-                {episodeSearch && ` matching "${episodeSearch}"`}
-              </span>
+                  {/* Count */}
+                  <span className="text-text-muted text-xs ml-auto">
+                    {filteredEpisodes.length} episode{filteredEpisodes.length !== 1 ? 's' : ''}
+                    {episodeSearch && ` matching "${episodeSearch}"`}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
+          </FocusContext.Provider>
 
           {/* Episode List */}
           <FocusContext.Provider value={episodesFocusKey}>

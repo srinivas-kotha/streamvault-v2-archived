@@ -81,13 +81,14 @@ function FocusableVolumeSlider({ volume, isMuted, onVolumeChange }: {
   );
 }
 
-function FocusableProgressBar({ progressRef, progress, onSeek, playerRef, duration, isLive }: {
+function FocusableProgressBar({ progressRef, progress, onSeek, playerRef, duration, isLive, currentTime }: {
   progressRef: React.RefObject<HTMLDivElement | null>;
   progress: number;
   onSeek: (e: React.MouseEvent<HTMLDivElement>) => void;
   playerRef: React.RefObject<VideoPlayerHandle | null>;
   duration: number;
   isLive: boolean;
+  currentTime: number;
 }) {
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
     focusKey: 'player-progress-bar',
@@ -118,15 +119,22 @@ function FocusableProgressBar({ progressRef, progress, onSeek, playerRef, durati
 
   return (
     <div ref={ref} {...focusProps} className="px-4 mb-1">
+      {/* TV mode: time label above progress bar, always visible */}
+      {isTVMode && duration > 0 && (
+        <div className="flex justify-between text-xs text-white/70 mb-1 px-0.5">
+          <span>{formatDuration(Math.floor(currentTime))}</span>
+          <span>{formatDuration(Math.floor(duration))}</span>
+        </div>
+      )}
       <div
         ref={progressRef}
-        onClick={onSeek}
-        onTouchStart={handleTouchSeek}
-        onTouchMove={handleTouchSeek}
-        className={`w-full h-1.5 bg-white/20 cursor-pointer group/progress hover:h-3 transition-all rounded-full touch-none ${showFocusRing ? 'h-3 ring-2 ring-teal/60' : ''}`}
+        onClick={isTVMode ? undefined : onSeek}
+        onTouchStart={isTVMode ? undefined : handleTouchSeek}
+        onTouchMove={isTVMode ? undefined : handleTouchSeek}
+        className={`w-full h-1.5 bg-white/20 ${isTVMode ? '' : 'cursor-pointer'} group/progress ${isTVMode ? '' : 'hover:h-3'} transition-all rounded-full touch-none ${showFocusRing ? 'h-3 ring-2 ring-teal/60' : ''}`}
       >
         <div className="h-full bg-teal rounded-full relative" style={{ width: `${progress}%` }}>
-          <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-teal rounded-full transition-opacity ${showFocusRing ? 'opacity-100' : 'opacity-0 group-hover/progress:opacity-100'}`} />
+          <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-teal rounded-full transition-opacity ${showFocusRing ? 'opacity-100' : isTVMode ? 'opacity-100' : 'opacity-0 group-hover/progress:opacity-100'}`} />
         </div>
       </div>
     </div>
@@ -242,6 +250,7 @@ export function PlayerControls({
             playerRef={playerRef}
             duration={duration}
             isLive={isLive}
+            currentTime={currentTime}
           />
         )}
 

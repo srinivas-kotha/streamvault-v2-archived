@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 
 export interface OSDAction {
-  type: 'seek-back' | 'seek-forward' | 'volume' | 'play' | 'pause' | 'mute' | 'unmute';
-  value?: number; // volume level 0-1, or seek seconds
+  type: 'seek-back' | 'seek-forward' | 'fast-forward' | 'fast-rewind' | 'seek-percent' | 'volume' | 'play' | 'pause' | 'mute' | 'unmute';
+  value?: number; // volume level 0-1, seek seconds, or seek percentage
+  speed?: number; // fast-seek speed multiplier (2, 4, 8)
   timestamp: number; // Date.now() to trigger re-renders on same action
 }
 
@@ -14,7 +15,10 @@ export function PlayerOSD({ action }: { action: OSDAction | null }) {
     if (!action) return;
     setCurrentAction(action);
     setVisible(true);
-    const timer = setTimeout(() => setVisible(false), 1200);
+
+    // Fast-seek OSD stays visible longer while holding (refreshed each repeat)
+    const hideDelay = action.type === 'fast-forward' || action.type === 'fast-rewind' ? 800 : 1200;
+    const timer = setTimeout(() => setVisible(false), hideDelay);
     return () => clearTimeout(timer);
   }, [action]);
 
@@ -49,6 +53,43 @@ function renderOSDContent(action: OSDAction) {
             <text x="14" y="15.5" fontSize="7.5" fontWeight="bold" textAnchor="middle" fill="currentColor">10</text>
           </svg>
           <span className="text-sm font-medium">+10s</span>
+        </div>
+      );
+    case 'fast-forward':
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-1">
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z" />
+            </svg>
+            <span className="text-2xl font-bold">{action.speed ?? 2}x</span>
+          </div>
+          <span className="text-sm font-medium text-teal">
+            +{formatSeekTime(action.value ?? 0)}
+          </span>
+        </div>
+      );
+    case 'fast-rewind':
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-1">
+            <span className="text-2xl font-bold">{action.speed ?? 2}x</span>
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20 18V6l-8.5 6L20 18zM11 18V6l-8.5 6L11 18z" />
+            </svg>
+          </div>
+          <span className="text-sm font-medium text-teal">
+            -{formatSeekTime(action.value ?? 0)}
+          </span>
+        </div>
+      );
+    case 'seek-percent':
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-3xl font-bold">{Math.round(action.value ?? 0)}%</span>
+          <div className="w-32 h-1.5 bg-white/20 rounded-full overflow-hidden">
+            <div className="h-full bg-teal rounded-full transition-all" style={{ width: `${action.value ?? 0}%` }} />
+          </div>
         </div>
       );
     case 'volume':
@@ -95,4 +136,19 @@ function renderOSDContent(action: OSDAction) {
         </div>
       );
   }
+}
+
+/** Format accumulated seek seconds into human-readable string */
+function formatSeekTime(seconds: number): string {
+  if (seconds >= 3600) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+  if (seconds >= 60) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+  return `${seconds}s`;
 }

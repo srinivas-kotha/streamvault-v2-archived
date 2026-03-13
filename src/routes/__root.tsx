@@ -12,8 +12,15 @@ function FullscreenPlayer() {
   const currentStreamName = usePlayerStore((s) => s.currentStreamName);
   const startTime = usePlayerStore((s) => s.startTime);
   const stop = usePlayerStore((s) => s.stop);
+  const episodeList = usePlayerStore((s) => s.episodeList);
+  const episodeIndex = usePlayerStore((s) => s.episodeIndex);
+  const playNextEpisode = usePlayerStore((s) => s.playNextEpisode);
+  const playPrevEpisode = usePlayerStore((s) => s.playPrevEpisode);
 
   if (!currentStreamId || !currentStreamType) return null;
+
+  const hasNext = episodeList.length > 0 && episodeIndex !== null && episodeIndex < episodeList.length - 1;
+  const hasPrev = episodeList.length > 0 && episodeIndex !== null && episodeIndex > 0;
 
   return (
     <div className="fixed inset-0 z-50 bg-black">
@@ -32,6 +39,10 @@ function FullscreenPlayer() {
         streamId={currentStreamId}
         streamName={currentStreamName || undefined}
         startTime={startTime}
+        hasNext={hasNext}
+        hasPrev={hasPrev}
+        onNext={hasNext ? playNextEpisode : undefined}
+        onPrev={hasPrev ? playPrevEpisode : undefined}
         onClose={stop}
       />
     </div>

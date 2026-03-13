@@ -90,15 +90,25 @@ export function PlayerPage({
     }, 4000);
   }, []);
 
-  const handleOSD = useCallback((action: { type: string; timestamp: number }) => {
+  const handleOSD = useCallback((action: { type: string; value?: number; speed?: number; timestamp: number }) => {
     const vol = usePlayerStore.getState().volume;
     const isMut = usePlayerStore.getState().isMuted;
+
+    let value: number | undefined;
+    if (action.type === 'volume') {
+      value = isMut ? 0 : vol;
+    } else if (action.value !== undefined) {
+      value = action.value;
+    }
+
     setOsdAction({
       type: action.type as OSDAction['type'],
-      value: action.type === 'volume' ? (isMut ? 0 : vol) : undefined,
+      value,
+      speed: action.speed,
       timestamp: action.timestamp,
     });
-  }, []);
+    showControls();
+  }, [showControls]);
 
   // Show controls when paused
   useEffect(() => {

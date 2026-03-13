@@ -45,6 +45,11 @@ export const useUIStore = create<UIState>((set) => ({
 
 export type StreamType = 'live' | 'vod' | 'series';
 
+export interface EpisodeEntry {
+  id: string;
+  name: string;
+}
+
 interface PlayerState {
   currentStreamId: string | null;
   currentStreamType: StreamType | null;
@@ -57,9 +62,13 @@ interface PlayerState {
   seriesId: string | null;
   seasonNumber: number | null;
   episodeIndex: number | null;
+  /** Ordered episode list for next/prev navigation */
+  episodeList: EpisodeEntry[];
   // Actions
   playStream: (id: string, type: StreamType, name: string, startTime?: number) => void;
-  playSeries: (id: string, type: StreamType, name: string, seriesId: string, season: number, epIndex: number, startTime?: number) => void;
+  playSeries: (id: string, type: StreamType, name: string, seriesId: string, season: number, epIndex: number, startTime?: number, episodes?: EpisodeEntry[]) => void;
+  playNextEpisode: () => void;
+  playPrevEpisode: () => void;
   stop: () => void;
   togglePlay: () => void;
   toggleMute: () => void;
@@ -67,7 +76,7 @@ interface PlayerState {
   setEpisodeIndex: (idx: number) => void;
 }
 
-export const usePlayerStore = create<PlayerState>((set) => ({
+export const usePlayerStore = create<PlayerState>((set, get) => ({
   currentStreamId: null,
   currentStreamType: null,
   currentStreamName: null,
@@ -78,6 +87,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   seriesId: null,
   seasonNumber: null,
   episodeIndex: null,
+  episodeList: [],
   playStream: (id, type, name, startTime = 0) => {
     set({
       currentStreamId: id,
@@ -88,9 +98,10 @@ export const usePlayerStore = create<PlayerState>((set) => ({
       seriesId: null,
       seasonNumber: null,
       episodeIndex: null,
+      episodeList: [],
     });
   },
-  playSeries: (id, type, name, seriesId, season, epIndex, startTime = 0) => {
+  playSeries: (id, type, name, seriesId, season, epIndex, startTime = 0, episodes = []) => {
     set({
       currentStreamId: id,
       currentStreamType: type,
@@ -100,6 +111,35 @@ export const usePlayerStore = create<PlayerState>((set) => ({
       seriesId,
       seasonNumber: season,
       episodeIndex: epIndex,
+      episodeList: episodes,
+    });
+  },
+  playNextEpisode: () => {
+    const { episodeList, episodeIndex } = get();
+    if (episodeIndex === null || !episodeList.length || episodeIndex >= episodeList.length - 1) return;
+    const nextIdx = episodeIndex + 1;
+    const next = episodeList[nextIdx];
+    if (!next) return;
+    set({
+      currentStreamId: next.id,
+      currentStreamName: next.name,
+      startTime: 0,
+      episodeIndex: nextIdx,
+      isPlaying: true,
+    });
+  },
+  playPrevEpisode: () => {
+    const { episodeList, episodeIndex } = get();
+    if (episodeIndex === null || !episodeList.length || episodeIndex <= 0) return;
+    const prevIdx = episodeIndex - 1;
+    const prev = episodeList[prevIdx];
+    if (!prev) return;
+    set({
+      currentStreamId: prev.id,
+      currentStreamName: prev.name,
+      startTime: 0,
+      episodeIndex: prevIdx,
+      isPlaying: true,
     });
   },
   stop: () =>
@@ -112,6 +152,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
       seriesId: null,
       seasonNumber: null,
       episodeIndex: null,
+      episodeList: [],
     }),
   togglePlay: () => set((s) => ({ isPlaying: !s.isPlaying })),
   toggleMute: () => set((s) => ({ isMuted: !s.isMuted })),
