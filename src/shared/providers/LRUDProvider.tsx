@@ -1,11 +1,15 @@
-import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { Lrud } from '@bam.tech/lrud';
 import { useUIStore } from '@lib/store';
 // Note: useUIStore.getState() is used directly (not as a hook) inside the keydown handler
 // to read suppressArrowNav synchronously without re-rendering LRUDProvider.
 
-// Create a global singleton instance of LRUD for the app
+// Create a global singleton instance of LRUD for the app.
+// Root must be registered at module level — NOT in useEffect — because React fires
+// child useEffects before parent useEffects. If root is registered in LRUDProvider's
+// useEffect, all child useLRUD registrations silently fail (parent 'root' not found).
 export const lrud = new Lrud();
+lrud.registerNode('root', { orientation: 'vertical' });
 
 // Expose to window for Fire TV debug overlay
 (window as unknown as Record<string, unknown>).__LRUD_INSTANCE__ = lrud;
@@ -28,8 +32,10 @@ export const lrud = new Lrud();
     return result;
   }
   const root = lrud.getRootNode();
+  const nodeCount = Object.keys((lrud as unknown as Record<string, unknown>).nodes as object).length;
+  const focusId = lrud.currentFocusNode?.id ?? 'none';
   const dump = root ? dumpNode(root as unknown as Record<string, unknown>) : 'No root node';
-  console.log('[LRUD Tree]\n' + dump);
+  console.log(`[LRUD Tree] ${nodeCount} nodes, focus: ${focusId}\n${dump}`);
   return dump;
 };
 
@@ -53,14 +59,9 @@ interface LRUDProviderProps {
 
 export function LRUDProvider({ children }: LRUDProviderProps) {
   const setInputMode = useUIStore((s) => s.setInputMode);
-  const rootRegistered = useRef(false);
 
   useEffect(() => {
-    // Register the root node if not already done
-    if (!rootRegistered.current) {
-      lrud.registerNode('root', { orientation: 'vertical' });
-      rootRegistered.current = true;
-    }
+    // Root is registered at module level (above) so it exists before any child effects.
 
     // Dedup: Fire TV APK dispatches to both window AND document to handle
     // cached vs fresh frontend. Skip if same key fires twice within 50ms.
