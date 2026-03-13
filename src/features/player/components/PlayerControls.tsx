@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import type { QualityLevel, VideoPlayerHandle } from './VideoPlayer';
 import type React from 'react';
 import { formatDuration } from '@shared/utils/formatDuration';
 import { useUIStore, usePlayerStore } from '@lib/store';
+import { isTVMode } from '@shared/utils/isTVMode';
 import { useLRUD } from '@shared/hooks/useLRUD';
 
 function FocusableButton({
@@ -159,7 +160,6 @@ export function PlayerControls({
   const [showQuality, setShowQuality] = useState(false);
   const toggleMiniPlayer = usePlayerStore((s) => s.toggleMiniPlayer);
   const progressRef = useRef<HTMLDivElement>(null);
-  const isStandalone = useMemo(() => window.matchMedia('(display-mode: standalone)').matches, []);
 
   const handleSeek = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -318,7 +318,7 @@ export function PlayerControls({
         )}
 
         {/* Mini-player + PiP — hidden in standalone/TV mode */}
-        {!isStandalone && (
+        {!isTVMode && (
           <>
             <FocusableButton id="player-mini" onClick={toggleMiniPlayer} className="p-1.5 text-white/70 hover:text-white transition-colors" title="Mini player">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

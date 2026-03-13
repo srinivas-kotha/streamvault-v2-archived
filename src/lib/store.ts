@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { isTVMode } from '@shared/utils/isTVMode';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -77,28 +78,26 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   seasonNumber: null,
   episodeIndex: null,
   playStream: (id, type, name, startTime = 0) => {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     set({
       currentStreamId: id,
       currentStreamType: type,
       currentStreamName: name,
       startTime,
       isPlaying: true,
-      isMiniPlayer: !isStandalone,
+      isMiniPlayer: !isTVMode,
       seriesId: null,
       seasonNumber: null,
       episodeIndex: null,
     });
   },
   playSeries: (id, type, name, seriesId, season, epIndex, startTime = 0) => {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     set({
       currentStreamId: id,
       currentStreamType: type,
       currentStreamName: name,
       startTime,
       isPlaying: true,
-      isMiniPlayer: !isStandalone,
+      isMiniPlayer: !isTVMode,
       seriesId,
       seasonNumber: season,
       episodeIndex: epIndex,

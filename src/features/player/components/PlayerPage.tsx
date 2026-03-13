@@ -1,8 +1,9 @@
-import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { useStreamUrl } from '../api';
 import { VideoPlayer, type VideoPlayerHandle, type QualityLevel } from './VideoPlayer';
 import { PlayerControls } from './PlayerControls';
 import { usePlayerKeyboard } from '../hooks/usePlayerKeyboard';
+import { isTVMode } from '@shared/utils/isTVMode';
 import { useProgressTracking } from '../hooks/useProgressTracking';
 import { usePlayerStore } from '@lib/store';
 import { useLRUD } from '@shared/hooks/useLRUD';
@@ -117,10 +118,9 @@ export function PlayerPage({
     onClose,
   });
 
-  // Auto-fullscreen in standalone/TV mode (Fire Stick, Samsung TV PWA)
-  const isStandalone = useMemo(() => window.matchMedia('(display-mode: standalone)').matches, []);
+  // Auto-fullscreen in TV mode (Fire Stick WebView, Samsung TV PWA)
   useEffect(() => {
-    if (!isStandalone || !isPlaying) return;
+    if (!isTVMode || !isPlaying) return;
     // Small delay to let the video element mount before requesting fullscreen
     const timer = setTimeout(() => {
       playerRef.current?.toggleFullscreen();
@@ -128,7 +128,7 @@ export function PlayerPage({
     return () => clearTimeout(timer);
     // Only trigger once when playback starts, not on every isPlaying change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isStandalone, streamId]);
+  }, [streamId]);
 
   // Sync volume to video element
   useEffect(() => {
