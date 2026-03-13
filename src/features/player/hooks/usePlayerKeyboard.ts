@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { VideoPlayerHandle } from '../components/VideoPlayer';
+import { isTVMode } from '@shared/utils/isTVMode';
 
 interface UsePlayerKeyboardOptions {
   playerRef: React.RefObject<VideoPlayerHandle | null>;
@@ -46,26 +47,24 @@ export function usePlayerKeyboard({
         }
       }
 
-      // We want to override Up/Down/Left/Right only if LRUD isn't focused on a specific control
-      // (like a quality selector or play/pause button).
+      // Arrow keys: seek ±10s (LEFT/RIGHT) and volume ±0.1 (UP/DOWN)
       const isArrowKey = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key);
       if (isArrowKey) {
-        const active = document.activeElement;
-        const isGenericFocus =
-          !active ||
-          active === document.body ||
-          active === video ||
-          active.tagName === 'VIDEO';
-        
-        // If they are specifically focused on a control button, we let LRUD take the arrow keys
-        // to move focus around the controls.
-        if (!isGenericFocus) return; 
+        // In TV mode, ALWAYS intercept arrows for seek/volume — even if a control button has LRUD focus.
+        // On desktop, only intercept when no specific control is focused (let LRUD handle button navigation).
+        if (!isTVMode) {
+          const active = document.activeElement;
+          const isGenericFocus =
+            !active ||
+            active === document.body ||
+            active === video ||
+            active.tagName === 'VIDEO';
+          if (!isGenericFocus) return;
+        }
 
-        // Otherwise, stop propagation to prevent LRUD from catching it 
-        // and handle it natively for the video player.
         e.stopPropagation();
         e.preventDefault();
-        
+
         switch (e.key) {
           case 'ArrowLeft':
             if (!isLive) playerRef.current?.seek(Math.max(0, video.currentTime - 10));

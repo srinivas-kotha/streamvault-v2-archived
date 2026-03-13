@@ -65,14 +65,6 @@ export function TopNav() {
     };
   }, []);
 
-  const inputMode = useUIStore((s) => s.inputMode);
-
-  const { ref: hamburgerRef, isFocused: hamburgerFocused } = useLRUD({
-    id: 'hamburger-menu',
-    parent: 'top-nav',
-    onEnter: () => setMobileMenuOpen((prev) => !prev),
-  });
-
   return (
     <header
       ref={topNavRef}
@@ -86,15 +78,12 @@ export function TopNav() {
         <div className="flex items-center">
           {/* Hamburger Menu Button (Mobile Only) */}
           <button
-            ref={hamburgerRef}
             onClick={(e) => {
               e.stopPropagation();
               setMobileMenuOpen(!mobileMenuOpen);
               setProfileOpen(false);
             }}
-            className={`md:hidden p-2 mr-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-raised/50 transition-colors ${
-              hamburgerFocused && inputMode === 'keyboard' ? 'ring-2 ring-teal/50 text-text-primary' : ''
-            }`}
+            className="md:hidden p-2 mr-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-raised/50 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               {mobileMenuOpen ? (
@@ -143,14 +132,14 @@ export function TopNav() {
         </div>
       </nav>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Menu Dropdown (touch-only, no LRUD) */}
       <div
         className={`md:hidden fixed top-16 left-0 right-0 bg-surface-raised border-b border-border shadow-xl px-4 py-4 space-y-2 overflow-y-auto transition-transform origin-top duration-300 ${
           mobileMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0 pointer-events-none'
         }`}
         style={{ maxHeight: 'calc(100vh - 64px)' }}
       >
-        <TopNavFocusGroup languages={languages} matchRoute={matchRoute} isMobile={true} isOpen={mobileMenuOpen} />
+        <MobileNavLinks languages={languages} matchRoute={matchRoute} />
       </div>
     </header>
   );
@@ -161,17 +150,15 @@ interface NavItemProps {
   label: string;
   isActive: boolean;
   icon?: React.ReactNode;
-  isFocusable?: boolean;
 }
 
-function NavItem({ to, label, isActive, icon, isFocusable = true }: NavItemProps) {
+function NavItem({ to, label, isActive, icon }: NavItemProps) {
   const navigate = useNavigate();
   const inputMode = useUIStore((s) => s.inputMode);
 
   const { ref, isFocused, focusProps } = useLRUD({
     id: `nav-item-${to}`,
     parent: 'top-nav-items',
-    isFocusable,
     onEnter: () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       navigate({ to: to as any });
@@ -186,7 +173,6 @@ function NavItem({ to, label, isActive, icon, isFocusable = true }: NavItemProps
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       to={to as any}
       {...focusProps}
-      tabIndex={isFocusable ? 0 : -1}
       className={`relative flex items-center gap-1.5 px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap min-h-[48px] transition-all ${
         isActive
           ? 'text-text-primary'
@@ -204,20 +190,20 @@ function NavItem({ to, label, isActive, icon, isFocusable = true }: NavItemProps
   );
 }
 
-function TopNavFocusGroup({ languages, matchRoute, isMobile, isOpen = true }: { languages: string[]; matchRoute: ReturnType<typeof useMatchRoute>; isMobile?: boolean; isOpen?: boolean }) {
+function TopNavFocusGroup({ languages, matchRoute }: { languages: string[]; matchRoute: ReturnType<typeof useMatchRoute> }) {
   const isHome = matchRoute({ to: '/', fuzzy: false });
 
-  // Register a boundary container node for all the nav items
+  // Single LRUD registration for nav items — always horizontal, always focusable
   const { ref: groupRef } = useLRUD({
     id: 'top-nav-items',
     parent: 'top-nav',
-    orientation: isMobile ? 'vertical' : 'horizontal',
-    isFocusable: false, // It's just a structural proxy node
+    orientation: 'horizontal',
+    isFocusable: false,
   });
 
   return (
-    <div ref={groupRef} className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center gap-1 overflow-x-auto scrollbar-hide flex-1'}`}>
-      <NavItem to="/" label="Home" isActive={!!isHome} isFocusable={isOpen} />
+    <div ref={groupRef} className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1">
+      <NavItem to="/" label="Home" isActive={!!isHome} />
       {languages.map((lang) => (
         <NavItem
           key={lang}
@@ -225,16 +211,35 @@ function TopNavFocusGroup({ languages, matchRoute, isMobile, isOpen = true }: { 
           label={lang}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           isActive={!!matchRoute({ to: `/language/${lang.toLowerCase()}` as any, fuzzy: true })}
-          isFocusable={isOpen}
         />
       ))}
-      {!isMobile && (
-        <NavItem isFocusable={isOpen} to="/search" label="Search" isActive={!!matchRoute({ to: '/search', fuzzy: true })} icon={
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        } />
-      )}
+      <NavItem to="/search" label="Search" isActive={!!matchRoute({ to: '/search', fuzzy: true })} icon={
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      } />
+    </div>
+  );
+}
+
+/** Mobile dropdown nav — plain Links, no LRUD registration (touch-only) */
+function MobileNavLinks({ languages, matchRoute }: { languages: string[]; matchRoute: ReturnType<typeof useMatchRoute> }) {
+  const isHome = matchRoute({ to: '/', fuzzy: false });
+  return (
+    <div className="flex flex-col gap-2">
+      <Link to="/" className={`px-4 py-3 rounded-lg text-sm font-medium ${isHome ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised/30'}`}>Home</Link>
+      {languages.map((lang) => (
+        <Link
+          key={lang}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          to={`/language/${lang.toLowerCase()}` as any}
+          className={`px-4 py-3 rounded-lg text-sm font-medium ${
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            matchRoute({ to: `/language/${lang.toLowerCase()}` as any, fuzzy: true }) ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised/30'
+          }`}
+        >{lang}</Link>
+      ))}
+      <Link to="/search" className={`px-4 py-3 rounded-lg text-sm font-medium ${matchRoute({ to: '/search', fuzzy: true }) ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised/30'}`}>Search</Link>
     </div>
   );
 }
@@ -270,18 +275,21 @@ function ProfileMenu({
   const { ref: favRef, isFocused: favFocused, focusProps: favProps } = useLRUD({
     id: 'profile-menu-fav',
     parent: 'profile-menu',
+    isFocusable: profileOpen,
     onEnter: () => { navigate({ to: '/favorites' }); setProfileOpen(false); },
   });
 
   const { ref: histRef, isFocused: histFocused, focusProps: histProps } = useLRUD({
     id: 'profile-menu-history',
     parent: 'profile-menu',
+    isFocusable: profileOpen,
     onEnter: () => { navigate({ to: '/history' }); setProfileOpen(false); },
   });
 
   const { ref: logoutRef, isFocused: logoutFocused, focusProps: logoutProps } = useLRUD({
     id: 'profile-menu-logout',
     parent: 'profile-menu',
+    isFocusable: profileOpen,
     onEnter: onLogout,
   });
 

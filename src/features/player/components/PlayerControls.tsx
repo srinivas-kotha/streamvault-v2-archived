@@ -51,6 +51,7 @@ function FocusableVolumeSlider({ volume, isMuted, onVolumeChange }: {
   const { ref, isFocused, focusProps } = useLRUD({
     id: 'player-volume-slider',
     parent: 'player-controls',
+    isFocusable: !isTVMode,
     onEnter: () => inputRef.current?.focus(),
   });
   
@@ -88,6 +89,7 @@ function FocusableProgressBar({ progressRef, progress, onSeek, playerRef, durati
   const { ref, isFocused, focusProps } = useLRUD({
     id: 'player-progress-bar',
     parent: 'player-controls',
+    isFocusable: !isTVMode,
   });
 
   const showFocus = isFocused && inputMode === 'keyboard';

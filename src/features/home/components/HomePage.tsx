@@ -88,7 +88,7 @@ export function HomePage() {
         )}
 
         {/* Continue Watching */}
-        <ContinueWatching />
+        <ContinueWatching parentFocusKey="home-content" />
 
         {/* Latest Telugu Movies */}
         <ContentRail

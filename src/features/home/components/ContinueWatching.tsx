@@ -10,7 +10,11 @@ const contentTypeToStreamType: Record<string, StreamType> = {
   series: 'series',
 };
 
-export function ContinueWatching() {
+interface ContinueWatchingProps {
+  parentFocusKey?: string;
+}
+
+export function ContinueWatching({ parentFocusKey }: ContinueWatchingProps) {
   const { data: history, isLoading } = useWatchHistory();
   const playStream = usePlayerStore((s) => s.playStream);
   const navigate = useNavigate();
@@ -47,6 +51,7 @@ export function ContinueWatching() {
       title="Continue Watching"
       isLoading={isLoading}
       isEmpty={inProgress.length === 0}
+      parentFocusKey={parentFocusKey}
     >
       {inProgress.map((item) => {
         const percent = Math.round((item.progress_seconds / item.duration_seconds) * 100);

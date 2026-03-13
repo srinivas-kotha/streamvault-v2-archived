@@ -7,6 +7,7 @@ import { isTVMode } from '@shared/utils/isTVMode';
 import { useProgressTracking } from '../hooks/useProgressTracking';
 import { usePlayerStore } from '@lib/store';
 import { useLRUD } from '@shared/hooks/useLRUD';
+import { useLRUDContext } from '@shared/providers/LRUDProvider';
 
 interface PlayerPageProps {
   streamType: string;
@@ -87,10 +88,15 @@ export function PlayerPage({
     if (!isPlaying) showControls();
   }, [isPlaying, showControls]);
 
-  // Spatial Navigation wrapper
+  const { lrud } = useLRUDContext();
+
+  // Spatial Navigation wrapper for player
+  // In TV mode, arrows are intercepted by usePlayerKeyboard (capture phase) so LRUD never sees them.
+  // This effectively traps focus within the player controls.
   const { ref, isFocused } = useLRUD({
     id: `player-${streamId}`,
     parent: 'root',
+    orientation: 'vertical',
     isFocusable: false,
   });
 
@@ -101,6 +107,16 @@ export function PlayerPage({
     orientation: 'horizontal',
     isFocusable: false,
   });
+
+  // In TV mode, auto-focus play/pause when player mounts
+  useEffect(() => {
+    if (isTVMode) {
+      const timer = setTimeout(() => {
+        try { lrud.assignFocus('player-play-pause'); } catch { /* not registered yet */ }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [streamId, lrud]);
 
   // Keep controls visible if user is navigating controls with D-pad
   useEffect(() => {

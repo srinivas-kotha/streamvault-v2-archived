@@ -68,7 +68,8 @@ export function ContentRail({
     parent: parentFocusKey,
     orientation: 'horizontal',
     isWrapping: true,
-    isFocusable: false, // Structural node that groups children
+    isIndexAlign: true,
+    isFocusable: false,
   });
 
   if (isEmpty && !isLoading) return null;
