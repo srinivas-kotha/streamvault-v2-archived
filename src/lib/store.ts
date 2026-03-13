@@ -29,6 +29,9 @@ interface UIState {
   setSidebarOpen: (open: boolean) => void;
   inputMode: 'mouse' | 'keyboard';
   setInputMode: (mode: 'mouse' | 'keyboard') => void;
+  /** When true, LRUDProvider skips arrow key handling (e.g. player captures arrows for seek/volume) */
+  suppressArrowNav: boolean;
+  setSuppressArrowNav: (suppress: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -37,6 +40,8 @@ export const useUIStore = create<UIState>((set) => ({
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   inputMode: 'mouse' as const,
   setInputMode: (mode) => set({ inputMode: mode }),
+  suppressArrowNav: false,
+  setSuppressArrowNav: (suppress) => set({ suppressArrowNav: suppress }),
 }));
 
 export type StreamType = 'live' | 'vod' | 'series';

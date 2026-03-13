@@ -5,7 +5,7 @@ import { PlayerControls } from './PlayerControls';
 import { usePlayerKeyboard } from '../hooks/usePlayerKeyboard';
 import { isTVMode } from '@shared/utils/isTVMode';
 import { useProgressTracking } from '../hooks/useProgressTracking';
-import { usePlayerStore } from '@lib/store';
+import { usePlayerStore, useUIStore } from '@lib/store';
 import { useLRUD } from '@shared/hooks/useLRUD';
 import { useLRUDContext } from '@shared/providers/LRUDProvider';
 
@@ -108,15 +108,21 @@ export function PlayerPage({
     isFocusable: false,
   });
 
-  // In TV mode, auto-focus play/pause when player mounts
+  // In TV mode: suppress LRUD arrow navigation (player handles seek/volume),
+  // and auto-focus play/pause when player mounts
+  const setSuppressArrowNav = useUIStore((s) => s.setSuppressArrowNav);
   useEffect(() => {
     if (isTVMode) {
+      setSuppressArrowNav(true);
       const timer = setTimeout(() => {
         try { lrud.assignFocus('player-play-pause'); } catch { /* not registered yet */ }
       }, 100);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        setSuppressArrowNav(false);
+      };
     }
-  }, [streamId, lrud]);
+  }, [streamId, lrud, setSuppressArrowNav]);
 
   // Keep controls visible if user is navigating controls with D-pad
   useEffect(() => {

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useMatchRoute, useNavigate } from '@tanstack/react-router';
 import { useLRUD } from '@shared/hooks/useLRUD';
+import { useLRUDContext } from '@shared/providers/LRUDProvider';
 import { useAuthStore, useUIStore } from '@lib/store';
 import { useLogout } from '@features/auth/hooks/useAuth';
 import { useLiveCategories } from '@features/live/api';
@@ -257,6 +258,17 @@ function ProfileMenu({
 }) {
   const navigate = useNavigate();
   const inputMode = useUIStore((s) => s.inputMode);
+  const { lrud } = useLRUDContext();
+  const prevProfileOpen = useRef(profileOpen);
+
+  // When profile menu closes, reassign focus to profile button to prevent
+  // LRUD focus from being stranded on now-invisible menu items
+  useEffect(() => {
+    if (prevProfileOpen.current && !profileOpen) {
+      try { lrud.assignFocus('profile-btn'); } catch { /* noop */ }
+    }
+    prevProfileOpen.current = profileOpen;
+  }, [profileOpen, lrud]);
 
   // Register the profile-menu LRUD container so dropdown children have a parent
   const { ref: menuRef } = useLRUD({

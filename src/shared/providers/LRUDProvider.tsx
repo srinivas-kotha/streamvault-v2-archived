@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react';
 import { Lrud } from '@bam.tech/lrud';
 import { useUIStore } from '@lib/store';
+// Note: useUIStore.getState() is used directly (not as a hook) inside the keydown handler
+// to read suppressArrowNav synchronously without re-rendering LRUDProvider.
 
 // Create a global singleton instance of LRUD for the app
 export const lrud = new Lrud();
@@ -58,6 +60,10 @@ export function LRUDProvider({ children }: LRUDProviderProps) {
 
       // Let non-arrow keys through to inputs normally
       if (isInInput && !isArrow) return;
+
+      // When suppressArrowNav is true (e.g. player is active in TV mode),
+      // skip arrow handling so usePlayerKeyboard can handle seek/volume exclusively
+      if (isArrow && useUIStore.getState().suppressArrowNav) return;
 
       const isNavKey = isArrow || ['Enter', 'Escape', 'Backspace'].includes(e.key);
 
