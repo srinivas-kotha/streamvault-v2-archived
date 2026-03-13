@@ -74,28 +74,32 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   seriesId: null,
   seasonNumber: null,
   episodeIndex: null,
-  playStream: (id, type, name) =>
+  playStream: (id, type, name) => {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     set({
       currentStreamId: id,
       currentStreamType: type,
       currentStreamName: name,
       isPlaying: true,
-      isMiniPlayer: true,
+      isMiniPlayer: !isStandalone,
       seriesId: null,
       seasonNumber: null,
       episodeIndex: null,
-    }),
-  playSeries: (id, type, name, seriesId, season, epIndex) =>
+    });
+  },
+  playSeries: (id, type, name, seriesId, season, epIndex) => {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     set({
       currentStreamId: id,
       currentStreamType: type,
       currentStreamName: name,
       isPlaying: true,
-      isMiniPlayer: true,
+      isMiniPlayer: !isStandalone,
       seriesId,
       seasonNumber: season,
       episodeIndex: epIndex,
-    }),
+    });
+  },
   stop: () =>
     set({
       currentStreamId: null,

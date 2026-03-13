@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "uk.srinivaskotha.streamvault.twa",
+      "sha256_cert_fingerprints": [
+        "F5:EF:BD:A3:A1:18:C6:B6:50:34:EE:8D:3D:C7:9B:C3:97:C5:0C:6E:D5:41:68:3C:FE:6A:99:3C:BE:09:90:D6"
+      ]
+    }
+  }
+]

@@ -36,6 +36,10 @@ export function LRUDProvider({ children }: LRUDProviderProps) {
 
     // Handle keydown events to drive LRUD
     function handleKeyDown(e: KeyboardEvent) {
+      // Don't intercept keys when user is typing in an input
+      const tag = (document.activeElement as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
       const isNavKey = [
         'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
         'Up', 'Down', 'Left', 'Right',

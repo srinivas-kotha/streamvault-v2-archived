@@ -22,17 +22,33 @@ function formatEpisodeDate(unixTimestamp: string): string {
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+interface Episode {
+  id: string;
+  episode_num: number;
+  title: string;
+  container_extension: string;
+  added: string;
+  info: {
+    movie_image: string;
+    duration_secs: number;
+    duration: string;
+    plot: string;
+  };
+  season: number;
+  direct_source: string;
+}
+
 // A wrapper component for episodes in the list to give them individual LRUD hooks cleanly
-function FocusableEpisodeItem({ 
-  ep, 
-  isPlaying, 
-  activeRef, 
-  playEpisode 
-}: { 
-  ep: any; 
-  isPlaying: boolean; 
-  activeRef?: any; 
-  playEpisode: (ep: any) => void;
+function FocusableEpisodeItem({
+  ep,
+  isPlaying,
+  activeRef,
+  playEpisode
+}: {
+  ep: Episode;
+  isPlaying: boolean;
+  activeRef?: React.RefObject<HTMLDivElement | null>;
+  playEpisode: (ep: Episode) => void;
 }) {
   const inputMode = useUIStore((s) => s.inputMode);
   const { ref, isFocused, focusProps } = useLRUD({
@@ -46,8 +62,8 @@ function FocusableEpisodeItem({
 
   return (
     <div
-      ref={(el) => {
-        ref.current = el;
+      ref={(el: HTMLDivElement | null) => {
+        ref(el);
         if (activeRef && isPlaying) activeRef.current = el;
       }}
       {...focusProps}
@@ -192,7 +208,7 @@ export function SeriesDetail() {
       });
     }
     return Array.from(seasonsMap.values()).sort((a, b) => a.season_number - b.season_number);
-  }, [data?.seasons, data?.episodes]);
+  }, [data]);
 
   // All episodes for active season, sorted
   const allEpisodes = useMemo(() => {

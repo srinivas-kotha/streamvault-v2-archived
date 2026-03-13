@@ -59,8 +59,19 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
       },
       getVideo: () => videoRef.current,
       toggleFullscreen: () => {
-        const doc = document as any;
-        const el = containerRef.current as any;
+        const doc = document as Document & {
+          webkitFullscreenElement?: Element;
+          mozFullScreenElement?: Element;
+          msFullscreenElement?: Element;
+          webkitExitFullscreen?: () => void;
+          mozCancelFullScreen?: () => void;
+          msExitFullscreen?: () => void;
+        };
+        const el = containerRef.current as (HTMLDivElement & {
+          webkitRequestFullscreen?: () => void;
+          mozRequestFullScreen?: () => void;
+          msRequestFullscreen?: () => void;
+        }) | null;
         if (!el) return;
 
         const isFullscreen = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement;

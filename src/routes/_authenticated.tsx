@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 import { TopNav } from '@shared/components/TopNav';
-import { LRUDProvider } from '@shared/providers/LRUDProvider';
 import { useAuthStore } from '@lib/store';
 import { useAuthCheck } from '@features/auth/hooks/useAuth';
 import { useBackNavigation } from '@shared/hooks/useBackNavigation';
@@ -27,13 +26,11 @@ function AuthenticatedLayout() {
   useBackNavigation();
 
   return (
-    <LRUDProvider>
-      <div className="min-h-screen bg-obsidian">
-        <TopNav />
-        <main className="min-h-screen pt-16 overflow-y-auto">
-          <Outlet />
-        </main>
-      </div>
-    </LRUDProvider>
+    <div className="min-h-screen bg-obsidian">
+      <TopNav />
+      <main className="min-h-screen pt-16 overflow-y-auto">
+        <Outlet />
+      </main>
+    </div>
   );
 }

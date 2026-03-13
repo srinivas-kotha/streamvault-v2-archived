@@ -18,6 +18,7 @@ export function MovieDetail() {
   const { data, isLoading } = useVODInfo(vodId);
   const { data: watchHistory } = useWatchHistory();
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+  const inputMode = useUIStore((s) => s.inputMode);
 
   // Find saved progress for this movie
   const savedProgress = useMemo(() => {
@@ -27,20 +28,6 @@ export function MovieDetail() {
     );
     return entry?.progress_seconds ?? 0;
   }, [watchHistory, vodId]);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-8 w-1/2" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-      </div>
-    );
-  }
-
-  if (!data) return null;
-  const { info, movie_data } = data;
 
   const { ref: backRef, isFocused: backFocused, focusProps: backFocusProps } = useLRUD({
     id: `vod-back-${vodId}`,
@@ -60,7 +47,19 @@ export function MovieDetail() {
     onEnter: () => setIsPlayerOpen(true),
   });
 
-  const inputMode = useUIStore((s) => s.inputMode);
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-8 w-1/2" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+    );
+  }
+
+  if (!data) return null;
+  const { info, movie_data } = data;
 
   return (
     <div>
@@ -135,10 +134,10 @@ export function MovieDetail() {
               <Badge key={g} variant="teal">{g}</Badge>
             ))}
           </div>
-          <Button 
-            ref={playRef as any}
+          <Button
+            ref={playRef}
             {...playFocusProps}
-            size="lg" 
+            size="lg"
             onClick={() => setIsPlayerOpen(true)}
             className={playFocused && inputMode === 'keyboard' ? 'ring-2 ring-offset-2 ring-offset-obsidian ring-teal' : ''}
           >

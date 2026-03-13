@@ -13,45 +13,49 @@ interface UseLRUDOptions extends Omit<NodeConfig, 'id'> {
 export function useLRUD({ id, onEnter, onFocus, onBlur, parent = 'root', ...config }: UseLRUDOptions) {
   const { lrud } = useLRUDContext();
   const [isFocused, setIsFocused] = useState(false);
-  const ref = useRef<any>(null);
+  const elementRef = useRef<HTMLElement | null>(null);
+
+  // Callback ref compatible with any HTML element type
+  const ref = useCallback((node: HTMLElement | null) => {
+    elementRef.current = node;
+  }, []);
+
+  // Use refs for callbacks to avoid re-registration on every render
+  const onEnterRef = useRef(onEnter);
+  const onFocusRef = useRef(onFocus);
+  const onBlurRef = useRef(onBlur);
+  onEnterRef.current = onEnter;
+  onFocusRef.current = onFocus;
+  onBlurRef.current = onBlur;
 
   useEffect(() => {
-    // Register the node in the LRUD tree
+    // Register the node in the LRUD tree with parent
     lrud.registerNode(id, {
+      parent,
       ...config,
       onFocus: () => {
         setIsFocused(true);
-        if (onFocus) onFocus();
-        
+        onFocusRef.current?.();
+
         // Auto-scroll the DOM node into view when focused by the keyboard
-        if (ref.current && typeof ref.current.scrollIntoView === 'function') {
-          ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        if (elementRef.current && typeof elementRef.current.scrollIntoView === 'function') {
+          elementRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
         }
       },
       onBlur: () => {
         setIsFocused(false);
-        if (onBlur) onBlur();
+        onBlurRef.current?.();
       },
       onSelect: () => {
-        if (onEnter) onEnter();
+        onEnterRef.current?.();
       }
     });
-
-    // If it has a parent other than root, we need to ensure the parent exists or register it to the parent.
-    // However, the Lrud API registers nodes at the top level and handles relationships via parent ids internally or structurally.
-    // The current version of @bam.tech/lrud registers nodes via lrud.registerNode(id, config) ignoring a parent tree structure explicitly at registration unless it's given the parent ID in its config.
-    // To support parent references we need to assign it to the parent in the tree if parent !== 'root'.
-    if (parent && parent !== 'root') {
-      try { lrud.assignFocus(parent); } catch (e) {} // ensure parent is known
-      lrud.registerNode(id, { isFocusable: config.isFocusable ?? true });
-      // NOTE: actually, lrud.registerNode only accepts 1-2 args: id, nodeConfig. Since `parent` is a property on nodeConfig for older versions, we should just pass it in nodeConfig if valid, or handle structural nodes. We'll simplify and trust lrud's state for this app's flat/simple spatial layout to rely more on DOM ordering and proximity handling.
-    }
 
     return () => {
       // Unregister the node when the component unmounts
       try {
         lrud.unregisterNode(id);
-      } catch (e) {
+      } catch {
         // Node might already be gone
       }
     };
@@ -61,7 +65,7 @@ export function useLRUD({ id, onEnter, onFocus, onBlur, parent = 'root', ...conf
   const handleMouseEnter = useCallback(() => {
     try {
       lrud.assignFocus(id);
-    } catch (e) {
+    } catch {
       // Ignore if node is not focusable or tree isn't ready
     }
   }, [id, lrud]);
@@ -69,8 +73,8 @@ export function useLRUD({ id, onEnter, onFocus, onBlur, parent = 'root', ...conf
   const setFocus = useCallback(() => {
     try {
       lrud.assignFocus(id);
-    } catch (e) {
-      console.warn(`Could not focus LRUD node ${id}`, e);
+    } catch {
+      console.warn(`Could not focus LRUD node ${id}`);
     }
   }, [id, lrud]);
 
@@ -81,7 +85,7 @@ export function useLRUD({ id, onEnter, onFocus, onBlur, parent = 'root', ...conf
     focusProps: {
       onMouseEnter: handleMouseEnter,
       // For accessibility, still use standard focus handlers if the element is naturally focusable
-      onFocus: handleMouseEnter, 
+      onFocus: handleMouseEnter,
     }
   };
 }
