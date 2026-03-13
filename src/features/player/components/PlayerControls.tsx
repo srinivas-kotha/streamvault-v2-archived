@@ -164,7 +164,7 @@ export function PlayerControls({
   return (
     <div
       className={`absolute inset-0 flex flex-col justify-end transition-opacity duration-300 bg-gradient-to-t from-obsidian/80 via-transparent to-obsidian/30 ${
-        visible ? 'opacity-100' : 'opacity-0'
+        visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
     >
       {/* Progress bar */}

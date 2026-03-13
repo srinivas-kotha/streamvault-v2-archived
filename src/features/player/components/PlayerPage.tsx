@@ -93,6 +93,14 @@ export function PlayerPage({
     isFocusable: false,
   });
 
+  // Register 'player-controls' as a container for all control buttons (D-pad navigation)
+  useLRUD({
+    id: 'player-controls',
+    parent: `player-${streamId}`,
+    orientation: 'horizontal',
+    isFocusable: false,
+  });
+
   // Keep controls visible if user is navigating controls with D-pad
   useEffect(() => {
     if (isFocused) showControls();
