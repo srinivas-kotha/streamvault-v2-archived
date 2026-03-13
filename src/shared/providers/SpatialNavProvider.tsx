@@ -1,12 +1,15 @@
-import { useEffect, type ReactNode } from 'react';
-import { init, setFocus } from '@noriginmedia/norigin-spatial-navigation';
+import { useEffect, useState, type ReactNode } from 'react';
+import { init, setFocus, getCurrentFocusKey } from '@noriginmedia/norigin-spatial-navigation';
 import { useUIStore } from '@lib/store';
+
+// Check URL param for debug mode (e.g. ?debug=spatial)
+const isSpatialDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'spatial';
 
 // Initialize spatial navigation at module level (before any component renders).
 // init() is idempotent — safe to call multiple times.
 init({
-  debug: false,
-  visualDebug: false,
+  debug: isSpatialDebug,
+  visualDebug: isSpatialDebug,
   distanceCalculationMethod: 'center',
   shouldUseNativeEvents: true,
   shouldFocusDOMNode: true,
@@ -72,7 +75,13 @@ export function SpatialNavProvider({ children }: SpatialNavProviderProps) {
 
       // Bootstrap focus on first nav key if nothing is focused
       if (isNavKey && !document.querySelector('[data-focused="true"]')) {
+        if (isSpatialDebug) console.log('[spatial] No focused element, bootstrapping to SN:ROOT');
         try { setFocus('SN:ROOT'); } catch { /* no focusable nodes yet */ }
+      }
+
+      if (isSpatialDebug && isArrow) {
+        const currentKey = getCurrentFocusKey();
+        console.log(`[spatial] Arrow ${e.key} | current focus: ${currentKey}`);
       }
     }
 
@@ -94,5 +103,57 @@ export function SpatialNavProvider({ children }: SpatialNavProviderProps) {
     };
   }, [setInputMode]);
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {isSpatialDebug && <SpatialDebugOverlay />}
+    </>
+  );
+}
+
+/** Visible overlay showing norigin focus state — only renders when ?debug=spatial */
+function SpatialDebugOverlay() {
+  const [info, setInfo] = useState({ focusKey: 'none', lastKey: '', focusedCount: 0 });
+
+  useEffect(() => {
+    function update() {
+      const focusKey = getCurrentFocusKey() || 'none';
+      const focusedEls = document.querySelectorAll('[data-focused="true"]');
+      const allFocusable = document.querySelectorAll('[tabindex]');
+      setInfo((prev) => ({
+        ...prev,
+        focusKey,
+        focusedCount: focusedEls.length,
+      }));
+    }
+
+    function onKey(e: KeyboardEvent) {
+      setInfo((prev) => ({ ...prev, lastKey: e.key }));
+      // Update focus state after norigin processes the key
+      setTimeout(update, 50);
+    }
+
+    window.addEventListener('keydown', onKey);
+    const interval = setInterval(update, 500);
+    update();
+
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      clearInterval(interval);
+    };
+  }, []);
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 8, right: 8, zIndex: 99999,
+      background: 'rgba(0,0,0,0.85)', color: '#2dd4bf', padding: '8px 12px',
+      borderRadius: 8, fontSize: 12, fontFamily: 'monospace', lineHeight: 1.6,
+      pointerEvents: 'none', maxWidth: 320,
+    }}>
+      <div><strong>Spatial Debug</strong></div>
+      <div>Focus: <span style={{ color: '#fff' }}>{info.focusKey}</span></div>
+      <div>Last key: <span style={{ color: '#fff' }}>{info.lastKey || '-'}</span></div>
+      <div>data-focused els: <span style={{ color: info.focusedCount > 0 ? '#4ade80' : '#f87171' }}>{info.focusedCount}</span></div>
+    </div>
+  );
 }
