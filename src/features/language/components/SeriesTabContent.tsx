@@ -92,7 +92,9 @@ function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { valu
   const inputRef = useRef<HTMLInputElement>(null);
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
     focusKey,
-    onEnterPress: () => inputRef.current?.focus(),
+    onEnterPress: () => {
+      setTimeout(() => inputRef.current?.focus(), 0);
+    },
   });
 
   return (
@@ -106,6 +108,9 @@ function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { valu
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') inputRef.current?.blur();
+        }}
         className="w-full pl-10 pr-4 py-2.5 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
       />
       {value && (

@@ -126,7 +126,7 @@ export function TopNav() {
 
           {/* Desktop Nav Items */}
           <div className="hidden md:flex flex-1 items-center overflow-x-auto scrollbar-hide">
-            <TopNavFocusGroup languages={languages} matchRoute={matchRoute} />
+            <TopNavFocusGroup languages={languages.slice(0, 9)} matchRoute={matchRoute} />
           </div>
 
           {/* Profile */}
