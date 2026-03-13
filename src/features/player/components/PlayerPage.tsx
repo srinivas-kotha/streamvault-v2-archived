@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import { useStreamUrl } from '../api';
 import { VideoPlayer, type VideoPlayerHandle, type QualityLevel } from './VideoPlayer';
 import { PlayerControls } from './PlayerControls';
+import { PlayerOSD, type OSDAction } from './PlayerOSD';
 import { usePlayerKeyboard } from '../hooks/usePlayerKeyboard';
 import { isTVMode } from '@shared/utils/isTVMode';
 import { useProgressTracking } from '../hooks/useProgressTracking';
@@ -44,6 +45,7 @@ export function PlayerPage({
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
   const [currentQuality, setCurrentQuality] = useState(-1);
   const [error, setError] = useState<string | null>(null);
+  const [osdAction, setOsdAction] = useState<OSDAction | null>(null);
 
   const [controlsVisible, setControlsVisible] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -86,6 +88,16 @@ export function PlayerPage({
     controlsTimeoutRef.current = setTimeout(() => {
       setControlsVisible(false);
     }, 4000);
+  }, []);
+
+  const handleOSD = useCallback((action: { type: string; timestamp: number }) => {
+    const vol = usePlayerStore.getState().volume;
+    const isMut = usePlayerStore.getState().isMuted;
+    setOsdAction({
+      type: action.type as OSDAction['type'],
+      value: action.type === 'volume' ? (isMut ? 0 : vol) : undefined,
+      timestamp: action.timestamp,
+    });
   }, []);
 
   // Show controls when paused
@@ -131,6 +143,7 @@ export function PlayerPage({
     onVolumeUp: handleVolumeUp,
     onVolumeDown: handleVolumeDown,
     onClose,
+    onOSD: handleOSD,
   });
 
   // Auto-fullscreen — skip in TV mode (player div fills viewport via CSS)
@@ -234,6 +247,7 @@ export function PlayerPage({
           onPrev={onPrev}
           visible={controlsVisible}
         />
+        <PlayerOSD action={osdAction} />
         {streamName && (
           <div className="absolute top-4 left-4 text-white/80 text-sm font-medium bg-obsidian/50 px-3 py-1 rounded-lg backdrop-blur-sm">
             {streamName}

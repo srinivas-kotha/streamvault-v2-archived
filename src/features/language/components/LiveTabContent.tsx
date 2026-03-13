@@ -155,7 +155,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
       {/* Content: Rails mode (no filters) or Grid mode (filters active) */}
       {isLoading ? (
         hasActiveFilters ? (
-          <SkeletonGrid count={24} aspectRatio="square" />
+          <SkeletonGrid count={24} aspectRatio="landscape" />
         ) : (
           <ContentRail title="Loading..." isLoading={true}>
             <div />
@@ -185,7 +185,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
                   key={channel.stream_id}
                   image={channel.stream_icon}
                   title={channel.name}
-                  aspectRatio="square"
+                  aspectRatio="landscape"
                   onClick={() => handlePlay(channel)}
                 />
               ))}
@@ -208,7 +208,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
                   image={item.stream_icon}
                   title={item.name}
                   isNew={isNewContent(item.added)}
-                  aspectRatio="square"
+                  aspectRatio="landscape"
                   onClick={() => handlePlay(item)}
                 />
               ))}

@@ -10,6 +10,7 @@ interface ContentCardProps {
   progress?: number; // 0-100
   isFavorite?: boolean;
   onFavoriteToggle?: () => void;
+  onRemove?: () => void;
   onClick?: () => void;
   aspectRatio?: 'poster' | 'landscape' | 'square';
   focusKey?: string;
@@ -42,6 +43,27 @@ function FocusableFavoriteButton({ isFavorite, onToggle, focusId }: { isFavorite
   );
 }
 
+function FocusableRemoveButton({ onRemove, focusId }: { onRemove: () => void; focusId: string }) {
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: focusId,
+    onEnterPress: () => onRemove(),
+  });
+
+  return (
+    <button
+      ref={ref}
+      {...focusProps}
+      onClick={(e) => { e.stopPropagation(); onRemove(); }}
+      className={`absolute top-2 right-2 p-1 rounded-full bg-obsidian/60 backdrop-blur-sm hover:bg-error/80 transition-all ${showFocusRing ? 'ring-2 ring-error z-10 bg-error/80' : ''}`}
+      aria-label="Remove"
+    >
+      <svg className="w-3.5 h-3.5 text-text-muted hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  );
+}
+
 const aspectClasses = {
   poster: 'aspect-[2/3]',
   landscape: 'aspect-video',
@@ -56,6 +78,7 @@ export function ContentCard({
   progress,
   isFavorite,
   onFavoriteToggle,
+  onRemove,
   onClick,
   aspectRatio = 'poster',
   focusKey: propFocusKey,
@@ -71,7 +94,7 @@ export function ContentCard({
     onEnterPress,
     onFocus: (layout) => {
       // Auto-scroll into view when focused via D-pad
-      layout.node?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      layout.node?.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' });
     },
   });
 
@@ -106,6 +129,11 @@ export function ContentCard({
         {/* Favorite star */}
         {onFavoriteToggle && (
           <FocusableFavoriteButton isFavorite={isFavorite} onToggle={onFavoriteToggle} focusId={`fav-btn-${cardKey}`} />
+        )}
+
+        {/* Remove button (for Continue Watching) */}
+        {onRemove && (
+          <FocusableRemoveButton onRemove={onRemove} focusId={`remove-btn-${cardKey}`} />
         )}
 
         {/* Progress bar */}

@@ -63,15 +63,16 @@ export function TopNav() {
     };
   }, []);
 
-  // TV mode: minimal header with just logo + profile button
+  // TV mode: full nav header with Home, language links, Search, and profile
   if (isTVMode) {
     return (
       <FocusContext.Provider value={topNavFocusKey}>
         <header ref={topNavRef} className="fixed top-0 left-0 right-0 z-50 bg-obsidian/95 backdrop-blur-sm">
-          <nav className="flex items-center justify-between h-12 px-4 lg:px-10">
-            <Link to="/" className="font-display text-lg font-bold text-text-primary">
+          <nav className="flex items-center h-12 px-4 lg:px-10 gap-2">
+            <Link to="/" className="font-display text-lg font-bold text-text-primary flex-shrink-0">
               Stream<span className="text-teal">Vault</span>
             </Link>
+            <TopNavFocusGroup languages={languages} matchRoute={matchRoute} />
             <ProfileMenu
               username={username}
               profileOpen={profileOpen}

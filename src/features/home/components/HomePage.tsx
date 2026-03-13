@@ -1,10 +1,10 @@
+import { useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { PageTransition } from '@shared/components/PageTransition';
 import { ContentRail } from '@shared/components/ContentRail';
 import { FocusableCard } from '@shared/components/FocusableCard';
 import { ContinueWatching } from './ContinueWatching';
-import { usePageFocus } from '@shared/hooks/usePageFocus';
-import { useSpatialContainer, FocusContext } from '@shared/hooks/useSpatialNav';
+import { useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
 import {
   useLanguageMovieRail,
   useLanguageSeriesRail,
@@ -16,11 +16,11 @@ import type { XtreamVODStream } from '@shared/types/api';
 
 export function HomePage() {
   const navigate = useNavigate();
-  usePageFocus('home-content');
 
   const { ref: contentRef, focusKey } = useSpatialContainer({
     focusKey: 'home-content',
     forceFocus: true,
+    autoRestoreFocus: true,
   });
 
   // Data hooks -- Telugu & Hindi movies and series
@@ -28,6 +28,18 @@ export function HomePage() {
   const { items: teluguSeries, isLoading: teluguSeriesLoading } = useLanguageSeriesRail('Telugu');
   const { items: hindiMovies, isLoading: hindiMoviesLoading } = useLanguageMovieRail('Hindi');
   const { items: hindiSeries, isLoading: hindiSeriesLoading } = useLanguageSeriesRail('Hindi');
+
+  // Auto-focus first available content after data loads
+  const allLoading = teluguMoviesLoading || teluguSeriesLoading || hindiMoviesLoading || hindiSeriesLoading;
+
+  useEffect(() => {
+    if (allLoading) return;
+    // Data loaded — focus the first rail
+    const timer = setTimeout(() => {
+      try { setFocus('home-content'); } catch { /* noop */ }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [allLoading]);
 
   const handleVodClick = (item: XtreamVODStream) => {
     navigate({ to: '/vod/$vodId', params: { vodId: String(item.stream_id) } });

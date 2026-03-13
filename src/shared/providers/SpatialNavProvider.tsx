@@ -45,6 +45,10 @@ export function SpatialNavProvider({ children }: SpatialNavProviderProps) {
       // When suppressArrowNav is true (player active in TV mode), skip arrow handling
       if (isArrow && useUIStore.getState().suppressArrowNav) return;
 
+      if (isArrow) {
+        e.preventDefault();  // Prevent native scroll — norigin handles focus movement, card onFocus scrolls into view
+      }
+
       const isNavKey = isArrow || ['Enter', 'Escape', 'Backspace'].includes(e.key);
 
       if (isNavKey) {

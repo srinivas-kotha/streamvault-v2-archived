@@ -11,6 +11,7 @@ interface UsePlayerKeyboardOptions {
   onVolumeUp: () => void;
   onVolumeDown: () => void;
   onClose?: () => void;
+  onOSD?: (action: { type: string; value?: number; timestamp: number }) => void;
 }
 
 export function usePlayerKeyboard({
@@ -22,6 +23,7 @@ export function usePlayerKeyboard({
   onVolumeUp,
   onVolumeDown,
   onClose,
+  onOSD,
 }: UsePlayerKeyboardOptions) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -41,8 +43,10 @@ export function usePlayerKeyboard({
         if (isGenericFocus) {
           e.preventDefault();
           e.stopPropagation();
-          if (video.paused) playerRef.current?.play();
+          const wasPaused = video.paused;
+          if (wasPaused) playerRef.current?.play();
           else playerRef.current?.pause();
+          onOSD?.({ type: wasPaused ? 'play' : 'pause', timestamp: Date.now() });
           return;
         }
       }
@@ -67,16 +71,24 @@ export function usePlayerKeyboard({
 
         switch (e.key) {
           case 'ArrowLeft':
-            if (!isLive) playerRef.current?.seek(Math.max(0, video.currentTime - 10));
+            if (!isLive) {
+              playerRef.current?.seek(Math.max(0, video.currentTime - 10));
+              onOSD?.({ type: 'seek-back', timestamp: Date.now() });
+            }
             break;
           case 'ArrowRight':
-            if (!isLive) playerRef.current?.seek(video.currentTime + 10);
+            if (!isLive) {
+              playerRef.current?.seek(video.currentTime + 10);
+              onOSD?.({ type: 'seek-forward', timestamp: Date.now() });
+            }
             break;
           case 'ArrowUp':
             onVolumeUp();
+            onOSD?.({ type: 'volume', timestamp: Date.now() });
             break;
           case 'ArrowDown':
             onVolumeDown();
+            onOSD?.({ type: 'volume', timestamp: Date.now() });
             break;
         }
         return;
@@ -84,19 +96,25 @@ export function usePlayerKeyboard({
 
       switch (e.key) {
         case ' ':
-        case 'k':
+        case 'k': {
           e.preventDefault();
-          if (video.paused) playerRef.current?.play();
+          const wasPaused = video.paused;
+          if (wasPaused) playerRef.current?.play();
           else playerRef.current?.pause();
+          onOSD?.({ type: wasPaused ? 'play' : 'pause', timestamp: Date.now() });
           break;
+        }
         case 'f':
           e.preventDefault();
           playerRef.current?.toggleFullscreen();
           break;
-        case 'm':
+        case 'm': {
           e.preventDefault();
+          const wasMuted = video.muted;
           onMuteToggle();
+          onOSD?.({ type: wasMuted ? 'unmute' : 'mute', timestamp: Date.now() });
           break;
+        }
         case 'n':
           if (onNext) { e.preventDefault(); onNext(); }
           break;
@@ -120,5 +138,5 @@ export function usePlayerKeyboard({
     // We use capture phase so we can stopPropagation before LRUD gets it
     window.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
-  }, [playerRef, isLive, onNext, onPrev, onMuteToggle, onVolumeUp, onVolumeDown, onClose]);
+  }, [playerRef, isLive, onNext, onPrev, onMuteToggle, onVolumeUp, onVolumeDown, onClose, onOSD]);
 }

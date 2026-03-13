@@ -10,6 +10,7 @@ interface FocusableCardProps {
   isFavorite?: boolean;
   isNew?: boolean;
   onFavoriteToggle?: () => void;
+  onRemove?: () => void;
   onClick?: () => void;
   aspectRatio?: 'poster' | 'landscape' | 'square';
   /** Unique spatial focus key — prevents ID collisions when titles match */
@@ -25,6 +26,7 @@ export function FocusableCard({
   isFavorite,
   isNew,
   onFavoriteToggle,
+  onRemove,
   onClick,
   aspectRatio = 'poster',
   focusKey,
@@ -46,6 +48,7 @@ export function FocusableCard({
         progress={progress}
         isFavorite={isFavorite}
         onFavoriteToggle={onFavoriteToggle}
+        onRemove={onRemove}
         onClick={onClick}
         aspectRatio={aspectRatio}
       />

@@ -1,4 +1,5 @@
 import { useWatchHistory } from '../api';
+import { useRemoveHistoryItem } from '@features/history/api';
 import { useNavigate } from '@tanstack/react-router';
 import { usePlayerStore, type StreamType } from '@lib/store';
 import { ContentRail } from '@shared/components/ContentRail';
@@ -12,6 +13,7 @@ const contentTypeToStreamType: Record<string, StreamType> = {
 
 export function ContinueWatching() {
   const { data: history, isLoading } = useWatchHistory();
+  const removeHistoryItem = useRemoveHistoryItem();
   const playStream = usePlayerStore((s) => s.playStream);
   const navigate = useNavigate();
 
@@ -59,6 +61,10 @@ export function ContinueWatching() {
             subtitle={`${percent}% watched`}
             progress={percent}
             aspectRatio="landscape"
+            onRemove={() => removeHistoryItem.mutate({
+              contentId: item.content_id,
+              contentType: item.content_type,
+            })}
             onClick={() => handleClick(item)}
           />
         );

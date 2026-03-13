@@ -19,3 +19,15 @@ export function useClearHistory() {
     },
   });
 }
+
+export function useRemoveHistoryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ contentId, contentType }: { contentId: number; contentType: string }) => {
+      return api<void>(`/history/${contentId}?content_type=${contentType}`, { method: 'DELETE' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['history'] });
+    },
+  });
+}

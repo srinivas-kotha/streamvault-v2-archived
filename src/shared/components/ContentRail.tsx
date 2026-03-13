@@ -1,11 +1,11 @@
 import { createContext, useRef, type ReactNode } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { useSpatialFocusable, useSpatialContainer, FocusContext } from '@shared/hooks/useSpatialNav';
 import { HorizontalScroll } from './HorizontalScroll';
 
 const RailContext = createContext<string>('SN:ROOT');
 
-function FocusableSeeAll({ to, parentFocusKey }: { to: string; parentFocusKey: string }) {
+function FocusableSeeAllCard({ to, parentFocusKey }: { to: string; parentFocusKey: string }) {
   const navigate = useNavigate();
 
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
@@ -17,16 +17,27 @@ function FocusableSeeAll({ to, parentFocusKey }: { to: string; parentFocusKey: s
   });
 
   return (
-    <div ref={ref} {...focusProps}>
-      <Link
+    <div className="rail-item flex-shrink-0">
+      <div
+        ref={ref}
+        {...focusProps}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic route path from props
-        to={to as any}
-        className={`text-sm text-teal hover:text-teal/80 transition-colors whitespace-nowrap min-h-[44px] flex items-center ${
-          showFocusRing ? 'ring-2 ring-teal/50 rounded px-2' : ''
+        onClick={() => navigate({ to: to as any })}
+        className={`flex items-center justify-center aspect-[2/3] rounded-lg border cursor-pointer transition-all duration-200 ${
+          showFocusRing
+            ? 'border-teal bg-teal/10 scale-[1.08] ring-2 ring-teal/60 ring-offset-2 ring-offset-obsidian shadow-[0_0_24px_rgba(45,212,191,0.3)]'
+            : 'border-border-subtle bg-surface-raised/50 hover:border-teal/30 hover:bg-surface-raised'
         }`}
       >
-        See All →
-      </Link>
+        <div className="text-center px-2">
+          <svg className={`w-6 h-6 mx-auto mb-2 ${showFocusRing ? 'text-teal' : 'text-text-muted'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+          <span className={`text-xs font-medium ${showFocusRing ? 'text-teal' : 'text-text-muted'}`}>
+            See All
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -42,13 +53,26 @@ interface ContentRailProps {
   focusKey?: string;
 }
 
-export function ContentRail({
+/**
+ * ContentRail — early-returns BEFORE mounting the inner component
+ * to avoid the norigin conditional render anti-pattern
+ * (calling useFocusable then returning null registers a ghost node).
+ */
+export function ContentRail(props: ContentRailProps) {
+  const { isEmpty = false, isLoading = false } = props;
+
+  // Return null BEFORE any hooks are called — prevents ghost focus nodes
+  if (isEmpty && !isLoading) return null;
+
+  return <ContentRailInner {...props} />;
+}
+
+/** Inner component — only mounts when rail has content or is loading */
+function ContentRailInner({
   title,
   seeAllTo,
   children,
   className = '',
-  emptyMessage: _emptyMessage = 'Nothing here yet',
-  isEmpty = false,
   isLoading = false,
   focusKey: propFocusKey,
 }: ContentRailProps) {
@@ -62,8 +86,6 @@ export function ContentRail({
     focusBoundaryDirections: ['left', 'right'],
   });
 
-  if (isEmpty && !isLoading) return null;
-
   return (
     <FocusContext.Provider value={focusKey}>
       <section ref={ref} className={`${className}`}>
@@ -71,9 +93,6 @@ export function ContentRail({
           <h2 className="font-display text-lg lg:text-xl font-semibold text-text-primary">
             {title}
           </h2>
-          {seeAllTo && (
-            <FocusableSeeAll to={seeAllTo} parentFocusKey={railId} />
-          )}
         </div>
 
         <div className="px-6 lg:px-10">
@@ -91,6 +110,9 @@ export function ContentRail({
             <HorizontalScroll ref={scrollRef}>
               <RailContext.Provider value={focusKey}>
                 {children}
+                {seeAllTo && (
+                  <FocusableSeeAllCard to={seeAllTo} parentFocusKey={railId} />
+                )}
               </RailContext.Provider>
             </HorizontalScroll>
           )}
