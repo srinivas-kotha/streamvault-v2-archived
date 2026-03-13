@@ -130,8 +130,9 @@ class MainActivity : Activity() {
 
             if (eventType != null) {
                 // Inject a synthetic KeyboardEvent directly into JavaScript.
-                // Only dispatch on document (not both document AND window)
-                // to avoid double-firing the LRUD handler.
+                // Dispatch to both window and document so the handler fires
+                // regardless of which cached frontend version is loaded.
+                // JS-side dedup (50ms window) prevents double-firing.
                 val js = """
                     (function() {
                         var e = new KeyboardEvent('$eventType', {
@@ -142,7 +143,18 @@ class MainActivity : Activity() {
                             bubbles: true,
                             cancelable: true
                         });
-                        document.dispatchEvent(e);
+                        // Dispatch to BOTH targets — old cached frontend may listen on
+                        // window, new frontend listens on document. Dedup handled in JS.
+                        window.dispatchEvent(e);
+                        var e2 = new KeyboardEvent('$eventType', {
+                            key: '$key',
+                            code: '$code',
+                            keyCode: $keyCode,
+                            which: $keyCode,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        document.dispatchEvent(e2);
 
                         // Debug overlay — shows key + LRUD state
                         if ('$eventType' === 'keydown') {

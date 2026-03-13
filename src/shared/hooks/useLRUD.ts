@@ -32,10 +32,14 @@ export function useLRUD({ id, onEnter, onFocus, onBlur, parent = 'root', ...conf
     // Unregister first in case the node already exists (e.g. HMR, re-mount)
     try { lrud.unregisterNode(id); } catch { /* not registered yet */ }
 
-    // Register the node in the LRUD tree with parent
+    // Register the node in the LRUD tree with parent.
+    // @bam.tech/lrud considers a node focusable only if isFocusable=true or
+    // selectAction is set. Default leaf nodes (no orientation) to focusable.
+    const isFocusable = config.isFocusable ?? (config.orientation == null);
     lrud.registerNode(id, {
       parent,
       ...config,
+      isFocusable,
       onFocus: () => {
         setIsFocused(true);
         onFocusRef.current?.();

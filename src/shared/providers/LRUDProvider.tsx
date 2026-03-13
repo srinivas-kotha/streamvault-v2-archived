@@ -37,9 +37,18 @@ export function LRUDProvider({ children }: LRUDProviderProps) {
       rootRegistered.current = true;
     }
 
+    // Dedup: Fire TV APK dispatches to both window AND document to handle
+    // cached vs fresh frontend. Skip if same key fires twice within 50ms.
+    let lastKeyTime = 0;
+    let lastKeyCode = '';
+
     // Handle keydown events to drive LRUD.
     // Use capture phase so we intercept before any child element can swallow the event.
     function handleKeyDown(e: KeyboardEvent) {
+      const now = Date.now();
+      if (e.key === lastKeyCode && now - lastKeyTime < 50) return;
+      lastKeyTime = now;
+      lastKeyCode = e.key;
       // Don't intercept keys when user is typing in an input — EXCEPT arrow
       // keys which should escape the input and navigate via LRUD
       const tag = (document.activeElement as HTMLElement)?.tagName;
@@ -100,14 +109,16 @@ export function LRUDProvider({ children }: LRUDProviderProps) {
       setInputMode('mouse');
     }
 
-    // Listen on document with capture phase. Fire TV native wrapper injects
-    // synthetic KeyboardEvents via evaluateJavascript() dispatched on document.
-    // Desktop browsers also bubble keydown from DOM elements up to document.
+    // Listen on BOTH document and window with capture phase.
+    // Fire TV APK dispatches synthetic KeyboardEvents to both targets.
+    // Dedup above prevents double-firing LRUD.
     document.addEventListener('keydown', handleKeyDown, { capture: true });
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown, { capture: true });
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, [setInputMode]);
