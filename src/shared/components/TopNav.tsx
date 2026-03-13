@@ -16,9 +16,11 @@ export function TopNav() {
   const [scrolled, setScrolled] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  // Register the top-nav spatial container
+  // Register the top-nav spatial container — focusable: false so individual
+  // NavItems are direct smartNavigate candidates (containers block Up navigation)
   const { ref: topNavRef, focusKey: topNavFocusKey } = useSpatialContainer({
     focusKey: 'top-nav',
+    focusable: false,
   });
 
   // Detect languages from categories
@@ -213,6 +215,7 @@ function TopNavFocusGroup({ languages, matchRoute }: { languages: string[]; matc
 
   const { ref: groupRef, focusKey } = useSpatialContainer({
     focusKey: 'top-nav-items',
+    focusable: false,
   });
 
   return (
