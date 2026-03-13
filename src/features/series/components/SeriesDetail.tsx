@@ -373,7 +373,16 @@ export function SeriesDetail() {
     );
   }
 
-  if (!data) return null;
+  if (!data || !data.info || Array.isArray(data.info) || !data.info.name) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-text-muted">Content unavailable. The provider may be temporarily down.</p>
+        <button onClick={() => navigate({ to: '/series' })} className="mt-4 px-4 py-2 bg-teal/15 text-teal rounded-lg text-sm hover:bg-teal/25 transition-colors">
+          Back to Series
+        </button>
+      </div>
+    );
+  }
   const { info, seasons } = data;
 
   return (

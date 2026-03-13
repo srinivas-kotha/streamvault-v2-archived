@@ -58,7 +58,16 @@ export function MovieDetail() {
     );
   }
 
-  if (!data) return null;
+  if (!data || !data.info || Array.isArray(data.info) || !data.info.name) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-text-muted">Content unavailable. The provider may be temporarily down.</p>
+        <button onClick={() => navigate({ to: '/vod' })} className="mt-4 px-4 py-2 bg-teal/15 text-teal rounded-lg text-sm hover:bg-teal/25 transition-colors">
+          Back to Movies
+        </button>
+      </div>
+    );
+  }
   const { info, movie_data } = data;
 
   return (
