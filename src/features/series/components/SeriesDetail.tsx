@@ -7,8 +7,8 @@ import { Badge } from '@shared/components/Badge';
 import { Skeleton } from '@shared/components/Skeleton';
 import { formatDuration } from '@shared/utils/formatDuration';
 import { parseGenres } from '@shared/utils/parseGenres';
-import { PlayerPage } from '@features/player/components/PlayerPage';
 import { PageTransition } from '@shared/components/PageTransition';
+import { usePlayerStore } from '@lib/store';
 import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
 
 type EpisodeSortKey = 'latest' | 'oldest' | 'episode';
@@ -238,14 +238,11 @@ export function SeriesDetail() {
   const { data: watchHistory } = useWatchHistory();
 
   const [activeSeason, setActiveSeason] = useState<number | null>(null);
-  const [playingEpisodeId, setPlayingEpisodeId] = useState<string | null>(null);
-  const [playingEpisodeName, setPlayingEpisodeName] = useState<string>('');
-  const [resumeStartTime, setResumeStartTime] = useState(0);
   const [episodeSort, setEpisodeSort] = useState<EpisodeSortKey>('latest');
   const [episodeSearch, setEpisodeSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(EPISODES_PER_PAGE);
   const episodeListRef = useRef<HTMLDivElement>(null);
-  const highlightRef = useRef<HTMLDivElement>(null);
+
 
   // Find the last watched episode for this series from watch history
   const lastWatchedEpisode = useMemo(() => {
@@ -359,38 +356,17 @@ export function SeriesDetail() {
     return null;
   }, [data?.info]);
 
-  // Find current episode index for next/prev navigation
-  const currentEpisodeIndex = useMemo(() => {
-    if (!playingEpisodeId) return -1;
-    return allEpisodes.findIndex((ep) => String(ep.id) === playingEpisodeId);
-  }, [playingEpisodeId, allEpisodes]);
+
+  const playStream = usePlayerStore((s) => s.playStream);
 
   const playEpisode = useCallback(
     (ep: (typeof allEpisodes)[0], startTime = 0) => {
-      setPlayingEpisodeId(String(ep.id));
-      setPlayingEpisodeName(
-        `${data?.info.name || 'Series'} - S${activeSeason}E${ep.episode_num} - ${ep.title}`
-      );
-      setResumeStartTime(startTime);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const name = `${data?.info.name || 'Series'} - S${activeSeason}E${ep.episode_num} - ${ep.title}`;
+      playStream(String(ep.id), 'series', name, startTime);
     },
-    [data?.info.name, activeSeason]
+    [data?.info.name, activeSeason, playStream]
   );
 
-  const playNext = useCallback(() => {
-    // In "latest first" sort, "next" means the episode below (index + 1)
-    const nextIdx = currentEpisodeIndex + 1;
-    if (nextIdx < allEpisodes.length) {
-      playEpisode(allEpisodes[nextIdx]!);
-    }
-  }, [currentEpisodeIndex, allEpisodes, playEpisode]);
-
-  const playPrev = useCallback(() => {
-    const prevIdx = currentEpisodeIndex - 1;
-    if (prevIdx >= 0) {
-      playEpisode(allEpisodes[prevIdx]!);
-    }
-  }, [currentEpisodeIndex, allEpisodes, playEpisode]);
 
   const handleLoadMore = useCallback(() => {
     setVisibleCount((prev) => prev + EPISODES_PER_PAGE);
@@ -432,14 +408,9 @@ export function SeriesDetail() {
     onEnterPress: () => navigate({ to: '/series' }),
   });
 
-  const { ref: closeRef, showFocusRing: closeFocusRing, focusProps: closeFocusProps } = useSpatialFocusable({
-    focusKey: `series-close-${seriesId}`,
-    onEnterPress: () => setPlayingEpisodeId(null),
-  });
-
   // Auto-focus resume button or back button when page loads
   useEffect(() => {
-    if (!isLoading && data && !playingEpisodeId) {
+    if (!isLoading && data) {
       const timer = setTimeout(() => {
         // Try resume button first, then first episode
         try { setFocus(`series-resume-${seriesId}`); } catch {
@@ -448,7 +419,7 @@ export function SeriesDetail() {
       }, 150);
       return () => clearTimeout(timer);
     }
-  }, [isLoading, data, seriesId, playingEpisodeId]);
+  }, [isLoading, data, seriesId]);
 
   if (isLoading) {
     return (
@@ -553,47 +524,14 @@ export function SeriesDetail() {
               </div>
             </div>
 
-            {/* Inline Player */}
-            {playingEpisodeId && (
-              <div className="relative mb-6 mx-6 lg:mx-10">
-                <button
-                  ref={closeRef}
-                  {...closeFocusProps}
-                  onClick={() => setPlayingEpisodeId(null)}
-                  className={`absolute top-3 right-3 z-20 p-2.5 bg-obsidian/80 rounded-full text-text-muted hover:text-text-primary transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                    closeFocusRing ? 'ring-2 ring-teal bg-teal/20 text-text-primary' : ''
-                  }`}
-                  title="Close player"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                <PlayerPage
-                  streamType="series"
-                  streamId={playingEpisodeId}
-                  streamName={playingEpisodeName}
-                  startTime={resumeStartTime}
-                  hasNext={currentEpisodeIndex < allEpisodes.length - 1}
-                  hasPrev={currentEpisodeIndex > 0}
-                  onNext={playNext}
-                  onPrev={playPrev}
-                  onClose={() => setPlayingEpisodeId(null)}
-                />
-              </div>
-            )}
-
             {/* Resume Banner — extracted to avoid conditional useSpatialFocusable anti-pattern */}
-            {lastWatchedEpisode && !playingEpisodeId && (
+            {lastWatchedEpisode && (
               <ResumeButton
                 seriesId={seriesId}
                 episode={lastWatchedEpisode}
                 seriesName={info.name}
                 onResume={(contentId, contentName, progressSeconds) => {
-                  setPlayingEpisodeId(String(contentId));
-                  setPlayingEpisodeName(contentName);
-                  setResumeStartTime(progressSeconds);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  playStream(String(contentId), 'series', contentName, progressSeconds);
                 }}
               />
             )}
@@ -738,18 +676,14 @@ export function SeriesDetail() {
                   </p>
                 </div>
               ) : (
-                visibleEpisodes.map((ep) => {
-                  const isPlaying = playingEpisodeId === String(ep.id);
-                  return (
+                visibleEpisodes.map((ep) => (
                     <FocusableEpisodeItem
                       key={ep.id}
                       ep={ep}
-                      isPlaying={isPlaying}
-                      activeRef={highlightRef}
+                      isPlaying={false}
                       playEpisode={playEpisode}
                     />
-                  );
-                })
+                ))
               )}
             </div>
           </FocusContext.Provider>
