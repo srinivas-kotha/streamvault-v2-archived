@@ -135,6 +135,9 @@ function FocusableEpisodeItem({
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
     focusKey: `series-ep-${ep.id}`,
     onEnterPress: () => playEpisode(ep),
+    onFocus: (layout) => {
+      layout.node?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+    },
   });
 
   const addedDate = formatEpisodeDate(ep.added);
