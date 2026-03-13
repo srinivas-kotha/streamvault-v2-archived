@@ -1,27 +1,16 @@
-import { useRef, useState, useEffect, useCallback, useId, type ReactNode } from 'react';
+import { useRef, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useUIStore } from '@lib/store';
-import { useLRUD } from '@shared/hooks/useLRUD';
+import { isTVMode } from '@shared/utils/isTVMode';
 
-function FocusableScrollArrow({ direction, onClick, arrowOpacity, instanceId }: {
+function ScrollArrow({ direction, onClick, arrowOpacity }: {
   direction: 'left' | 'right';
   onClick: () => void;
   arrowOpacity: string;
-  instanceId: string;
 }) {
-  const inputMode = useUIStore((s) => s.inputMode);
-  const { ref, isFocused, focusProps } = useLRUD({
-    id: `scroll-arrow-${direction}-${instanceId}`,
-    parent: 'root',
-    onEnter: onClick,
-  });
-  const showFocus = isFocused && inputMode === 'keyboard';
-
   return (
     <button
-      ref={ref}
-      {...focusProps}
       onClick={onClick}
-      className={`absolute ${direction === 'left' ? 'left-0' : 'right-0'} top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-obsidian/80 border border-border-subtle text-text-primary transition-opacity duration-200 hover:bg-surface-raised hover:border-teal/30 ${showFocus ? 'opacity-100 ring-2 ring-teal' : arrowOpacity}`}
+      className={`absolute ${direction === 'left' ? 'left-0' : 'right-0'} top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-obsidian/80 border border-border-subtle text-text-primary transition-opacity duration-200 hover:bg-surface-raised hover:border-teal/30 ${arrowOpacity}`}
       aria-label={`Scroll ${direction}`}
     >
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -37,7 +26,6 @@ interface HorizontalScrollProps {
 }
 
 export function HorizontalScroll({ children, className = '' }: HorizontalScrollProps) {
-  const instanceId = useId();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -82,9 +70,9 @@ export function HorizontalScroll({ children, className = '' }: HorizontalScrollP
 
   return (
     <div className={`group/scroll relative ${className}`}>
-      {/* Left arrow */}
-      {canScrollLeft && (
-        <FocusableScrollArrow direction="left" onClick={() => scroll('left')} arrowOpacity={arrowOpacity} instanceId={instanceId} />
+      {/* Left arrow — hidden in TV mode (D-pad users scroll via focus + scrollIntoView) */}
+      {!isTVMode && canScrollLeft && (
+        <ScrollArrow direction="left" onClick={() => scroll('left')} arrowOpacity={arrowOpacity} />
       )}
 
       {/* Scrollable area */}
@@ -95,9 +83,9 @@ export function HorizontalScroll({ children, className = '' }: HorizontalScrollP
         {children}
       </div>
 
-      {/* Right arrow */}
-      {canScrollRight && (
-        <FocusableScrollArrow direction="right" onClick={() => scroll('right')} arrowOpacity={arrowOpacity} instanceId={instanceId} />
+      {/* Right arrow — hidden in TV mode */}
+      {!isTVMode && canScrollRight && (
+        <ScrollArrow direction="right" onClick={() => scroll('right')} arrowOpacity={arrowOpacity} />
       )}
     </div>
   );

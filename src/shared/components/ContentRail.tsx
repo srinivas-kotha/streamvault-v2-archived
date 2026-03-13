@@ -1,8 +1,11 @@
-import { type ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useLRUD } from '@shared/hooks/useLRUD';
 import { useUIStore } from '@lib/store';
 import { HorizontalScroll } from './HorizontalScroll';
+
+const RailContext = createContext<string>('root');
+export function useRailParent() { return useContext(RailContext); }
 
 
 interface ContentRailProps {
@@ -14,6 +17,7 @@ interface ContentRailProps {
   isEmpty?: boolean;
   isLoading?: boolean;
   focusKey?: string;
+  parentFocusKey?: string;
 }
 
 function FocusableSeeAll({ to, parentFocusKey }: { to: string; parentFocusKey: string }) {
@@ -55,12 +59,15 @@ export function ContentRail({
   isEmpty = false,
   isLoading = false,
   focusKey: propFocusKey,
+  parentFocusKey = 'root',
 }: ContentRailProps) {
   const focusKeyId = propFocusKey || `rail-${title.replace(/\s+/g, '-').toLowerCase()}`;
 
   const { ref } = useLRUD({
     id: focusKeyId,
-    parent: 'root',
+    parent: parentFocusKey,
+    orientation: 'horizontal',
+    isWrapping: true,
     isFocusable: false, // Structural node that groups children
   });
 
@@ -92,7 +99,9 @@ export function ContentRail({
             </div>
           ) : (
             <HorizontalScroll>
-              {children}
+              <RailContext.Provider value={focusKeyId}>
+                {children}
+              </RailContext.Provider>
             </HorizontalScroll>
           )}
         </div>

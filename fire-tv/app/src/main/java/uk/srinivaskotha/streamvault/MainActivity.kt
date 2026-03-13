@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.webkit.CookieManager
@@ -178,7 +180,50 @@ class MainActivity : Activity() {
                     })();
                 """.trimIndent()
 
-                webView.evaluateJavascript(js, null)
+                webView.evaluateJavascript(js) { _ ->
+                    // After Enter keydown, check if JS focused an input element.
+                    // WebView needs a real touch event to create an InputConnection
+                    // that routes virtual keyboard input to the HTML <input>.
+                    // Programmatic .focus() + IMM.showSoftInput() opens the keyboard
+                    // but doesn't connect it to the input field.
+                    if (key == "Enter" && eventType == "keydown") {
+                        webView.evaluateJavascript("""
+                            (function() {
+                                var el = document.activeElement;
+                                if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+                                    var r = el.getBoundingClientRect();
+                                    return JSON.stringify({x: r.left + r.width/2, y: r.top + r.height/2});
+                                }
+                                return 'null';
+                            })();
+                        """.trimIndent()) { result ->
+                            if (result != "\"null\"" && result != "null") {
+                                try {
+                                    val clean = result.trim('"').replace("\\\"", "\"")
+                                    val x = Regex(""""x":\s*([\d.]+)""").find(clean)?.groupValues?.get(1)?.toFloat() ?: return@evaluateJavascript
+                                    val y = Regex(""""y":\s*([\d.]+)""").find(clean)?.groupValues?.get(1)?.toFloat() ?: return@evaluateJavascript
+
+                                    // Account for WebView's device pixel ratio
+                                    val density = resources.displayMetrics.density
+                                    val tapX = x * density
+                                    val tapY = y * density
+
+                                    // Simulate a native touch tap — this triggers WebView's
+                                    // internal InputConnection setup for the HTML input.
+                                    val now = SystemClock.uptimeMillis()
+                                    val down = MotionEvent.obtain(now, now, MotionEvent.ACTION_DOWN, tapX, tapY, 0)
+                                    val up = MotionEvent.obtain(now, now + 50, MotionEvent.ACTION_UP, tapX, tapY, 0)
+                                    webView.dispatchTouchEvent(down)
+                                    webView.postDelayed({
+                                        webView.dispatchTouchEvent(up)
+                                        up.recycle()
+                                    }, 50)
+                                    down.recycle()
+                                } catch (_: Exception) { /* parsing failed, skip */ }
+                            }
+                        }
+                    }
+                }
                 return true  // Consume the event — don't let WebView handle it
             }
         }

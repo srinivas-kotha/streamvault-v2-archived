@@ -24,7 +24,7 @@ function FeaturedCard({ channel }: { channel: XtreamLiveStream }) {
 
   const { ref, isFocused, focusProps } = useLRUD({
     id: `featured-${channel.stream_id}`,
-    parent: 'root',
+    parent: 'featured-channels',
     onEnter: handleClick,
   });
 
@@ -98,8 +98,21 @@ function FeaturedCard({ channel }: { channel: XtreamLiveStream }) {
   );
 }
 
-export function FeaturedChannels() {
+interface FeaturedChannelsProps {
+  parentFocusKey?: string;
+}
+
+export function FeaturedChannels({ parentFocusKey = 'root' }: FeaturedChannelsProps) {
   const { data: channels, isLoading } = useFeaturedChannels();
+
+  // Register container for featured channel cards
+  const { ref: containerRef } = useLRUD({
+    id: 'featured-channels',
+    parent: parentFocusKey,
+    orientation: 'horizontal',
+    isWrapping: true,
+    isFocusable: false,
+  });
 
   if (isLoading) {
     return (
@@ -125,7 +138,7 @@ export function FeaturedChannels() {
         <span className="w-1.5 h-5 bg-gradient-to-b from-teal to-indigo rounded-full" />
         Featured Channels
       </h2>
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+      <div ref={containerRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
         {channels.map((channel) => (
           <FeaturedCard key={channel.stream_id} channel={channel} />
         ))}

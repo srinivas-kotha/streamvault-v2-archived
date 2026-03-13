@@ -118,15 +118,14 @@ export function PlayerPage({
     onClose,
   });
 
-  // Auto-fullscreen in TV mode (Fire Stick WebView, Samsung TV PWA)
+  // Auto-fullscreen — skip in TV mode (player div fills viewport via CSS)
+  // Only trigger for non-TV contexts (e.g. Samsung PWA that isn't in TV mode)
   useEffect(() => {
-    if (!isTVMode || !isPlaying) return;
-    // Small delay to let the video element mount before requesting fullscreen
+    if (isTVMode || !isPlaying) return;
     const timer = setTimeout(() => {
       playerRef.current?.toggleFullscreen();
     }, 300);
     return () => clearTimeout(timer);
-    // Only trigger once when playback starts, not on every isPlaying change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streamId]);
 
@@ -141,7 +140,7 @@ export function PlayerPage({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[70vh] bg-obsidian rounded-xl">
+      <div className={`flex items-center justify-center ${isTVMode ? 'h-screen' : 'h-[70vh]'} bg-obsidian rounded-xl`}>
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-teal/30 border-t-teal rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary text-sm">Loading stream...</p>
@@ -152,7 +151,7 @@ export function PlayerPage({
 
   if (error || !streamData) {
     return (
-      <div className="flex items-center justify-center h-[70vh] bg-surface rounded-xl">
+      <div className={`flex items-center justify-center ${isTVMode ? 'h-screen' : 'h-[70vh]'} bg-surface rounded-xl`}>
         <div className="text-center">
           <svg className="w-12 h-12 text-error mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -170,10 +169,14 @@ export function PlayerPage({
     );
   }
 
+  const playerClass = isTVMode
+    ? 'fixed inset-0 w-screen h-screen z-50 bg-black'
+    : 'relative aspect-video bg-black rounded-xl overflow-hidden';
+
   return (
-    <div 
+    <div
       ref={ref}
-      className="relative aspect-video bg-black rounded-xl overflow-hidden focus:outline-none"
+      className={`${playerClass} focus:outline-none`}
       onMouseMove={showControls}
       onMouseLeave={() => isPlaying && setControlsVisible(false)}
       onClick={() => {

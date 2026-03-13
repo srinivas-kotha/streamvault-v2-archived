@@ -8,9 +8,10 @@ import { usePlayerStore, useUIStore } from '@lib/store';
 
 interface ChannelCardProps {
   channel: XtreamLiveStream;
+  parentFocusKey?: string;
 }
 
-export function ChannelCard({ channel }: ChannelCardProps) {
+export function ChannelCard({ channel, parentFocusKey }: ChannelCardProps) {
   const navigate = useNavigate();
   const playStream = usePlayerStore((s) => s.playStream);
   const inputMode = useUIStore((s) => s.inputMode);
@@ -28,7 +29,7 @@ export function ChannelCard({ channel }: ChannelCardProps) {
 
   const { ref, isFocused, focusProps } = useLRUD({
     id: `channel-${channel.stream_id}`,
-    parent: 'root',
+    parent: parentFocusKey || 'root',
     onEnter: handlePlay,
   });
 

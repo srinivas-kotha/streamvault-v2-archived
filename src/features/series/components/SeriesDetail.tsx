@@ -43,17 +43,19 @@ function FocusableEpisodeItem({
   ep,
   isPlaying,
   activeRef,
-  playEpisode
+  playEpisode,
+  parentFocusKey
 }: {
   ep: Episode;
   isPlaying: boolean;
   activeRef?: React.RefObject<HTMLDivElement | null>;
   playEpisode: (ep: Episode) => void;
+  parentFocusKey: string;
 }) {
   const inputMode = useUIStore((s) => s.inputMode);
   const { ref, isFocused, focusProps } = useLRUD({
     id: `series-ep-${ep.id}`,
-    parent: 'root',
+    parent: parentFocusKey,
     onEnter: () => playEpisode(ep),
   });
   
@@ -330,27 +332,48 @@ export function SeriesDetail() {
 
   const inputMode = useUIStore((s) => s.inputMode);
 
+  const { ref: contentRef } = useLRUD({
+    id: `series-content-${seriesId}`,
+    parent: 'root',
+    orientation: 'vertical',
+    isFocusable: false,
+  });
+
+  useLRUD({
+    id: `series-actions-${seriesId}`,
+    parent: `series-content-${seriesId}`,
+    orientation: 'horizontal',
+    isFocusable: false,
+  });
+
+  useLRUD({
+    id: `series-episodes-${seriesId}`,
+    parent: `series-content-${seriesId}`,
+    orientation: 'vertical',
+    isFocusable: false,
+  });
+
   const { ref: backRef, isFocused: backFocused, focusProps: backFocusProps } = useLRUD({
     id: `series-back-${seriesId}`,
-    parent: 'root',
+    parent: `series-actions-${seriesId}`,
     onEnter: () => navigate({ to: '/series' }),
   });
 
   const { ref: closeRef, isFocused: closeFocused, focusProps: closeFocusProps } = useLRUD({
     id: `series-close-${seriesId}`,
-    parent: 'root',
+    parent: `series-actions-${seriesId}`,
     onEnter: () => setPlayingEpisodeId(null),
   });
 
   const { ref: loadMoreRef, isFocused: loadMoreFocused, focusProps: loadMoreFocusProps } = useLRUD({
     id: `series-load-more-${seriesId}`,
-    parent: 'root',
+    parent: `series-episodes-${seriesId}`,
     onEnter: handleLoadMore,
   });
 
   const { ref: resumeRef, isFocused: resumeFocused, focusProps: resumeFocusProps } = useLRUD({
     id: `series-resume-${seriesId}`,
-    parent: 'root',
+    parent: `series-actions-${seriesId}`,
     onEnter: () => {
       if (!lastWatchedEpisode) return;
       setPlayingEpisodeId(String(lastWatchedEpisode.content_id));
@@ -387,7 +410,7 @@ export function SeriesDetail() {
 
   return (
     <PageTransition>
-      <div className="pb-12">
+      <div ref={contentRef} className="pb-12">
         {/* Back button */}
         <div className="px-6 lg:px-10 pt-4 mb-4">
           <button
@@ -690,6 +713,7 @@ export function SeriesDetail() {
                   isPlaying={isPlaying}
                   activeRef={highlightRef}
                   playEpisode={playEpisode}
+                  parentFocusKey={`series-episodes-${seriesId}`}
                 />
               );
             })

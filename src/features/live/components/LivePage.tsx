@@ -80,7 +80,7 @@ function FocusableViewToggle({ isActive, onSelect, title, icon, id }: {
   id: string;
 }) {
   const inputMode = useUIStore((s) => s.inputMode);
-  const { ref, isFocused, focusProps } = useLRUD({ id, parent: 'live-main', onEnter: onSelect });
+  const { ref, isFocused, focusProps } = useLRUD({ id, parent: 'live-controls', onEnter: onSelect });
   const showFocus = isFocused && inputMode === 'keyboard';
 
   return (
@@ -110,7 +110,7 @@ function FocusableLiveSearch({ searchQuery, setSearchQuery }: {
   const inputMode = useUIStore((s) => s.inputMode);
   const { ref: focusRef, isFocused, focusProps } = useLRUD({
     id: 'live-search',
-    parent: 'live-main',
+    parent: 'live-controls',
     onEnter: () => inputRef.current?.focus(),
   });
   const showFocus = isFocused && inputMode === 'keyboard';
@@ -134,9 +134,9 @@ function FocusableLiveSearch({ searchQuery, setSearchQuery }: {
 function SidebarNav({ categories, activeCatId, isLoading, onSelect }: SidebarNavProps) {
   const { ref } = useLRUD({
     id: 'live-sidebar',
-    parent: 'root',
+    parent: 'live-layout',
     orientation: 'vertical',
-    isFocusable: false, // Structual wrapper for the sidebar layout
+    isFocusable: false,
   });
 
   return (
@@ -171,6 +171,47 @@ export function LivePage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const debouncedSearch = useDebounce(searchQuery);
 
+  // Page container
+  const { ref: contentRef } = useLRUD({
+    id: 'live-content',
+    parent: 'root',
+    orientation: 'vertical',
+    isFocusable: false,
+  });
+
+  // Horizontal split: sidebar | main
+  const { ref: layoutRef } = useLRUD({
+    id: 'live-layout',
+    parent: 'live-content',
+    orientation: 'horizontal',
+    isFocusable: false,
+  });
+
+  // Main content area
+  const { ref: mainRef } = useLRUD({
+    id: 'live-main',
+    parent: 'live-layout',
+    orientation: 'vertical',
+    isFocusable: false,
+  });
+
+  // Controls bar (search + view toggles)
+  useLRUD({
+    id: 'live-controls',
+    parent: 'live-main',
+    orientation: 'horizontal',
+    isFocusable: false,
+  });
+
+  // Channel grid container
+  useLRUD({
+    id: 'live-channel-grid',
+    parent: 'live-main',
+    orientation: 'horizontal',
+    isWrapping: true,
+    isFocusable: false,
+  });
+
   const { data: categories, isLoading: catLoading } = useLiveCategories();
   const firstCatId = categories?.[0]?.category_id || '';
   const activeCatId = selectedCategory || firstCatId;
@@ -201,7 +242,7 @@ export function LivePage() {
 
   return (
     <PageTransition>
-    <div className="flex flex-col gap-4 h-full">
+    <div ref={contentRef} className="flex flex-col gap-4 h-full">
       {/* Inline Player */}
       {play && (
         <div className="relative">
@@ -225,9 +266,9 @@ export function LivePage() {
       )}
 
       {/* Featured Channels Section */}
-      {!play && <FeaturedChannels />}
+      {!play && <FeaturedChannels parentFocusKey="live-content" />}
 
-      <div className="flex gap-6 flex-1 min-h-0">
+      <div ref={layoutRef} className="flex gap-6 flex-1 min-h-0">
         {/* Category Sidebar — vertical focus boundary */}
         <SidebarNav
           categories={sortedCategories}
@@ -238,7 +279,7 @@ export function LivePage() {
 
 
         {/* Main Content */}
-        <div className="flex-1 min-w-0">
+        <div ref={mainRef} className="flex-1 min-w-0">
           {/* Top bar: Search + View toggle */}
           <div className="flex items-center gap-3 mb-4">
             <FocusableLiveSearch searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -285,7 +326,7 @@ export function LivePage() {
           ) : viewMode === 'epg' ? (
             <EPGGrid channels={filteredStreams} />
           ) : (
-            <ChannelGrid channels={filteredStreams} />
+            <ChannelGrid channels={filteredStreams} parentFocusKey="live-channel-grid" />
           )}
         </div>
       </div>
