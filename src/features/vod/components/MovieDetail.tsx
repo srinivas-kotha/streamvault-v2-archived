@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useVODInfo } from '../api';
 import { useWatchHistory } from '@features/history/api';
@@ -9,7 +9,7 @@ import { Skeleton } from '@shared/components/Skeleton';
 import { formatDuration } from '@shared/utils/formatDuration';
 import { parseGenres } from '@shared/utils/parseGenres';
 import { PlayerPage } from '@features/player/components/PlayerPage';
-import { useSpatialFocusable, useSpatialContainer, FocusContext } from '@shared/hooks/useSpatialNav';
+import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
 
 export function MovieDetail() {
   const { vodId } = useParams({ from: '/_authenticated/vod/$vodId' });
@@ -49,6 +49,16 @@ export function MovieDetail() {
     focusKey: `vod-play-${vodId}`,
     onEnterPress: () => setIsPlayerOpen(true),
   });
+
+  // Auto-focus Play button when page loads
+  useEffect(() => {
+    if (!isLoading && data && !isPlayerOpen) {
+      const timer = setTimeout(() => {
+        try { setFocus(`vod-play-${vodId}`); } catch { /* not mounted yet */ }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, data, vodId, isPlayerOpen]);
 
   if (isLoading) {
     return (

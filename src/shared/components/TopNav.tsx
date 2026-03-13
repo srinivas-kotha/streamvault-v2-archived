@@ -72,7 +72,7 @@ export function TopNav() {
             <Link to="/" className="font-display text-lg font-bold text-text-primary flex-shrink-0">
               Stream<span className="text-teal">Vault</span>
             </Link>
-            <TopNavFocusGroup languages={languages} matchRoute={matchRoute} />
+            <TopNavFocusGroup languages={languages.slice(0, 9)} matchRoute={matchRoute} />
             <ProfileMenu
               username={username}
               profileOpen={profileOpen}

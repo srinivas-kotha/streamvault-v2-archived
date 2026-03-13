@@ -9,7 +9,7 @@ import { formatDuration } from '@shared/utils/formatDuration';
 import { parseGenres } from '@shared/utils/parseGenres';
 import { PlayerPage } from '@features/player/components/PlayerPage';
 import { PageTransition } from '@shared/components/PageTransition';
-import { useSpatialFocusable, useSpatialContainer, FocusContext } from '@shared/hooks/useSpatialNav';
+import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
 
 type EpisodeSortKey = 'latest' | 'oldest' | 'episode';
 const EPISODES_PER_PAGE = 50;
@@ -361,6 +361,19 @@ export function SeriesDetail() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
   });
+
+  // Auto-focus resume button or first episode when page loads
+  useEffect(() => {
+    if (!isLoading && data && !playingEpisodeId) {
+      const timer = setTimeout(() => {
+        // Try resume button first, then first episode
+        try { setFocus(`series-resume-${seriesId}`); } catch {
+          try { setFocus(`series-content-${seriesId}`); } catch { /* noop */ }
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, data, seriesId, playingEpisodeId]);
 
   if (isLoading) {
     return (
