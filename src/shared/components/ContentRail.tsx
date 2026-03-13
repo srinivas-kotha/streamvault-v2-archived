@@ -78,6 +78,7 @@ function ContentRailInner({
 
   const { ref, focusKey } = useSpatialContainer({
     focusKey: railId,
+    focusable: false,
     saveLastFocusedChild: true,
     isFocusBoundary: true,
     focusBoundaryDirections: ['left', 'right'],

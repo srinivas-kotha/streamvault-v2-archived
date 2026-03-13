@@ -108,6 +108,7 @@ export function PlayerPage({
   // Spatial Navigation: player container with focus boundary
   const { ref, focusKey, hasFocusedChild } = useSpatialContainer({
     focusKey: 'player-container',
+    focusable: false,
     isFocusBoundary: true,
   });
 

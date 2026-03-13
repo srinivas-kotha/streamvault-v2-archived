@@ -134,7 +134,7 @@ function FocusablePill({ id, label, isActive, onSelect }: {
 }
 
 function SearchBarContainer({ children }: { children: React.ReactNode }) {
-  const { ref, focusKey } = useSpatialContainer({ focusKey: 'search-bar' });
+  const { ref, focusKey } = useSpatialContainer({ focusKey: 'search-bar', focusable: false });
   return (
     <FocusContext.Provider value={focusKey}>
       <div ref={ref}>{children}</div>
@@ -143,7 +143,7 @@ function SearchBarContainer({ children }: { children: React.ReactNode }) {
 }
 
 function SearchTabsContainer({ children }: { children: React.ReactNode }) {
-  const { ref, focusKey } = useSpatialContainer({ focusKey: 'search-tabs' });
+  const { ref, focusKey } = useSpatialContainer({ focusKey: 'search-tabs', focusable: false });
   return (
     <FocusContext.Provider value={focusKey}>
       <div ref={ref}>{children}</div>
@@ -152,7 +152,7 @@ function SearchTabsContainer({ children }: { children: React.ReactNode }) {
 }
 
 function SearchResultsContainer({ children }: { children: React.ReactNode }) {
-  const { ref, focusKey } = useSpatialContainer({ focusKey: 'search-results' });
+  const { ref, focusKey } = useSpatialContainer({ focusKey: 'search-results', focusable: false });
   return (
     <FocusContext.Provider value={focusKey}>
       <div ref={ref}>{children}</div>

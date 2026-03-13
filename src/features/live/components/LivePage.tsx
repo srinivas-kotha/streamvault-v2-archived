@@ -128,6 +128,7 @@ function FocusableLiveSearch({ searchQuery, setSearchQuery }: {
 function SidebarNav({ categories, activeCatId, isLoading, onSelect }: SidebarNavProps) {
   const { ref, focusKey } = useSpatialContainer({
     focusKey: 'live-sidebar',
+    focusable: false,
     isFocusBoundary: true,
     focusBoundaryDirections: ['left'],
   });
@@ -183,21 +184,25 @@ export function LivePage() {
   // Horizontal split: sidebar | main
   const { ref: layoutRef, focusKey: layoutFocusKey } = useSpatialContainer({
     focusKey: 'live-layout',
+    focusable: false,
   });
 
   // Main content area
   const { ref: mainRef, focusKey: mainFocusKey } = useSpatialContainer({
     focusKey: 'live-main',
+    focusable: false,
   });
 
   // Controls bar (search + view toggles)
-  const { focusKey: controlsFocusKey } = useSpatialContainer({
+  const { ref: controlsRef, focusKey: controlsFocusKey } = useSpatialContainer({
     focusKey: 'live-controls',
+    focusable: false,
   });
 
   // Channel grid container
-  const { focusKey: channelGridFocusKey } = useSpatialContainer({
+  const { ref: channelGridRef, focusKey: channelGridFocusKey } = useSpatialContainer({
     focusKey: 'live-channel-grid',
+    focusable: false,
   });
 
   const { data: categories, isLoading: catLoading } = useLiveCategories();
@@ -272,7 +277,7 @@ export function LivePage() {
         <div ref={mainRef} className="flex-1 min-w-0">
           {/* Top bar: Search + View toggle */}
           <FocusContext.Provider value={controlsFocusKey}>
-          <div className="flex items-center gap-3 mb-4">
+          <div ref={controlsRef} className="flex items-center gap-3 mb-4">
             <FocusableLiveSearch searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
             {/* View mode toggle */}
@@ -306,6 +311,7 @@ export function LivePage() {
           </FocusContext.Provider>
 
           <FocusContext.Provider value={channelGridFocusKey}>
+          <div ref={channelGridRef}>
           {streamsLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               <SkeletonGrid count={18} aspectRatio="square" />
@@ -321,6 +327,7 @@ export function LivePage() {
           ) : (
             <ChannelGrid channels={filteredStreams} />
           )}
+          </div>
           </FocusContext.Provider>
         </div>
         </FocusContext.Provider>

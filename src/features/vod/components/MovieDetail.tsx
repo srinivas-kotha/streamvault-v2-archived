@@ -32,8 +32,9 @@ export function MovieDetail() {
     focusable: false,
   });
 
-  const { focusKey: actionsFocusKey } = useSpatialContainer({
+  const { ref: actionsRef, focusKey: actionsFocusKey } = useSpatialContainer({
     focusKey: `movie-actions-${vodId}`,
+    focusable: false,
   });
 
   const { ref: backRef, showFocusRing: backFocusRing, focusProps: backFocusProps } = useSpatialFocusable({
@@ -88,6 +89,7 @@ export function MovieDetail() {
     <FocusContext.Provider value={contentFocusKey}>
       <div ref={contentRef}>
         <FocusContext.Provider value={actionsFocusKey}>
+          <div ref={actionsRef}>
           {/* Back button */}
           <button
             ref={backRef}
@@ -172,6 +174,7 @@ export function MovieDetail() {
                 {savedProgress > 0 ? 'Resume' : 'Play'}
               </Button>
             </div>
+          </div>
           </div>
         </FocusContext.Provider>
 

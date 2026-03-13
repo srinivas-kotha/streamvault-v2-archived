@@ -101,6 +101,7 @@ export function FeaturedChannels() {
   // Register container for featured channel cards
   const { ref: containerRef, focusKey } = useSpatialContainer({
     focusKey: 'featured-channels',
+    focusable: false,
   });
 
   if (isLoading) {
