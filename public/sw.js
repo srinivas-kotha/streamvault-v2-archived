@@ -2,7 +2,7 @@
 // Minimal SW to enable PWA install on Samsung TV, Fire Stick, mobile, etc.
 // Does NOT cache aggressively — streaming content should always be live.
 
-const CACHE_NAME = 'streamvault-shell-v3';
+const CACHE_NAME = 'streamvault-shell-v4';
 const SHELL_ASSETS = [
   '/',
   '/manifest.json',

@@ -15,6 +15,14 @@ export function TopNav() {
   const [scrolled, setScrolled] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
+  // Register the top-nav LRUD container so children (hamburger, nav-items, profile-btn) have a parent
+  const { ref: topNavRef } = useLRUD({
+    id: 'top-nav',
+    parent: 'root',
+    orientation: 'horizontal',
+    isFocusable: false,
+  });
+
   // Detect languages from categories
   const { data: liveCategories } = useLiveCategories();
   const { data: vodCategories } = useVODCategories();
@@ -67,6 +75,7 @@ export function TopNav() {
 
   return (
     <header
+      ref={topNavRef}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled || mobileMenuOpen
           ? 'bg-obsidian/90 backdrop-blur-xl border-b border-border-subtle shadow-lg'
@@ -244,6 +253,14 @@ function ProfileMenu({
   const navigate = useNavigate();
   const inputMode = useUIStore((s) => s.inputMode);
 
+  // Register the profile-menu LRUD container so dropdown children have a parent
+  const { ref: menuRef } = useLRUD({
+    id: 'profile-menu',
+    parent: 'top-nav',
+    orientation: 'vertical',
+    isFocusable: false,
+  });
+
   const { ref: profileBtnRef, isFocused: profileFocused } = useLRUD({
     id: 'profile-btn',
     parent: 'top-nav',
@@ -288,7 +305,7 @@ function ProfileMenu({
       </button>
 
       {profileOpen && (
-        <div role="menu" className="absolute right-0 top-full mt-2 w-48 py-2 bg-surface-raised border border-border rounded-lg shadow-xl z-[60]">
+        <div ref={menuRef} role="menu" className="absolute right-0 top-full mt-2 w-48 py-2 bg-surface-raised border border-border rounded-lg shadow-xl z-[60]">
           <Link
             ref={favRef}
             to="/favorites"

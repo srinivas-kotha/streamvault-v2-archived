@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { queryClient } from '@lib/queryClient';
@@ -12,9 +13,18 @@ declare module '@tanstack/react-router' {
 }
 
 export function App() {
+  const appRef = useRef<HTMLDivElement>(null);
+
+  // Android TV WebViews need a focused DOM element to dispatch D-pad events
+  useEffect(() => {
+    appRef.current?.focus();
+  }, []);
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <div ref={appRef} tabIndex={-1} style={{ outline: 'none' }}>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </div>
   );
 }
