@@ -6,7 +6,7 @@ import { useUIStore } from '@lib/store';
 export const lrud = new Lrud();
 
 // Expose to window for Fire TV debug overlay
-(window as Record<string, unknown>).__LRUD_INSTANCE__ = lrud;
+(window as unknown as Record<string, unknown>).__LRUD_INSTANCE__ = lrud;
 
 interface LRUDContextType {
   lrud: Lrud;
