@@ -17,7 +17,7 @@ const EPISODES_PER_PAGE = 50;
 /** Extracted so useSpatialFocusable only runs when the button is actually mounted */
 function ResumeButton({ seriesId, episode, seriesName, onResume }: {
   seriesId: string;
-  episode: { content_id: number; content_name: string; progress_seconds: number; duration_seconds: number };
+  episode: { content_id: number; content_name: string | null; progress_seconds: number; duration_seconds: number };
   seriesName: string;
   onResume: (contentId: number, contentName: string, progressSeconds: number) => void;
 }) {
