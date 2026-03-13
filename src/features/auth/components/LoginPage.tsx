@@ -98,7 +98,7 @@ export function LoginPage() {
 
   usePageFocus('username-input');
 
-  const { ref: formRef, focusKey } = useSpatialContainer({ focusKey: 'login-form', focusable: false });
+  const { ref: formRef, focusKey } = useSpatialContainer({ focusKey: 'login-form' });
 
   const onSubmit = (data: LoginForm) => {
     loginMutation.mutate(data);

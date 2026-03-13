@@ -41,7 +41,6 @@ export function CategoryGrid({ categories, selectedId, onSelect, focusKey: propF
 
   const { ref: containerRef, focusKey } = useSpatialContainer({
     focusKey: parentId,
-    focusable: false,
   });
 
   return (

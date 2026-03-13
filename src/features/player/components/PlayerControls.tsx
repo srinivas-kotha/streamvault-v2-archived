@@ -211,7 +211,6 @@ export function PlayerControls({
   // Spatial Navigation: controls container
   const { ref: containerRef, focusKey } = useSpatialContainer({
     focusKey: 'player-controls',
-    focusable: false,
   });
 
   const handleSeek = useCallback(

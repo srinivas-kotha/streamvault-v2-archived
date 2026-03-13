@@ -68,35 +68,6 @@ function ResumeButton({ seriesId, episode, seriesName, onResume }: {
   );
 }
 
-/** Extracted so useSpatialFocusable only runs when the button is actually mounted */
-function LoadMoreButton({ seriesId, remaining, onLoadMore }: {
-  seriesId: string;
-  remaining: number;
-  onLoadMore: () => void;
-}) {
-  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
-    focusKey: `series-load-more-${seriesId}`,
-    onEnterPress: onLoadMore,
-  });
-
-  return (
-    <div className="px-6 lg:px-10 mt-4">
-      <button
-        ref={ref}
-        {...focusProps}
-        onClick={onLoadMore}
-        className={`w-full py-3 rounded-xl border text-sm font-medium transition-all ${
-          showFocusRing
-            ? 'bg-surface-raised ring-2 ring-teal ring-offset-2 ring-offset-obsidian text-text-primary'
-            : 'bg-surface-raised border-border text-text-secondary hover:border-teal/20 hover:text-text-primary'
-        }`}
-      >
-        Load More ({remaining} remaining)
-      </button>
-    </div>
-  );
-}
-
 function formatEpisodeDate(unixTimestamp: string): string {
   const ts = parseInt(unixTimestamp, 10);
   if (!ts || isNaN(ts)) return '';
@@ -412,14 +383,12 @@ export function SeriesDetail() {
     focusable: false,
   });
 
-  const { ref: actionsRef, focusKey: actionsFocusKey } = useSpatialContainer({
+  const { focusKey: actionsFocusKey } = useSpatialContainer({
     focusKey: `series-actions-${seriesId}`,
-    focusable: false,
   });
 
-  const { ref: episodesRef, focusKey: episodesFocusKey } = useSpatialContainer({
+  const { focusKey: episodesFocusKey } = useSpatialContainer({
     focusKey: `series-episodes-${seriesId}`,
-    focusable: false,
   });
 
   const { ref: backRef, showFocusRing: backFocusRing, focusProps: backFocusProps } = useSpatialFocusable({
@@ -430,6 +399,11 @@ export function SeriesDetail() {
   const { ref: closeRef, showFocusRing: closeFocusRing, focusProps: closeFocusProps } = useSpatialFocusable({
     focusKey: `series-close-${seriesId}`,
     onEnterPress: () => setPlayingEpisodeId(null),
+  });
+
+  const { ref: loadMoreRef, showFocusRing: loadMoreFocusRing, focusProps: loadMoreFocusProps } = useSpatialFocusable({
+    focusKey: `series-load-more-${seriesId}`,
+    onEnterPress: handleLoadMore,
   });
 
   // Auto-focus resume button or back button when page loads
@@ -475,7 +449,6 @@ export function SeriesDetail() {
       <FocusContext.Provider value={contentFocusKey}>
         <div ref={contentRef} className="pb-12">
           <FocusContext.Provider value={actionsFocusKey}>
-            <div ref={actionsRef}>
             {/* Back button */}
             <div className="px-6 lg:px-10 pt-4 mb-4">
               <button
@@ -592,7 +565,6 @@ export function SeriesDetail() {
                 }}
               />
             )}
-            </div>
           </FocusContext.Provider>
 
           {/* Plot */}
@@ -722,10 +694,7 @@ export function SeriesDetail() {
 
           {/* Episode List */}
           <FocusContext.Provider value={episodesFocusKey}>
-            <div ref={(el: HTMLDivElement | null) => {
-              (episodesRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-              episodeListRef.current = el;
-            }} className="space-y-2 px-6 lg:px-10">
+            <div ref={episodeListRef} className="space-y-2 px-6 lg:px-10">
               {visibleEpisodes.length === 0 && episodeSearch ? (
                 <div className="py-12 text-center">
                   <p className="text-text-muted text-sm">
@@ -749,13 +718,22 @@ export function SeriesDetail() {
             </div>
           </FocusContext.Provider>
 
-          {/* Load More — extracted to avoid conditional useSpatialFocusable anti-pattern */}
+          {/* Load More */}
           {hasMore && (
-            <LoadMoreButton
-              seriesId={seriesId}
-              remaining={filteredEpisodes.length - visibleCount}
-              onLoadMore={handleLoadMore}
-            />
+            <div className="px-6 lg:px-10 mt-4">
+              <button
+                ref={loadMoreRef}
+                {...loadMoreFocusProps}
+                onClick={handleLoadMore}
+                className={`w-full py-3 rounded-xl border text-sm font-medium transition-all ${
+                  loadMoreFocusRing
+                    ? 'bg-surface-raised ring-2 ring-teal ring-offset-2 ring-offset-obsidian text-text-primary'
+                    : 'bg-surface-raised border-border text-text-secondary hover:border-teal/20 hover:text-text-primary'
+                }`}
+              >
+                Load More ({filteredEpisodes.length - visibleCount} remaining)
+              </button>
+            </div>
           )}
 
           {/* Total episodes info */}
