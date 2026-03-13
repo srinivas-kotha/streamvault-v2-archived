@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
-import Hls from 'hls.js';
+import type HlsType from 'hls.js';
 
 export interface QualityLevel {
   index: number;
@@ -37,7 +37,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
     ref,
   ) {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const hlsRef = useRef<Hls | null>(null);
+    const hlsRef = useRef<HlsType | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isReady, setIsReady] = useState(false);
 
@@ -107,6 +107,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
       const video = videoRef.current;
       if (!video || !url) return;
 
+      let cancelled = false;
       setIsReady(false);
       const isHls = format === 'm3u8' || url.endsWith('.m3u8');
       let hlsRetryCount = 0;
@@ -114,18 +115,21 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
       let fallbackAttempted = false;
 
       const startDirectPlayback = () => {
+        if (cancelled) return;
         destroyHls();
         video.src = url;
         video.onloadeddata = () => {
+          if (cancelled) return;
           setIsReady(true);
           if (startTime > 0 && !isLive) video.currentTime = startTime;
           if (autoPlay) video.play().catch(() => {});
         };
         video.onerror = () => {
+          if (cancelled) return;
           // If direct playback fails and we haven't tried HLS yet, attempt HLS fallback
-          if (!fallbackAttempted && !isHls && Hls.isSupported()) {
+          if (!fallbackAttempted && !isHls) {
             fallbackAttempted = true;
-            startHlsPlayback();
+            initHls();
           } else {
             onError?.('Channel unavailable');
           }
@@ -133,7 +137,8 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
         if (autoPlay) video.play().catch(() => {});
       };
 
-      const startHlsPlayback = () => {
+      const startHlsPlayback = (Hls: typeof HlsType) => {
+        if (cancelled) return;
         destroyHls();
         const hls = new Hls({
           enableWorker: true,
@@ -158,6 +163,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
         hls.loadSource(url);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (cancelled) return;
           setIsReady(true);
           if (onQualityLevelsReady) {
             const levels: QualityLevel[] = hls.levels.map((level, i) => ({
@@ -174,6 +180,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
         });
 
         hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (cancelled) return;
           if (data.fatal) {
             if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
               hls.recoverMediaError();
@@ -204,20 +211,33 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
         });
       };
 
-      if (isHls && Hls.isSupported()) {
-        startHlsPlayback();
-      } else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Native HLS support (Safari)
-        video.src = url;
-        setIsReady(true);
-        if (startTime > 0 && !isLive) video.currentTime = startTime;
-        if (autoPlay) video.play().catch(() => {});
+      const initHls = async () => {
+        const { default: Hls } = await import('hls.js');
+        if (cancelled) return;
+        if (Hls.isSupported()) {
+          startHlsPlayback(Hls);
+        } else {
+          startDirectPlayback();
+        }
+      };
+
+      if (isHls) {
+        // Check native HLS support first (Safari), otherwise dynamic-import hls.js
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url;
+          setIsReady(true);
+          if (startTime > 0 && !isLive) video.currentTime = startTime;
+          if (autoPlay) video.play().catch(() => {});
+        } else {
+          initHls();
+        }
       } else {
         // Direct playback for .ts, .mp4, or non-HLS streams
         startDirectPlayback();
       }
 
       return () => {
+        cancelled = true;
         destroyHls();
         video.onloadeddata = null;
         video.onerror = null;

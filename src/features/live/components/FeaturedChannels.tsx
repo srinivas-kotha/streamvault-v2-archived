@@ -5,6 +5,7 @@ import { useFeaturedChannels, useEPG } from '../api';
 import { usePlayerStore } from '@lib/store';
 import { Badge } from '@shared/components/Badge';
 import type { XtreamLiveStream } from '@shared/types/api';
+import { upgradeProtocol } from '@shared/components/LazyImage';
 
 function FeaturedCard({ channel }: { channel: XtreamLiveStream }) {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ function FeaturedCard({ channel }: { channel: XtreamLiveStream }) {
       <div className="relative h-28 bg-gradient-to-br from-surface to-obsidian flex items-center justify-center overflow-hidden">
         {channel.stream_icon ? (
           <img
-            src={channel.stream_icon}
+            src={upgradeProtocol(channel.stream_icon)}
             alt={channel.name}
             loading="lazy"
             className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-110"

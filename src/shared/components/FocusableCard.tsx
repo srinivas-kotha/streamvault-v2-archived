@@ -15,6 +15,8 @@ interface FocusableCardProps {
   aspectRatio?: 'poster' | 'landscape' | 'square';
   /** Unique spatial focus key — prevents ID collisions when titles match */
   focusKey?: string;
+  /** Eagerly load image with high fetchPriority (use for above-the-fold LCP images) */
+  priority?: boolean;
 }
 
 export function FocusableCard({
@@ -30,6 +32,7 @@ export function FocusableCard({
   onClick,
   aspectRatio = 'poster',
   focusKey,
+  priority,
 }: FocusableCardProps) {
   return (
     <div className="rail-item flex-shrink-0">
@@ -51,6 +54,7 @@ export function FocusableCard({
         onRemove={onRemove}
         onClick={onClick}
         aspectRatio={aspectRatio}
+        priority={priority}
       />
     </div>
   );

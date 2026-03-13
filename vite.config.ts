@@ -38,7 +38,6 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom'],
           'vendor-tanstack': ['@tanstack/react-query', '@tanstack/react-router', '@tanstack/react-virtual'],
-          'vendor-hls': ['hls.js'],
           'vendor-motion': ['framer-motion'],
         },
       },

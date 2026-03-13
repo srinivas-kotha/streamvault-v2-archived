@@ -67,7 +67,7 @@ export function HomePage() {
             isLoading={teluguMoviesLoading}
             isEmpty={!teluguMovies.length}
           >
-            {teluguMovies.map((item) => (
+            {teluguMovies.map((item, index) => (
               <FocusableCard
                 key={item.stream_id}
                 focusKey={`vod-${item.stream_id}`}
@@ -76,6 +76,7 @@ export function HomePage() {
                 subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
                 isNew={isNewContent(item.added)}
                 aspectRatio="poster"
+                priority={index < 4}
                 onClick={() => handleVodClick(item)}
               />
             ))}

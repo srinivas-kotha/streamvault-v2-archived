@@ -5,6 +5,7 @@ import { useEPG } from '../api';
 import type { XtreamLiveStream } from '@shared/types/api';
 import { Badge } from '@shared/components/Badge';
 import { usePlayerStore } from '@lib/store';
+import { upgradeProtocol } from '@shared/components/LazyImage';
 
 interface ChannelCardProps {
   channel: XtreamLiveStream;
@@ -45,7 +46,7 @@ export function ChannelCard({ channel }: ChannelCardProps) {
       <div className="aspect-square relative bg-surface flex items-center justify-center overflow-hidden">
         {channel.stream_icon ? (
           <img
-            src={channel.stream_icon}
+            src={upgradeProtocol(channel.stream_icon)}
             alt={channel.name}
             loading="lazy"
             className="w-full h-full object-contain p-3"

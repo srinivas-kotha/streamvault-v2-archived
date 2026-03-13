@@ -14,6 +14,8 @@ interface ContentCardProps {
   onClick?: () => void;
   aspectRatio?: 'poster' | 'landscape' | 'square';
   focusKey?: string;
+  /** Eagerly load image with high fetchPriority (use for above-the-fold LCP images) */
+  priority?: boolean;
 }
 
 function FocusableFavoriteButton({ isFavorite, onToggle, focusId }: { isFavorite?: boolean; onToggle: () => void; focusId: string }) {
@@ -82,6 +84,7 @@ export function ContentCard({
   onClick,
   aspectRatio = 'poster',
   focusKey: propFocusKey,
+  priority,
 }: ContentCardProps) {
   const cardKey = propFocusKey || `card-${title.replace(/\s+/g, '-').toLowerCase()}`;
 
@@ -115,6 +118,7 @@ export function ContentCard({
           src={image}
           alt={title}
           aspectRatio={aspectRatio}
+          priority={priority}
           className="transition-transform duration-300 group-hover:scale-105"
         />
 
