@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
+
+// Mock isTVMode before importing usePlayerKeyboard (it evaluates at module load)
+vi.mock('@shared/utils/isTVMode', () => ({ isTVMode: false }));
+
 import { usePlayerKeyboard } from '../hooks/usePlayerKeyboard';
 import type { VideoPlayerHandle } from '../components/VideoPlayer';
 
