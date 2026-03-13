@@ -14,16 +14,15 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 
 /**
- * Minimal WebView wrapper for Fire TV / Fire Stick.
+ * Native WebView wrapper for Fire TV / Fire Stick.
  *
- * Loads the StreamVault PWA in a fullscreen WebView and ensures D-pad key
- * events from the Fire Stick remote are forwarded to JavaScript as standard
- * KeyboardEvent (keydown / keyup) events on the window object.
+ * Loads the StreamVault PWA and injects D-pad key events directly into
+ * JavaScript, bypassing WebView's built-in spatial navigation which
+ * consumes arrow key events before they reach window.addEventListener.
  *
- * Why this exists: TWA (Trusted Web Activity) requires Chrome, which is not
- * available on Fire OS. Without Chrome, the TWA APK falls back to Silk
- * browser or a broken Custom Tab, and D-pad events never reach JavaScript.
- * A native WebView wrapper gives us full control over the key event chain.
+ * Why this exists: TWA requires Chrome (not on Fire OS). WebView's own
+ * spatial navigation eats D-pad events. Direct JS injection is the only
+ * reliable way to get key events into the React app.
  */
 class MainActivity : Activity() {
 
@@ -31,6 +30,19 @@ class MainActivity : Activity() {
 
     companion object {
         private const val PWA_URL = "https://streamvault.srinivaskotha.uk"
+
+        // Map Android KeyEvent codes to JavaScript KeyboardEvent.key values
+        private val KEY_MAP = mapOf(
+            KeyEvent.KEYCODE_DPAD_UP to Triple("ArrowUp", 38, "ArrowUp"),
+            KeyEvent.KEYCODE_DPAD_DOWN to Triple("ArrowDown", 40, "ArrowDown"),
+            KeyEvent.KEYCODE_DPAD_LEFT to Triple("ArrowLeft", 37, "ArrowLeft"),
+            KeyEvent.KEYCODE_DPAD_RIGHT to Triple("ArrowRight", 39, "ArrowRight"),
+            KeyEvent.KEYCODE_DPAD_CENTER to Triple("Enter", 13, "Enter"),
+            KeyEvent.KEYCODE_ENTER to Triple("Enter", 13, "Enter"),
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE to Triple("MediaPlayPause", 179, "MediaPlayPause"),
+            KeyEvent.KEYCODE_MEDIA_REWIND to Triple("MediaRewind", 227, "MediaRewind"),
+            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD to Triple("MediaFastForward", 228, "MediaFastForward"),
+        )
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -76,7 +88,6 @@ class MainActivity : Activity() {
             // Support fullscreen video (HTML5 video element)
             webChromeClient = WebChromeClient()
 
-            // The WebView MUST have focus for D-pad key events to reach JavaScript.
             isFocusable = true
             isFocusableInTouchMode = true
             requestFocus()
@@ -99,15 +110,62 @@ class MainActivity : Activity() {
     }
 
     /**
-     * Forward ALL key events to the WebView. This is the critical piece that
-     * makes D-pad navigation work. Without this override, the Activity or
-     * WebView's built-in spatial navigation may consume arrow key events
-     * before they reach JavaScript.
+     * Intercept D-pad key events and inject them directly into JavaScript.
+     *
+     * WebView's built-in spatial navigation consumes arrow key events before
+     * they fire as KeyboardEvent on window. By intercepting at the Activity
+     * level and using evaluateJavascript(), we bypass WebView's spatial nav
+     * entirely and deliver events straight to our LRUD handler.
      */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        // Let the WebView handle the event first
-        if (webView.dispatchKeyEvent(event)) {
-            return true
+        val keyInfo = KEY_MAP[event.keyCode]
+
+        if (keyInfo != null) {
+            val (key, keyCode, code) = keyInfo
+            val eventType = when (event.action) {
+                KeyEvent.ACTION_DOWN -> "keydown"
+                KeyEvent.ACTION_UP -> "keyup"
+                else -> null
+            }
+
+            if (eventType != null) {
+                // Inject a synthetic KeyboardEvent directly into JavaScript.
+                // Dispatch on both document and window to ensure capture-phase
+                // listeners on either target receive the event.
+                // Also show a debug toast on screen (remove after confirming it works).
+                val js = """
+                    (function() {
+                        var e = new KeyboardEvent('$eventType', {
+                            key: '$key',
+                            code: '$code',
+                            keyCode: $keyCode,
+                            which: $keyCode,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        document.dispatchEvent(e);
+                        window.dispatchEvent(e);
+
+                        // Debug overlay — shows key events on screen
+                        if ('$eventType' === 'keydown') {
+                            var d = document.getElementById('sv-debug');
+                            if (!d) {
+                                d = document.createElement('div');
+                                d.id = 'sv-debug';
+                                d.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;background:rgba(0,0,0,0.8);color:#0ff;padding:8px 16px;border-radius:8px;font-size:16px;font-family:monospace;pointer-events:none;transition:opacity 0.3s;';
+                                document.body.appendChild(d);
+                            }
+                            d.textContent = 'KEY: $key ($keyCode)';
+                            d.style.opacity = '1';
+                            clearTimeout(window._svDebugTimer);
+                            window._svDebugTimer = setTimeout(function() { d.style.opacity = '0.3'; }, 1500);
+                        }
+                    })();
+                """.trimIndent()
+
+                webView.evaluateJavascript(js, null)
+                return true  // Consume the event — don't let WebView handle it
+            }
         }
 
         // Back button: navigate back in WebView history, or exit app
@@ -130,7 +188,6 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         webView.onResume()
-        // Re-focus the WebView when returning from background
         webView.requestFocus()
     }
 

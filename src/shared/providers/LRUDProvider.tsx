@@ -97,12 +97,17 @@ export function LRUDProvider({ children }: LRUDProviderProps) {
       setInputMode('mouse');
     }
 
-    // Use capture: true to intercept before child elements can swallow events
+    // Listen on both window and document for key events.
+    // Native WebView wrapper injects synthetic KeyboardEvents via evaluateJavascript()
+    // which dispatches on both document and window. Capture phase ensures we
+    // intercept before any child element can swallow the event.
     window.addEventListener('keydown', handleKeyDown, { capture: true });
+    document.addEventListener('keydown', handleKeyDown, { capture: true });
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown, { capture: true });
+      document.removeEventListener('keydown', handleKeyDown, { capture: true });
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, [setInputMode]);
