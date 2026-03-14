@@ -165,6 +165,18 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
 
   const totalCount = allSeries.length;
 
+  // Recently added rail: top 20 by last_modified
+  const recentSeries = useMemo(() => {
+    if (!allSeries.length) return [];
+    return [...allSeries]
+      .sort((a, b) => {
+        const aTime = parseInt(a.last_modified || '0', 10);
+        const bTime = parseInt(b.last_modified || '0', 10);
+        return bTime - aTime;
+      })
+      .slice(0, 20);
+  }, [allSeries]);
+
   // Rails mode: group series by channel
   const seriesRails = useMemo(() => {
     if (!allSeries.length) return [];
@@ -271,6 +283,29 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
       ) : !hasActiveFilters ? (
         /* Rails mode */
         <div className="space-y-8">
+          {/* Recently Added rail */}
+          {recentSeries.length > 0 && (
+            <ContentRail title="Recently Added">
+              {recentSeries.map((item) => (
+                <FocusableCard
+                  key={item.series_id}
+                  focusKey={`series-recent-${item.series_id}`}
+                  image={item.cover}
+                  title={item.name}
+                  subtitle={item.genre || undefined}
+                  isNew={isNewContent(item.last_modified)}
+                  aspectRatio="poster"
+                  onClick={() =>
+                    navigate({
+                      to: '/series/$seriesId',
+                      params: { seriesId: String(item.series_id) },
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    } as any)
+                  }
+                />
+              ))}
+            </ContentRail>
+          )}
           {seriesRails.map((rail) => (
             <ContentRail key={rail.channelId} title={rail.channelName}>
               {rail.items.map((item) => (

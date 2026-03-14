@@ -6,13 +6,19 @@ import type { XtreamCategory, XtreamSeriesItem, XtreamSeriesInfo } from '@shared
 // ── Channel-to-language mapping (fallback until category parser is rewritten) ──
 
 const SERIES_CHANNEL_LANGUAGE: Record<string, string> = {
-  // Telugu TV channels
-  '453': 'Telugu', // STAR MAA
+  // Telugu TV channels (ordered by popularity)
   '455': 'Telugu', // ZEE TELUGU
-  '494': 'Telugu', // GEMINI
-  '493': 'Telugu', // ETV
-  '552': 'Telugu', // SONY TELUGU
+  '453': 'Telugu', // STAR MAA
   '469': 'Telugu', // AHA
+  '493': 'Telugu', // ETV
+  '494': 'Telugu', // GEMINI
+  '552': 'Telugu', // SONY TELUGU
+  // OTT Platforms (mixed-language — filtered by series name)
+  '104': 'Multi', // ZEE5+ALT BALAJI
+  '105': 'Multi', // SONY LIV
+  '106': 'Multi', // NETFLIX
+  '102': 'Multi', // DISNEY+ HOTSTAR
+  '310': 'Multi', // JIO CINEMA
   // Hindi TV channels
   '442': 'Hindi', // COLORS HINDI
   '443': 'Hindi', // SONY (SET)
@@ -26,12 +32,6 @@ const SERIES_CHANNEL_LANGUAGE: Record<string, string> = {
   '161': 'Hindi', // HINDI TV SERIES
   '276': 'Hindi', // INDIAN Reality Shows
   '200': 'Hindi', // BIGG BOSS OTT
-  // OTT Platforms (mixed-language — filtered by series name)
-  '102': 'Multi', // DISNEY+ HOTSTAR
-  '104': 'Multi', // ZEE5+ALT BALAJI
-  '105': 'Multi', // SONY LIV
-  '106': 'Multi', // NETFLIX
-  '310': 'Multi', // JIO CINEMA
 };
 
 const CHANNEL_NAMES: Record<string, string> = {

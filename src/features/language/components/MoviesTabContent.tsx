@@ -172,6 +172,14 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
 
   const hasActiveFilters = !!debouncedSearch || activeCategory !== null || sortKey !== 'name_asc';
 
+  // Latest movies rail: top 20 by added date
+  const latestMovies = useMemo(() => {
+    if (!allMovies.length) return [];
+    return [...allMovies]
+      .sort((a, b) => parseInt(b.added || '0', 10) - parseInt(a.added || '0', 10))
+      .slice(0, 20);
+  }, [allMovies]);
+
   // Category chips from rails data
   const categoryChips = useMemo(
     () =>
@@ -276,6 +284,28 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
           {railsLoading && (
             <ContentRail title="Loading..." isLoading={true}>
               <div />
+            </ContentRail>
+          )}
+          {/* Latest Movies rail */}
+          {latestMovies.length > 0 && !railsLoading && (
+            <ContentRail title="Latest Movies">
+              {latestMovies.map((item) => (
+                <FocusableCard
+                  key={item.stream_id}
+                  focusKey={`vod-latest-${item.stream_id}`}
+                  image={item.stream_icon}
+                  title={item.name}
+                  subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
+                  isNew={isNewContent(item.added)}
+                  aspectRatio="poster"
+                  onClick={() =>
+                    navigate({
+                      to: '/vod/$vodId',
+                      params: { vodId: String(item.stream_id) },
+                    })
+                  }
+                />
+              ))}
             </ContentRail>
           )}
           {movieRails.map((rail) => (
