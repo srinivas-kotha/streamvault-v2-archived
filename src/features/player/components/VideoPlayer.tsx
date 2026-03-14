@@ -244,7 +244,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
             isLive: true,
             url,
           }, {
-            enableWorker: true,
+            enableWorker: false, // CSP worker-src blocks Blob URL workers; main-thread demux is fine
             enableStashBuffer: false,
             stashInitialSize: 128 * 1024, // 128KB
             liveBufferLatencyChasing: true,
