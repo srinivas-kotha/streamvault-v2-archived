@@ -163,6 +163,7 @@ export function useSeriesByLanguage(language: string) {
   const allSeries = useMemo<SeriesWithChannel[]>(() => {
     const result: SeriesWithChannel[] = [];
     const seen = new Set<number>();
+    const seenNames = new Set<string>();
     const isAll = language.toLowerCase() === 'all';
 
     queries.forEach((q, idx) => {
@@ -180,7 +181,12 @@ export function useSeriesByLanguage(language: string) {
           if (!item.name.toLowerCase().includes(language.toLowerCase())) continue;
         }
 
+        // Name-based dedup: same series listed on multiple OTT platforms with different IDs
+        const normalizedName = item.name.replace(/\s*\([^)]*\)\s*$/g, '').trim().toLowerCase();
+        if (seenNames.has(normalizedName)) continue;
+
         seen.add(item.series_id);
+        seenNames.add(normalizedName);
         result.push({
           ...item,
           name: isMulti ? stripLanguageTag(item.name) : item.name,
