@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { init, setFocus, getCurrentFocusKey, setKeyMap } from '@noriginmedia/norigin-spatial-navigation';
-import { useUIStore } from '@lib/store';
+import { useUIStore, usePlayerStore } from '@lib/store';
 
 // Check URL param for debug mode (e.g. ?debug=spatial)
 const isSpatialDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'spatial';
@@ -90,13 +90,15 @@ export function SpatialNavProvider({ children }: SpatialNavProviderProps) {
         (document.activeElement as HTMLElement)?.blur();
       }
 
-      // Back button handler (TV remotes: Escape, Tizen: 10009, LG: 461)
-      if (e.key === 'Escape' || e.keyCode === 10009 || e.keyCode === 461) {
+      // Back button handler (TV remotes: Escape, Fire TV: 4, Tizen: 10009, LG: 461)
+      if (e.key === 'Escape' || e.keyCode === 4 || e.keyCode === 10009 || e.keyCode === 461) {
+        // Skip if player is active — usePlayerKeyboard handles back during playback
+        if (usePlayerStore.getState().currentStreamId) return;
         // Back navigation — let the app's router handle it
-        // norigin doesn't handle back, so we rely on browser/app history
         if (e.key !== 'Escape') {
           window.history.back();
           e.preventDefault();
+          e.stopPropagation(); // Prevent useBackNavigation from double-navigating
         }
       }
 
