@@ -40,7 +40,7 @@ function FocusableTab({
       ref={ref}
       {...focusProps}
       onClick={onSelect}
-      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all min-h-[44px] ${
+      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-[background-color,border-color,color] min-h-[44px] ${
         isActive
           ? 'text-teal border-b-2 border-teal bg-teal/5'
           : showFocusRing
@@ -85,7 +85,7 @@ function FocusableSearchInput({ inputRef, query, setQuery }: {
         placeholder="Search live TV, movies, series..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className={`w-full pl-12 pr-4 py-3 bg-surface border rounded-xl text-text-primary placeholder:text-text-muted text-base focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal transition-all ${
+        className={`w-full pl-12 pr-4 py-3 bg-surface border rounded-xl text-text-primary placeholder:text-text-muted text-base focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal transition-[border-color,box-shadow] ${
           showFocusRing ? 'border-teal ring-2 ring-teal/50' : 'border-white/10'
         }`}
       />
@@ -120,7 +120,7 @@ function FocusablePill({ id, label, isActive, onSelect }: {
       ref={ref}
       {...focusProps}
       onClick={onSelect}
-      className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all min-h-[36px] ${
+      className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-[background-color,border-color,color] min-h-[36px] ${
         isActive
           ? 'bg-teal/15 text-teal border border-teal/30'
           : showFocusRing

@@ -15,7 +15,7 @@ export function Navbar() {
       <div className="flex items-center gap-4">
         <Link
           to="/search"
-          className="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-raised transition-all"
+          className="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-raised transition-[background-color,color]"
           aria-label="Search"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

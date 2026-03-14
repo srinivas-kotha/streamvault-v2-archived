@@ -88,7 +88,7 @@ function renderOSDContent(action: OSDAction) {
         <div className="flex flex-col items-center gap-2">
           <span className="text-3xl font-bold">{Math.round(action.value ?? 0)}%</span>
           <div className="w-32 h-1.5 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-teal rounded-full transition-all" style={{ width: `${action.value ?? 0}%` }} />
+            <div className="h-full bg-teal rounded-full transition-[width]" style={{ width: `${action.value ?? 0}%` }} />
           </div>
         </div>
       );
@@ -99,7 +99,7 @@ function renderOSDContent(action: OSDAction) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
           <div className="w-32 h-1.5 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-teal rounded-full transition-all" style={{ width: `${Math.round((action.value ?? 0) * 100)}%` }} />
+            <div className="h-full bg-teal rounded-full transition-[width]" style={{ width: `${Math.round((action.value ?? 0) * 100)}%` }} />
           </div>
           <span className="text-sm font-medium">{Math.round((action.value ?? 0) * 100)}%</span>
         </div>

@@ -32,7 +32,7 @@ function FeaturedCard({ channel }: { channel: XtreamLiveStream }) {
       ref={ref}
       {...focusProps}
       onClick={handleClick}
-      className={`group relative cursor-pointer rounded-xl overflow-hidden bg-surface-raised border transition-all duration-300 min-w-[220px] flex-shrink-0 ${
+      className={`group relative cursor-pointer rounded-xl overflow-hidden bg-surface-raised border transition-[transform,border-color,box-shadow] duration-300 min-w-[220px] flex-shrink-0 ${
         showFocusRing
           ? 'border-teal scale-[1.05] z-10 ring-2 ring-teal/60 ring-offset-2 ring-offset-obsidian shadow-[0_0_30px_rgba(45,212,191,0.3)]'
           : 'border-border-subtle hover:border-teal/40 hover:shadow-[0_0_30px_rgba(45,212,191,0.2)] hover:scale-[1.02]'

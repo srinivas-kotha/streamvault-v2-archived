@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, memo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useSpatialFocusable } from '@shared/hooks/useSpatialNav';
 import { useEPG } from '../api';
@@ -11,7 +11,7 @@ interface ChannelCardProps {
   channel: XtreamLiveStream;
 }
 
-export function ChannelCard({ channel }: ChannelCardProps) {
+export const ChannelCard = memo(function ChannelCard({ channel }: ChannelCardProps) {
   const navigate = useNavigate();
   const playStream = usePlayerStore((s) => s.playStream);
   const { data: epg } = useEPG(channel.stream_id);
@@ -36,7 +36,7 @@ export function ChannelCard({ channel }: ChannelCardProps) {
       ref={ref}
       {...focusProps}
       onClick={handlePlay}
-      className={`group cursor-pointer rounded-lg overflow-hidden bg-surface-raised border transition-all duration-200 ${
+      className={`group cursor-pointer rounded-lg overflow-hidden bg-surface-raised border transition-[transform,border-color,box-shadow] duration-200 ${
         showFocusRing
           ? 'border-teal scale-[1.05] z-10 ring-2 ring-teal/60 ring-offset-2 ring-offset-obsidian shadow-[0_0_24px_rgba(45,212,191,0.3)]'
           : 'border-border-subtle hover:border-teal/30 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,212,191,0.15)]'
@@ -83,4 +83,4 @@ export function ChannelCard({ channel }: ChannelCardProps) {
       </div>
     </div>
   );
-}
+});

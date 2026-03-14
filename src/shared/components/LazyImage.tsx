@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 
 interface LazyImageProps {
   src: string;
@@ -24,7 +24,7 @@ const aspectClasses = {
 
 type LoadState = 'placeholder' | 'loading' | 'loaded' | 'error';
 
-export function LazyImage({
+export const LazyImage = memo(function LazyImage({
   src,
   alt,
   className = '',
@@ -106,6 +106,7 @@ export function LazyImage({
           src={safeSrc}
           alt={alt}
           loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
           fetchPriority={priority ? 'high' : undefined}
           onLoad={handleLoad}
           onError={handleError}
@@ -116,4 +117,4 @@ export function LazyImage({
       )}
     </div>
   );
-}
+});

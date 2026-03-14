@@ -23,7 +23,7 @@ function FocusableCategoryButton({ id, label, isActive, onSelect }: {
       ref={ref}
       {...focusProps}
       onClick={onSelect}
-      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-[background-color,border-color,color] ${
         isActive
           ? 'bg-teal/15 text-teal border border-teal/30'
           : showFocusRing

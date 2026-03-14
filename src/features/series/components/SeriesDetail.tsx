@@ -34,7 +34,7 @@ function FocusableSeasonTab({ seasonNumber, name, episodeCount, isActive, onSele
       role="tab"
       aria-selected={isActive}
       onClick={onSelect}
-      className={`px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all min-h-[44px] ${
+      className={`px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color] min-h-[44px] ${
         isActive
           ? 'bg-teal/15 text-teal border border-teal/30'
           : 'bg-surface-raised text-text-secondary border border-border hover:text-text-primary hover:border-teal/20'
@@ -80,7 +80,7 @@ function FocusableSearchInput({ value, onChange, seriesId }: {
         placeholder="Search episodes..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full pl-10 pr-4 py-2 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all"
+        className="w-full pl-10 pr-4 py-2 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-[border-color,box-shadow]"
       />
       {value && (
         <button
@@ -114,7 +114,7 @@ function FocusableSortPill({ sortKey, label, isActive, onSelect, seriesId }: {
       ref={ref}
       {...focusProps}
       onClick={onSelect}
-      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-[background-color,border-color,color] ${
         isActive ? 'bg-teal/15 text-teal' : 'text-text-muted hover:text-text-secondary'
       } ${showFocusRing ? 'ring-2 ring-teal ring-offset-1 ring-offset-obsidian' : ''}`}
     >
@@ -141,7 +141,7 @@ function ResumeButton({ seriesId, episode, seriesName, onResume }: {
         ref={ref}
         {...focusProps}
         onClick={() => onResume(episode.content_id, episode.content_name || seriesName, episode.progress_seconds ?? 0)}
-        className={`w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-teal/10 to-indigo/10 border border-teal/20 hover:border-teal/40 transition-all group ${
+        className={`w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-teal/10 to-indigo/10 border border-teal/20 hover:border-teal/40 transition-[border-color,box-shadow] group ${
           showFocusRing ? 'ring-2 ring-teal ring-offset-2 ring-offset-obsidian' : ''
         }`}
       >
@@ -194,7 +194,7 @@ function LoadMoreButton({ seriesId, remaining, onLoadMore }: {
         ref={ref}
         {...focusProps}
         onClick={onLoadMore}
-        className={`w-full py-3 rounded-xl border text-sm font-medium transition-all ${
+        className={`w-full py-3 rounded-xl border text-sm font-medium transition-[background-color,border-color,color] ${
           showFocusRing
             ? 'bg-surface-raised ring-2 ring-teal ring-offset-2 ring-offset-obsidian text-text-primary'
             : 'bg-surface-raised border-border text-text-secondary hover:border-teal/20 hover:text-text-primary'
@@ -258,7 +258,7 @@ function FocusableEpisodeItem({
         if (activeRef && isPlaying) activeRef.current = el;
       }}
       {...focusProps}
-      className={`flex gap-4 p-3 lg:p-4 rounded-xl transition-all group cursor-pointer min-h-[72px] outline-none ${
+      className={`flex gap-4 p-3 lg:p-4 rounded-xl transition-[background-color,border-color] group cursor-pointer min-h-[72px] outline-none ${
         isPlaying
           ? 'bg-teal/10 border border-teal/30'
           : showFocusRing

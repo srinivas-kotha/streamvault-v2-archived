@@ -37,7 +37,7 @@ function FocusableFilterTab({ id, label, isActive, onSelect }: {
       ref={ref}
       {...focusProps}
       onClick={onSelect}
-      className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+      className={`px-4 py-1.5 rounded-md text-sm font-medium transition-[background-color,border-color,color] ${
         isActive
           ? 'bg-teal/10 text-teal'
           : showFocusRing
@@ -66,7 +66,7 @@ function FocusableHistoryItem({ id, item, progress, onClick }: {
       ref={ref}
       {...focusProps}
       onClick={onClick}
-      className={`group flex items-center gap-4 p-3 bg-surface-raised border rounded-lg cursor-pointer transition-all ${
+      className={`group flex items-center gap-4 p-3 bg-surface-raised border rounded-lg cursor-pointer transition-[transform,border-color,box-shadow] ${
         showFocusRing
           ? 'border-teal ring-2 ring-teal/50 shadow-[0_0_15px_rgba(45,212,191,0.1)]'
           : 'border-border-subtle hover:border-teal/30 hover:shadow-[0_0_15px_rgba(45,212,191,0.1)]'
@@ -115,7 +115,7 @@ function FocusableHistoryItem({ id, item, progress, onClick }: {
           <div className="mt-2 flex items-center gap-2">
             <div className="flex-1 h-1.5 bg-surface rounded-full overflow-hidden">
               <div
-                className="h-full bg-teal rounded-full transition-all"
+                className="h-full bg-teal rounded-full transition-[width]"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -131,7 +131,7 @@ function FocusableHistoryItem({ id, item, progress, onClick }: {
       </div>
 
       {/* Continue indicator - always visible on TV */}
-      <div className={`flex-shrink-0 px-3 py-1.5 text-xs font-medium text-teal bg-teal/10 rounded-lg transition-all ${showFocusRing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+      <div className={`flex-shrink-0 px-3 py-1.5 text-xs font-medium text-teal bg-teal/10 rounded-lg transition-opacity ${showFocusRing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         Continue
       </div>
     </div>
@@ -183,7 +183,7 @@ export function HistoryPage() {
           <button
             onClick={() => clearHistory.mutate()}
             disabled={clearHistory.isPending}
-            className="px-3 py-1.5 text-xs text-text-muted hover:text-error bg-surface-raised hover:bg-error/10 border border-border-subtle hover:border-error/30 rounded-lg transition-all disabled:opacity-50"
+            className="px-3 py-1.5 text-xs text-text-muted hover:text-error bg-surface-raised hover:bg-error/10 border border-border-subtle hover:border-error/30 rounded-lg transition-[background-color,border-color,color,opacity] disabled:opacity-50"
           >
             {clearHistory.isPending ? 'Clearing...' : 'Clear History'}
           </button>

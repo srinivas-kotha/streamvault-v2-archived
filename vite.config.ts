@@ -33,12 +33,12 @@ export default defineConfig({
     setupFiles: [],
   },
   build: {
+    target: 'chrome80',
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom'],
           'vendor-tanstack': ['@tanstack/react-query', '@tanstack/react-router', '@tanstack/react-virtual'],
-          'vendor-motion': ['framer-motion'],
         },
       },
     },

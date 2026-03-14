@@ -36,7 +36,7 @@ function FocusableInput({ id, type = 'text', placeholder, autoComplete, error, r
         type={type}
         autoComplete={autoComplete}
         enterKeyHint={enterKeyHint}
-        className={`w-full px-4 py-2.5 bg-surface-raised border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all ${focused ? 'border-teal ring-2 ring-teal/50' : 'border-border'}`}
+        className={`w-full px-4 py-2.5 bg-surface-raised border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-[border-color,box-shadow] ${focused ? 'border-teal ring-2 ring-teal/50' : 'border-border'}`}
         placeholder={placeholder}
         ref={(el) => {
           registerRef(el);
@@ -74,7 +74,7 @@ function FocusableSubmitButton({ isPending }: { isPending: boolean }) {
         id="login-submit"
         type="submit"
         disabled={isPending}
-        className={`w-full py-2.5 px-4 bg-gradient-to-r from-teal-dim to-teal rounded-lg font-medium text-obsidian hover:opacity-90 disabled:opacity-50 transition-all focus:outline-none focus:ring-2 focus:ring-teal/50 focus:ring-offset-2 focus:ring-offset-obsidian ${focused ? 'ring-2 ring-teal/50 ring-offset-2 ring-offset-obsidian opacity-90' : ''}`}
+        className={`w-full py-2.5 px-4 bg-gradient-to-r from-teal-dim to-teal rounded-lg font-medium text-obsidian hover:opacity-90 disabled:opacity-50 transition-[opacity,box-shadow] focus:outline-none focus:ring-2 focus:ring-teal/50 focus:ring-offset-2 focus:ring-offset-obsidian ${focused ? 'ring-2 ring-teal/50 ring-offset-2 ring-offset-obsidian opacity-90' : ''}`}
       >
         {isPending ? (
           <span className="flex items-center justify-center gap-2">

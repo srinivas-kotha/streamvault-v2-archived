@@ -1,6 +1,7 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { usePlayerStore } from '@lib/store';
 import { PlayerPage } from '@features/player/components/PlayerPage';
+import { isTVMode } from '@shared/utils/isTVMode';
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -52,7 +53,7 @@ function FullscreenPlayer() {
 function RootLayout() {
   return (
     <>
-      <div className="grain-overlay" />
+      {!isTVMode && <div className="grain-overlay" />}
       <Outlet />
       <FullscreenPlayer />
     </>
