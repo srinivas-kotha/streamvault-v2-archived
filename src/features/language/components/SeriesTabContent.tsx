@@ -161,7 +161,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('recent');
   const debouncedSearch = useDebounce(searchQuery, 300);
-  const hasActiveFilters = !!debouncedSearch || activeChannel !== null || sortKey !== 'recent';
+  const hasActiveFilters = !!debouncedSearch || activeChannel !== null || sortKey !== 'name_asc';
 
   const totalCount = allSeries.length;
 
@@ -200,7 +200,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
   const clearFilters = () => {
     setSearchQuery('');
     setActiveChannel(null);
-    setSortKey('recent');
+    setSortKey('name_asc');
   };
 
   return (

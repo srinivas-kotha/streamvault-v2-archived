@@ -518,19 +518,22 @@ export function SeriesDetail() {
     onEnterPress: () => navigate({ to: '/series' }),
   });
 
-  // Auto-focus: resume button if exists, otherwise first season tab, then back button, then content container
+  // Auto-focus: try specific targets, then fall back to SN:ROOT which finds any focusable
   useEffect(() => {
     if (!isLoading && data) {
-      const timer = setTimeout(() => {
+      const tryFocus = () => {
         try { setFocus(`series-resume-${seriesId}`); return; } catch { /* not mounted */ }
         if (computedSeasons.length > 0 && computedSeasons[0]) {
           try { setFocus(`series-season-${computedSeasons[0].season_number}`); return; } catch { /* noop */ }
         }
         try { setFocus(`series-back-${seriesId}`); return; } catch { /* noop */ }
-        // Final fallback: focus the content container itself
-        try { setFocus(`series-content-${seriesId}`); } catch { /* noop */ }
-      }, 200);
-      return () => clearTimeout(timer);
+        // Final fallback: let norigin find any registered focusable
+        try { setFocus('SN:ROOT'); } catch { /* noop */ }
+      };
+      // Try at 200ms, retry at 500ms if focus is still none
+      const t1 = setTimeout(tryFocus, 200);
+      const t2 = setTimeout(tryFocus, 500);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
   }, [isLoading, data, seriesId, computedSeasons]);
 
