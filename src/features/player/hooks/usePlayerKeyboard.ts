@@ -41,6 +41,7 @@ export function usePlayerKeyboard({
 }: UsePlayerKeyboardOptions) {
   const holdStateRef = useRef<SeekHoldState | null>(null);
   const seekDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /** Debounced seek — prevents rapid D-pad presses from causing stutter on Fire TV */
   const debouncedSeek = (time: number) => {
@@ -53,6 +54,26 @@ export function usePlayerKeyboard({
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      // Back/close handling BEFORE video check — back button must work even if video is null
+      const isBackKey =
+        e.keyCode === 4 || // Fire TV back
+        e.keyCode === 10009 || // Samsung Tizen back
+        e.keyCode === 461 || // LG WebOS back
+        e.key === 'Backspace' ||
+        e.key === 'Escape' ||
+        e.key === 'GoBack';
+
+      if (isBackKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isTVMode && document.fullscreenElement) {
+          document.exitFullscreen();
+        } else if (onClose) {
+          onClose();
+        }
+        return;
+      }
 
       const video = playerRef.current?.getVideo();
       if (!video) return;
@@ -109,7 +130,17 @@ export function usePlayerKeyboard({
         if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !isLive) {
           const direction = e.key === 'ArrowRight' ? 1 : -1;
 
-          if (!e.repeat) {
+          // Cancel any pending hold-clear (TV remotes fire rapid keydown/keyup pairs)
+          if (holdClearTimeoutRef.current) {
+            clearTimeout(holdClearTimeoutRef.current);
+            holdClearTimeoutRef.current = null;
+          }
+
+          // Detect continued hold: e.repeat (keyboard) OR existing holdState for same key
+          // within 300ms window (TV remote rapid keydown/keyup cycles)
+          const isHeld = e.repeat || (holdStateRef.current?.key === e.key);
+
+          if (!isHeld) {
             // First press — seek ±10s and start tracking hold
             holdStateRef.current = {
               key: e.key,
@@ -123,7 +154,7 @@ export function usePlayerKeyboard({
               timestamp: Date.now(),
             });
           } else {
-            // Repeat event (key held down) — accelerated seek
+            // Repeat event OR continued TV remote hold — accelerated seek
             const hold = holdStateRef.current;
             if (hold && hold.key === e.key) {
               const holdDuration = Date.now() - hold.startTime;
@@ -165,18 +196,6 @@ export function usePlayerKeyboard({
         return;
       }
 
-      // Android/Fire TV back button (keyCode 4) — handle before switch
-      if (e.keyCode === 4) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!isTVMode && document.fullscreenElement) {
-          document.exitFullscreen();
-        } else if (onClose) {
-          onClose();
-        }
-        return;
-      }
-
       switch (e.key) {
         case ' ':
         case 'k': {
@@ -204,23 +223,18 @@ export function usePlayerKeyboard({
         case 'p':
           if (onPrev) { e.preventDefault(); onPrev(); }
           break;
-        case 'Backspace':
-        case 'Escape':
-        case 'GoBack': // Samsung TV Back Key
-          e.preventDefault();
-          e.stopPropagation();
-          if (!isTVMode && document.fullscreenElement) {
-            document.exitFullscreen();
-          } else if (onClose) {
-            onClose();
-          }
-          break;
       }
     }
 
     function handleKeyUp(e: KeyboardEvent) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        holdStateRef.current = null;
+        // TV remotes fire rapid keydown/keyup pairs instead of e.repeat.
+        // Delay clearing hold state so the next keydown within 300ms
+        // is treated as a continued hold (enables acceleration OSD).
+        if (holdClearTimeoutRef.current) clearTimeout(holdClearTimeoutRef.current);
+        holdClearTimeoutRef.current = setTimeout(() => {
+          holdStateRef.current = null;
+        }, 300);
       }
     }
 
@@ -231,6 +245,7 @@ export function usePlayerKeyboard({
       window.removeEventListener('keydown', handleKeyDown, { capture: true });
       window.removeEventListener('keyup', handleKeyUp, { capture: true });
       if (seekDebounceRef.current) clearTimeout(seekDebounceRef.current);
+      if (holdClearTimeoutRef.current) clearTimeout(holdClearTimeoutRef.current);
     };
   }, [playerRef, isLive, onNext, onPrev, onMuteToggle, onVolumeUp, onVolumeDown, onClose, onOSD]);
 }
