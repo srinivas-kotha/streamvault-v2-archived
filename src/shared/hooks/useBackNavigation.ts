@@ -24,7 +24,7 @@ export function useBackNavigation() {
       // Don't intercept when player is active — usePlayerKeyboard handles it
       if (usePlayerStore.getState().currentStreamId) return;
 
-      if (e.key === 'Escape' || e.key === 'Backspace') {
+      if (e.key === 'Escape' || e.key === 'Backspace' || e.keyCode === 4) {
         e.preventDefault();
         router.history.back();
       }

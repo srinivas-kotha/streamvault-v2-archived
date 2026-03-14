@@ -165,6 +165,18 @@ export function usePlayerKeyboard({
         return;
       }
 
+      // Android/Fire TV back button (keyCode 4) — handle before switch
+      if (e.keyCode === 4) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isTVMode && document.fullscreenElement) {
+          document.exitFullscreen();
+        } else if (onClose) {
+          onClose();
+        }
+        return;
+      }
+
       switch (e.key) {
         case ' ':
         case 'k': {
@@ -197,7 +209,7 @@ export function usePlayerKeyboard({
         case 'GoBack': // Samsung TV Back Key
           e.preventDefault();
           e.stopPropagation();
-          if (document.fullscreenElement) {
+          if (!isTVMode && document.fullscreenElement) {
             document.exitFullscreen();
           } else if (onClose) {
             onClose();
