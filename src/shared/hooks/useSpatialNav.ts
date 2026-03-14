@@ -3,12 +3,13 @@ import {
   useFocusable,
   FocusContext,
   setFocus,
+  doesFocusableExist,
   type FocusableComponentLayout,
   type FocusDetails,
 } from '@noriginmedia/norigin-spatial-navigation';
 import { useUIStore } from '@lib/store';
 
-export { FocusContext, setFocus };
+export { FocusContext, setFocus, doesFocusableExist };
 
 // Re-export pause/resume for player TV mode
 export { pause as pauseSpatialNav, resume as resumeSpatialNav } from '@noriginmedia/norigin-spatial-navigation';
@@ -69,6 +70,7 @@ export function useSpatialFocusable(options: UseSpatialFocusableOptions = {}) {
     showFocusRing,
     focusProps: {
       onMouseEnter,
+      'data-focus-key': focusKey,
     },
   };
 }

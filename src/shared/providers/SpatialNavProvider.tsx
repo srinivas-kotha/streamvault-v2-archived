@@ -62,17 +62,20 @@ export function SpatialNavProvider({ children }: SpatialNavProviderProps) {
         setInputMode('keyboard');
       }
 
-      // Enter/Select: click the focused card directly.
-      // norigin's onEnterPress relies on native events with shouldUseNativeEvents:true,
-      // but cards are <div> elements (not <button>), so native Enter doesn't trigger click.
-      // Also handles Fire TV DPAD_CENTER (keyCode 23) which norigin may not map.
+      // Enter/Select: click the focused element directly.
+      // norigin's onEnterPress can be unreliable with shouldUseNativeEvents:true on <div> cards.
+      // Also handles Fire TV DPAD_CENTER (keyCode 23).
+      // Uses data-focus-key attribute set by useSpatialFocusable to find the focused DOM element.
       if (isEnter && !isInInput) {
-        const focusedEl = document.querySelector('[data-focused="true"]') as HTMLElement;
-        if (focusedEl) {
-          focusedEl.click();
-          e.preventDefault();
-          e.stopPropagation();
-          return;
+        const currentKey = getCurrentFocusKey();
+        if (currentKey) {
+          const focusedEl = document.querySelector(`[data-focus-key="${CSS.escape(currentKey)}"]`) as HTMLElement;
+          if (focusedEl) {
+            focusedEl.click();
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
         }
       }
 
@@ -136,7 +139,7 @@ function SpatialDebugOverlay() {
   useEffect(() => {
     function update() {
       const focusKey = getCurrentFocusKey() || 'none';
-      const focusedEls = document.querySelectorAll('[data-focused="true"]');
+      const focusedEls = focusKey !== 'none' ? document.querySelectorAll(`[data-focus-key="${CSS.escape(focusKey)}"]`) : [];
       setInfo((prev) => ({
         ...prev,
         focusKey,
