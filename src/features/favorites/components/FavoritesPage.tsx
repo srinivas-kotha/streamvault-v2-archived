@@ -121,7 +121,7 @@ export function FavoritesPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
           <SkeletonGrid count={12} aspectRatio="poster" />
         </div>
       ) : filtered.length === 0 ? (
@@ -131,7 +131,7 @@ export function FavoritesPage() {
           icon="favorites"
         />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
           {filtered.map((fav) => (
             <ContentCard
               key={`${fav.content_type}-${fav.content_id}`}

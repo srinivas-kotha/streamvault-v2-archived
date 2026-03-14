@@ -24,8 +24,23 @@ function FocusableSearchInput({ searchQuery, setSearchQuery }: {
     onEnterPress: () => inputRef.current?.focus(),
   });
 
+  // When the wrapper div has DOM focus (via shouldFocusDOMNode) and user types,
+  // forward keystrokes to the actual input element
+  const handleWrapperKeyDown = (e: React.KeyboardEvent) => {
+    if (document.activeElement === inputRef.current) return;
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      inputRef.current?.focus();
+      setSearchQuery(searchQuery + e.key);
+      e.preventDefault();
+    } else if (e.key === 'Backspace' && searchQuery) {
+      inputRef.current?.focus();
+      setSearchQuery(searchQuery.slice(0, -1));
+      e.preventDefault();
+    }
+  };
+
   return (
-    <div ref={focusRef} {...focusProps} className="flex items-center gap-4 mb-4">
+    <div ref={focusRef} {...focusProps} onKeyDown={handleWrapperKeyDown} className="flex items-center gap-4 mb-4">
       <input
         ref={inputRef}
         type="text"
@@ -127,13 +142,13 @@ export function VODPage() {
 
       {/* Results */}
       {streamsLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
           <SkeletonGrid count={12} aspectRatio="poster" />
         </div>
       ) : processedStreams.length === 0 ? (
         <EmptyState title="No movies found" message="Try adjusting your filters" icon="content" />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
           {processedStreams.map((movie) => (
             <ContentCard
               key={movie.stream_id}

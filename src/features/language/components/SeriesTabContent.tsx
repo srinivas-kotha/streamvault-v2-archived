@@ -97,8 +97,23 @@ function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { valu
     },
   });
 
+  // When the wrapper div has DOM focus (via shouldFocusDOMNode) and user types,
+  // forward keystrokes to the actual input element
+  const handleWrapperKeyDown = (e: React.KeyboardEvent) => {
+    if (document.activeElement === inputRef.current) return;
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      inputRef.current?.focus();
+      onChange(value + e.key);
+      e.preventDefault();
+    } else if (e.key === 'Backspace' && value) {
+      inputRef.current?.focus();
+      onChange(value.slice(0, -1));
+      e.preventDefault();
+    }
+  };
+
   return (
-    <div ref={ref} {...focusProps} className={`relative flex-1 min-w-[200px] max-w-sm ${showFocusRing ? 'ring-2 ring-teal/50 rounded-lg' : ''}`}>
+    <div ref={ref} {...focusProps} onKeyDown={handleWrapperKeyDown} className={`relative flex-1 min-w-[200px] max-w-sm ${showFocusRing ? 'ring-2 ring-teal/50 rounded-lg' : ''}`}>
       <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
@@ -259,7 +274,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
       {isLoading ? (
         hasActiveFilters ? (
           <div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
               <SkeletonGrid count={18} aspectRatio="poster" />
             </div>
           </div>
@@ -323,7 +338,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
             </p>
           )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
             {processedSeries.map((series) => (
               <div key={series.series_id} className="relative">
                 <ContentCard
