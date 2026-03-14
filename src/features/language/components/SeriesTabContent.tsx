@@ -159,7 +159,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>('recent');
+  const [sortKey, setSortKey] = useState<SortKey>('name_asc');
   const debouncedSearch = useDebounce(searchQuery, 300);
   const hasActiveFilters = !!debouncedSearch || activeChannel !== null || sortKey !== 'name_asc';
 
