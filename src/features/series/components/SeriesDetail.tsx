@@ -61,8 +61,8 @@ function FocusableSearchInput({ value, onChange, seriesId }: {
     <div
       ref={ref}
       {...focusProps}
-      className={`relative flex-1 min-w-[180px] max-w-xs rounded-lg ${
-        showFocusRing ? 'ring-2 ring-teal ring-offset-1 ring-offset-obsidian' : ''
+      className={`relative flex-1 min-w-[180px] max-w-xs rounded-lg transition-[box-shadow,transform,filter] ${
+        showFocusRing ? 'ring-2 ring-teal ring-offset-1 ring-offset-obsidian shadow-[0_0_16px_rgba(45,212,191,0.25)] scale-105' : ''
       }`}
     >
       <svg

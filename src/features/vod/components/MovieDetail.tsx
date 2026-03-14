@@ -24,7 +24,7 @@ function StartOverButton({ vodId, onStartOver }: { vodId: string; onStartOver: (
       variant="secondary"
       size="lg"
       onClick={onStartOver}
-      className={showFocusRing ? 'ring-2 ring-offset-2 ring-offset-obsidian ring-teal' : ''}
+      className={showFocusRing ? 'ring-2 ring-offset-2 ring-offset-obsidian ring-teal scale-105 bg-surface-hover shadow-[0_0_16px_rgba(45,212,191,0.2)] border-teal/40' : ''}
       data-focus-key={`vod-restart-${vodId}`}
     >
       <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -190,7 +190,7 @@ export function MovieDetail() {
                   {...playFocusProps}
                   size="lg"
                   onClick={() => { setPlayerStartTime(savedProgress); setIsPlayerOpen(true); }}
-                  className={playFocusRing ? 'ring-2 ring-offset-2 ring-offset-obsidian ring-teal' : ''}
+                  className={playFocusRing ? 'ring-2 ring-offset-2 ring-offset-obsidian ring-teal scale-105 shadow-[0_0_20px_rgba(45,212,191,0.35)] brightness-110' : ''}
                   data-focus-key={`vod-play-${vodId}`}
                 >
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">

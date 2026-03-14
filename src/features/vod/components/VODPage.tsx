@@ -32,8 +32,8 @@ function FocusableSearchInput({ searchQuery, setSearchQuery }: {
         placeholder="Search movies..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className={`w-full max-w-xs px-4 py-2 bg-surface-raised border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-[border-color,box-shadow] ${
-          showFocusRing ? 'border-teal ring-2 ring-teal/50' : 'border-border'
+        className={`w-full max-w-xs px-4 py-2 bg-surface-raised border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-[border-color,box-shadow,transform,filter] ${
+          showFocusRing ? 'border-teal ring-2 ring-teal/50 shadow-[0_0_16px_rgba(45,212,191,0.25)] scale-105' : 'border-border'
         }`}
       />
     </div>
