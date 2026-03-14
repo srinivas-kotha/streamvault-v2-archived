@@ -68,23 +68,8 @@ function FocusableSearchInput({ inputRef, query, setQuery }: {
     onEnterPress: () => inputRef.current?.focus(),
   });
 
-  // When the wrapper div has DOM focus (via shouldFocusDOMNode) and user types,
-  // forward keystrokes to the actual input element
-  const handleWrapperKeyDown = (e: React.KeyboardEvent) => {
-    if (document.activeElement === inputRef.current) return;
-    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      inputRef.current?.focus();
-      setQuery(query + e.key);
-      e.preventDefault();
-    } else if (e.key === 'Backspace' && query) {
-      inputRef.current?.focus();
-      setQuery(query.slice(0, -1));
-      e.preventDefault();
-    }
-  };
-
   return (
-    <div ref={focusRef} {...focusProps} onKeyDown={handleWrapperKeyDown} className="relative">
+    <div ref={focusRef} {...focusProps} className="relative">
       <svg
         className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted"
         fill="none"
@@ -317,7 +302,7 @@ export function SearchPage() {
 
       {/* Loading */}
       {showLoading && (
-        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           <SkeletonGrid count={12} />
         </div>
       )}
@@ -353,7 +338,7 @@ export function SearchPage() {
                     <span className="ml-2 text-sm font-normal text-text-secondary">({filteredData.live.length})</span>
                   </h2>
                 )}
-                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {filteredData.live.map((stream) => (
                     <ContentCard
                       key={`live-${stream.stream_id}`}
@@ -381,7 +366,7 @@ export function SearchPage() {
                     <span className="ml-2 text-sm font-normal text-text-secondary">({filteredData.vod.length})</span>
                   </h2>
                 )}
-                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {filteredData.vod.map((movie) => (
                     <ContentCard
                       key={`vod-${movie.stream_id}`}
@@ -405,7 +390,7 @@ export function SearchPage() {
                     <span className="ml-2 text-sm font-normal text-text-secondary">({filteredData.series.length})</span>
                   </h2>
                 )}
-                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {filteredData.series.map((show) => (
                     <ContentCard
                       key={`series-${show.series_id}`}
