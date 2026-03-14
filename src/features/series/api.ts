@@ -6,12 +6,14 @@ import type { XtreamCategory, XtreamSeriesItem, XtreamSeriesInfo } from '@shared
 // ── Channel-to-language mapping (fallback until category parser is rewritten) ──
 
 const SERIES_CHANNEL_LANGUAGE: Record<string, string> = {
+  // Telugu TV channels
   '453': 'Telugu', // STAR MAA
   '455': 'Telugu', // ZEE TELUGU
   '494': 'Telugu', // GEMINI
   '493': 'Telugu', // ETV
   '552': 'Telugu', // SONY TELUGU
   '469': 'Telugu', // AHA
+  // Hindi TV channels
   '442': 'Hindi', // COLORS HINDI
   '443': 'Hindi', // SONY (SET)
   '444': 'Hindi', // STAR PLUS
@@ -24,6 +26,12 @@ const SERIES_CHANNEL_LANGUAGE: Record<string, string> = {
   '161': 'Hindi', // HINDI TV SERIES
   '276': 'Hindi', // INDIAN Reality Shows
   '200': 'Hindi', // BIGG BOSS OTT
+  // OTT Platforms (mixed-language — filtered by series name)
+  '102': 'Multi', // DISNEY+ HOTSTAR
+  '104': 'Multi', // ZEE5+ALT BALAJI
+  '105': 'Multi', // SONY LIV
+  '106': 'Multi', // NETFLIX
+  '310': 'Multi', // JIO CINEMA
 };
 
 const CHANNEL_NAMES: Record<string, string> = {
@@ -45,6 +53,11 @@ const CHANNEL_NAMES: Record<string, string> = {
   '161': 'Hindi TV',
   '276': 'Reality Shows',
   '200': 'Bigg Boss OTT',
+  '102': 'Disney+ Hotstar',
+  '104': 'ZEE5',
+  '105': 'Sony LIV',
+  '106': 'Netflix',
+  '310': 'Jio Cinema',
 };
 
 // ── Types ──
@@ -62,10 +75,14 @@ export interface ChannelInfo {
 
 // ── Helpers ──
 
-/** Get all category IDs for a given language. */
+/** Get all category IDs for a given language (includes Multi/OTT categories). */
 export function getChannelIdsForLanguage(language: string): string[] {
+  const lang = language.toLowerCase();
   return Object.entries(SERIES_CHANNEL_LANGUAGE)
-    .filter(([, lang]) => lang.toLowerCase() === language.toLowerCase())
+    .filter(([, l]) => {
+      const mapped = l.toLowerCase();
+      return mapped === lang || mapped === 'multi';
+    })
     .map(([id]) => id);
 }
 
@@ -83,6 +100,11 @@ export function getChannelName(categoryId: string): string {
 /** Get language for a category ID, or null if unknown. */
 export function getChannelLanguage(categoryId: string): string | null {
   return SERIES_CHANNEL_LANGUAGE[categoryId] || null;
+}
+
+/** Strip trailing language tag like "(Telugu)" from series name for cleaner display. */
+function stripLanguageTag(name: string): string {
+  return name.replace(/\s*\([^)]*\)\s*$/, '').trim();
 }
 
 // ── Hooks ──
@@ -141,16 +163,27 @@ export function useSeriesByLanguage(language: string) {
   const allSeries = useMemo<SeriesWithChannel[]>(() => {
     const result: SeriesWithChannel[] = [];
     const seen = new Set<number>();
+    const isAll = language.toLowerCase() === 'all';
 
     queries.forEach((q, idx) => {
       if (!q.data) return;
       const catId = channelIds[idx]!;
+      const catLang = SERIES_CHANNEL_LANGUAGE[catId];
+      const isMulti = catLang === 'Multi';
+
       for (const item of q.data) {
         // Deduplicate by series_id (some series appear in multiple categories)
         if (seen.has(item.series_id)) continue;
+
+        // For Multi/OTT categories, only include series matching the requested language
+        if (isMulti && !isAll) {
+          if (!item.name.toLowerCase().includes(language.toLowerCase())) continue;
+        }
+
         seen.add(item.series_id);
         result.push({
           ...item,
+          name: isMulti ? stripLanguageTag(item.name) : item.name,
           channelName: getChannelName(catId),
           channelId: catId,
         });
@@ -158,7 +191,7 @@ export function useSeriesByLanguage(language: string) {
     });
 
     return result;
-  }, [queries, channelIds]);
+  }, [queries, channelIds, language]);
 
   // Compute channel list with counts
   const channels = useMemo<ChannelInfo[]>(() => {
