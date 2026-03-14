@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import type HlsType from 'hls.js';
+import type mpegtsType from 'mpegts.js';
 
 export interface QualityLevel {
   index: number;
@@ -38,13 +39,21 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
   ) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const hlsRef = useRef<HlsType | null>(null);
+    const mpegtsRef = useRef<mpegtsType.Player | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isReady, setIsReady] = useState(false);
 
-    const destroyHls = useCallback(() => {
+    const destroyPlayers = useCallback(() => {
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
+      }
+      if (mpegtsRef.current) {
+        mpegtsRef.current.pause();
+        mpegtsRef.current.unload();
+        mpegtsRef.current.detachMediaElement();
+        mpegtsRef.current.destroy();
+        mpegtsRef.current = null;
       }
     }, []);
 
@@ -116,7 +125,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
 
       const startDirectPlayback = () => {
         if (cancelled) return;
-        destroyHls();
+        destroyPlayers();
         video.src = url;
         video.onloadeddata = () => {
           if (cancelled) return;
@@ -139,7 +148,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
 
       const startHlsPlayback = (Hls: typeof HlsType) => {
         if (cancelled) return;
-        destroyHls();
+        destroyPlayers();
         const hls = new Hls({
           enableWorker: true,
           capLevelToPlayerSize: true,
@@ -221,7 +230,57 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
         }
       };
 
-      if (isHls) {
+      const startMpegtsPlayback = async () => {
+        if (cancelled) return;
+        destroyPlayers();
+        try {
+          const mpegts = await import('mpegts.js');
+          if (cancelled || !mpegts.default.isSupported()) {
+            startDirectPlayback();
+            return;
+          }
+          const player = mpegts.default.createPlayer({
+            type: 'mpegts',
+            isLive: true,
+            url,
+          }, {
+            enableWorker: true,
+            enableStashBuffer: false,
+            stashInitialSize: 128 * 1024, // 128KB
+            liveBufferLatencyChasing: true,
+            liveBufferLatencyMaxLatency: 3,
+            liveBufferLatencyMinRemain: 0.5,
+          });
+          mpegtsRef.current = player;
+          player.attachMediaElement(video);
+          player.load();
+
+          player.on(mpegts.default.Events.ERROR, () => {
+            if (cancelled) return;
+            if (!fallbackAttempted) {
+              fallbackAttempted = true;
+              startDirectPlayback();
+            } else {
+              onError?.('Channel unavailable');
+            }
+          });
+
+          video.onloadeddata = () => {
+            if (cancelled) return;
+            setIsReady(true);
+          };
+          if (autoPlay) player.play();
+        } catch {
+          if (!cancelled) startDirectPlayback();
+        }
+      };
+
+      const isTs = format === 'ts';
+
+      if (isTs) {
+        // MPEG-TS stream — use mpegts.js
+        startMpegtsPlayback();
+      } else if (isHls) {
         // Check native HLS support first (Safari), otherwise dynamic-import hls.js
         if (video.canPlayType('application/vnd.apple.mpegurl')) {
           video.src = url;
@@ -232,17 +291,18 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
           initHls();
         }
       } else {
-        // Direct playback for .ts, .mp4, or non-HLS streams
+        // Direct playback for .mp4 or other formats
         startDirectPlayback();
       }
 
       return () => {
         cancelled = true;
-        destroyHls();
+        destroyPlayers();
         video.onloadeddata = null;
         video.onerror = null;
       };
-    }, [url, format, isLive, autoPlay, startTime, onError, onQualityLevelsReady, destroyHls]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [url, format, isLive, autoPlay, startTime, onError, onQualityLevelsReady, destroyPlayers]);
 
     useEffect(() => {
       const video = videoRef.current;
