@@ -50,7 +50,7 @@ export function EPGProgramBlock({
       onClick={onClick}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
-      className={`absolute top-0.5 bottom-0.5 rounded px-1.5 flex items-center overflow-hidden cursor-pointer transition-all text-xs select-none ${
+      className={`absolute top-0.5 bottom-0.5 rounded px-1.5 flex items-center overflow-hidden cursor-pointer transition-[background-color,border-color] text-xs select-none ${
         isNow
           ? 'bg-teal/15 border border-teal/40 text-text-primary'
           : isPast

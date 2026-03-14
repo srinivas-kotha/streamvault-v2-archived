@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import type HlsType from 'hls.js';
 import type mpegtsType from 'mpegts.js';
+import { isTVMode } from '@shared/utils/isTVMode';
 
 export interface QualityLevel {
   index: number;
@@ -150,7 +151,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
         if (cancelled) return;
         destroyPlayers();
         const hls = new Hls({
-          enableWorker: true,
+          enableWorker: !isTVMode,
           capLevelToPlayerSize: true,
           maxBufferLength: isLive ? 10 : 30,
           maxMaxBufferLength: isLive ? 30 : 120,

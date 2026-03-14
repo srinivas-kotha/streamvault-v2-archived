@@ -70,7 +70,7 @@ export function TopNav() {
     <FocusContext.Provider value={topNavFocusKey}>
       <header
         ref={topNavRef}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color] duration-300 ${
           scrolled
             ? 'bg-obsidian/90 backdrop-blur-xl border-b border-border-subtle shadow-lg'
             : 'bg-gradient-to-b from-obsidian/80 to-transparent'
@@ -218,7 +218,7 @@ function ProfileMenu({
         onClick={(e) => { e.stopPropagation(); setProfileOpen(!profileOpen); }}
         aria-expanded={profileOpen}
         aria-haspopup="menu"
-        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-raised/50 transition-all min-h-[48px] ${
+        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-raised/50 transition-[background-color,color] min-h-[48px] ${
           showProfileFocus ? 'ring-2 ring-teal/50 text-text-primary' : ''
         }`}
       >

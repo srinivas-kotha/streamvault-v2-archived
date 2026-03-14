@@ -29,7 +29,7 @@ export function Sidebar() {
     <aside
       className={`${
         sidebarOpen ? 'w-52' : 'w-16'
-      } bg-surface border-r border-border-subtle flex-shrink-0 transition-all duration-200 overflow-hidden`}
+      } bg-surface border-r border-border-subtle flex-shrink-0 transition-[width] duration-200 overflow-hidden`}
     >
       <nav className="flex flex-col gap-1 p-2 pt-4">
         {navItems.map((item) => {
@@ -38,7 +38,7 @@ export function Sidebar() {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-[background-color,color] group relative ${
                 isActive
                   ? 'bg-teal/10 text-teal before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-0.5 before:rounded-full before:bg-gradient-to-b before:from-teal before:to-indigo'
                   : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised'

@@ -55,7 +55,7 @@ function EPGChannelRow({
         ))
       ) : (
         <div
-          className="absolute inset-0.5 rounded bg-surface/40 border border-white/5 flex items-center px-2 cursor-pointer hover:border-teal/20 transition-all"
+          className="absolute inset-0.5 rounded bg-surface/40 border border-white/5 flex items-center px-2 cursor-pointer hover:border-teal/20 transition-[border-color,background-color]"
           onClick={onClick}
         >
           <span className="text-[11px] text-text-muted/50 truncate">

@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from 'react';
+import { useCallback, memo, type ReactNode } from 'react';
 import { useSpatialFocusable } from '@shared/hooks/useSpatialNav';
 import { LazyImage } from './LazyImage';
 
@@ -29,7 +29,7 @@ function FocusableFavoriteButton({ isFavorite, onToggle, focusId }: { isFavorite
       ref={ref}
       {...focusProps}
       onClick={(e) => { e.stopPropagation(); onToggle(); }}
-      className={`absolute top-2 right-2 p-1.5 rounded-full bg-obsidian/60 backdrop-blur-sm hover:bg-obsidian/80 transition-all ${showFocusRing ? 'ring-2 ring-teal z-10' : ''}`}
+      className={`absolute top-2 right-2 p-1.5 rounded-full bg-obsidian/70 hover:bg-obsidian/80 transition-[background-color,box-shadow] ${showFocusRing ? 'ring-2 ring-teal z-10' : ''}`}
       aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
     >
       <svg
@@ -56,7 +56,7 @@ function FocusableRemoveButton({ onRemove, focusId }: { onRemove: () => void; fo
       ref={ref}
       {...focusProps}
       onClick={(e) => { e.stopPropagation(); onRemove(); }}
-      className={`absolute top-2 right-2 p-1 rounded-full bg-obsidian/60 backdrop-blur-sm hover:bg-error/80 transition-all ${showFocusRing ? 'ring-2 ring-error z-10 bg-error/80' : ''}`}
+      className={`absolute top-2 right-2 p-1 rounded-full bg-obsidian/70 hover:bg-error/80 transition-[background-color,box-shadow] ${showFocusRing ? 'ring-2 ring-error z-10 bg-error/80' : ''}`}
       aria-label="Remove"
     >
       <svg className="w-3.5 h-3.5 text-text-muted hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -72,7 +72,7 @@ const aspectClasses = {
   square: 'aspect-square',
 };
 
-export function ContentCard({
+export const ContentCard = memo(function ContentCard({
   image,
   title,
   subtitle,
@@ -106,7 +106,7 @@ export function ContentCard({
       ref={ref}
       {...focusProps}
       onClick={onClick}
-      className={`group relative cursor-pointer rounded-lg overflow-hidden bg-surface-raised border transition-all duration-200 ambient-glow ${
+      className={`group relative cursor-pointer rounded-lg overflow-hidden bg-surface-raised border transition-[transform,border-color,box-shadow] duration-200 ambient-glow ${
         showFocusRing
           ? 'border-teal scale-[1.08] z-10 ring-2 ring-teal/60 ring-offset-2 ring-offset-obsidian shadow-[0_0_24px_rgba(45,212,191,0.3)]'
           : 'border-border-subtle hover:border-teal/30 hover:scale-[1.03]'
@@ -160,4 +160,4 @@ export function ContentCard({
       </div>
     </div>
   );
-}
+});

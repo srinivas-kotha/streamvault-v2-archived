@@ -131,7 +131,7 @@ function FocusableProgressBar({ progressRef, progress, onSeek, playerRef, durati
         onClick={isTVMode ? undefined : onSeek}
         onTouchStart={isTVMode ? undefined : handleTouchSeek}
         onTouchMove={isTVMode ? undefined : handleTouchSeek}
-        className={`w-full h-1.5 bg-white/20 ${isTVMode ? '' : 'cursor-pointer'} group/progress ${isTVMode ? '' : 'hover:h-3'} transition-all rounded-full touch-none ${showFocusRing ? 'h-3 ring-2 ring-teal/60' : ''}`}
+        className={`w-full h-1.5 bg-white/20 ${isTVMode ? '' : 'cursor-pointer'} group/progress ${isTVMode ? '' : 'hover:h-3'} transition-[height,box-shadow] rounded-full touch-none ${showFocusRing ? 'h-3 ring-2 ring-teal/60' : ''}`}
       >
         <div className="h-full bg-teal rounded-full relative" style={{ width: `${progress}%` }}>
           <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-teal rounded-full transition-opacity ${showFocusRing ? 'opacity-100' : isTVMode ? 'opacity-100' : 'opacity-0 group-hover/progress:opacity-100'}`} />

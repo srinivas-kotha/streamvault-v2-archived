@@ -55,6 +55,10 @@
   }
 }
 
+@utility contain-style {
+  contain: style;
+}
+
 /* Grain texture overlay */
 .grain-overlay {
   position: fixed;
@@ -76,8 +80,10 @@
 .ambient-glow {
   transition: box-shadow 0.3s ease;
 }
-.ambient-glow:hover {
-  box-shadow: 0 0 20px rgba(45, 212, 191, 0.15), 0 0 40px rgba(45, 212, 191, 0.05);
+@media (hover: hover) {
+  .ambient-glow:hover {
+    box-shadow: 0 0 20px rgba(45, 212, 191, 0.15), 0 0 40px rgba(45, 212, 191, 0.05);
+  }
 }
 
 /* Focus ring for keyboard navigation */
@@ -139,4 +145,14 @@
     padding-left: 3%;
     padding-right: 3%;
   }
+}
+
+/* Page transition animation (replaces framer-motion) */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-page-in {
+  animation: page-in 0.2s ease-out both;
 }

@@ -33,7 +33,7 @@ function FocusableLanguageTab({ id, label, isActive, onSelect }: {
       ref={ref}
       {...focusProps}
       onClick={onSelect}
-      className={`relative px-5 py-2.5 text-sm font-semibold transition-all min-h-[44px] rounded-lg ${
+      className={`relative px-5 py-2.5 text-sm font-semibold transition-[background-color,border-color,color] min-h-[44px] rounded-lg ${
         isActive
           ? 'text-teal bg-teal/10 border border-teal/30'
           : showFocusRing
@@ -61,7 +61,7 @@ function FocusableTab({ id, label, isActive, onSelect }: {
       role="tab"
       aria-selected={isActive}
       onClick={onSelect}
-      className={`relative px-5 py-3 text-sm font-medium transition-all min-h-[48px] ${
+      className={`relative px-5 py-3 text-sm font-medium transition-[background-color,border-color,color] min-h-[48px] ${
         isActive
           ? 'text-text-primary'
           : showFocusRing

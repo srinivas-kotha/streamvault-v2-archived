@@ -54,7 +54,7 @@ function SidebarCategoryButton({
       ref={ref}
       {...focusProps}
       onClick={() => onSelect(cat.category_id)}
-      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-[background-color,color] ${
         isActive
           ? 'bg-teal/10 text-teal border-l-2 border-teal font-medium'
           : showFocusRing
@@ -117,7 +117,7 @@ function FocusableLiveSearch({ searchQuery, setSearchQuery }: {
         placeholder="Filter channels..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className={`w-full px-4 py-2 bg-surface-raised border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-all ${
+        className={`w-full px-4 py-2 bg-surface-raised border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-[border-color,box-shadow] ${
           showFocusRing ? 'border-teal ring-2 ring-teal/50' : 'border-border'
         }`}
       />

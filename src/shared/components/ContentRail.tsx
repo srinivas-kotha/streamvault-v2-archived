@@ -21,7 +21,7 @@ function FocusableSeeAllCard({ to, parentFocusKey }: { to: string; parentFocusKe
         {...focusProps}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic route path from props
         onClick={() => navigate({ to: to as any })}
-        className={`flex items-center justify-center aspect-[2/3] rounded-lg border cursor-pointer transition-all duration-200 ${
+        className={`flex items-center justify-center aspect-[2/3] rounded-lg border cursor-pointer transition-[transform,border-color,box-shadow] duration-200 ${
           showFocusRing
             ? 'border-teal bg-teal/10 scale-[1.08] ring-2 ring-teal/60 ring-offset-2 ring-offset-obsidian shadow-[0_0_24px_rgba(45,212,191,0.3)]'
             : 'border-border-subtle bg-surface-raised/50 hover:border-teal/30 hover:bg-surface-raised'
@@ -85,7 +85,7 @@ function ContentRailInner({
 
   return (
     <FocusContext.Provider value={focusKey}>
-      <section ref={ref} className={`${className}`}>
+      <section ref={ref} className={`contain-style ${className}`}>
         <div className="flex items-center justify-between mb-1.5">
           <h2 className="font-display text-lg lg:text-xl font-semibold text-text-primary">
             {title}

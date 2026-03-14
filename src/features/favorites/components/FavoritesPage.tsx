@@ -32,7 +32,7 @@ function FocusableTab({ id, label, count, isActive, onSelect }: {
       ref={ref}
       {...focusProps}
       onClick={onSelect}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-[background-color,border-color,color] ${
         isActive
           ? 'bg-teal/10 text-teal border border-teal/30'
           : showFocusRing

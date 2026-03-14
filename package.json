@@ -17,7 +17,6 @@
     "@tanstack/react-query": "^5.62.0",
     "@tanstack/react-router": "^1.92.0",
     "@tanstack/react-virtual": "^3.11.0",
-    "framer-motion": "^11.15.0",
     "hls.js": "^1.5.17",
     "mpegts.js": "^1.8.0",
     "react": "^19.0.0",
