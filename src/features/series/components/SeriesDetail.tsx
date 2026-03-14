@@ -9,7 +9,7 @@ import { formatDuration } from '@shared/utils/formatDuration';
 import { parseGenres } from '@shared/utils/parseGenres';
 import { PageTransition } from '@shared/components/PageTransition';
 import { usePlayerStore } from '@lib/store';
-import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
+import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus, doesFocusableExist } from '@shared/hooks/useSpatialNav';
 
 type EpisodeSortKey = 'latest' | 'oldest' | 'episode';
 const EPISODES_PER_PAGE = 50;
@@ -518,19 +518,31 @@ export function SeriesDetail() {
     onEnterPress: () => navigate({ to: '/series' }),
   });
 
-  // Auto-focus: try specific targets, then fall back to SN:ROOT which finds any focusable
+  // Auto-focus: try specific targets using doesFocusableExist to avoid silently setting
+  // focus on non-existent keys. Without this check, setFocus('series-resume-X') sets the
+  // internal focus key even when no resume button is mounted, breaking all subsequent focus.
   useEffect(() => {
     if (!isLoading && data) {
       const tryFocus = () => {
-        try { setFocus(`series-resume-${seriesId}`); return; } catch { /* not mounted */ }
-        if (computedSeasons.length > 0 && computedSeasons[0]) {
-          try { setFocus(`series-season-${computedSeasons[0].season_number}`); return; } catch { /* noop */ }
+        const resumeKey = `series-resume-${seriesId}`;
+        if (doesFocusableExist(resumeKey)) {
+          setFocus(resumeKey);
+          return;
         }
-        try { setFocus(`series-back-${seriesId}`); return; } catch { /* noop */ }
-        // Final fallback: let norigin find any registered focusable
+        if (computedSeasons.length > 0 && computedSeasons[0]) {
+          const seasonKey = `series-season-${computedSeasons[0].season_number}`;
+          if (doesFocusableExist(seasonKey)) {
+            setFocus(seasonKey);
+            return;
+          }
+        }
+        const backKey = `series-back-${seriesId}`;
+        if (doesFocusableExist(backKey)) {
+          setFocus(backKey);
+          return;
+        }
         try { setFocus('SN:ROOT'); } catch { /* noop */ }
       };
-      // Try at 200ms, retry at 500ms if focus is still none
       const t1 = setTimeout(tryFocus, 200);
       const t2 = setTimeout(tryFocus, 500);
       return () => { clearTimeout(t1); clearTimeout(t2); };
