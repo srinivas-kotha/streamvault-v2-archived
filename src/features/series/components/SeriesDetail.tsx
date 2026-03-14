@@ -136,7 +136,7 @@ function ResumeButton({ seriesId, episode, seriesName, onResume }: {
   });
 
   return (
-    <div className="mx-6 lg:mx-10 mb-6">
+    <div className="mb-6">
       <button
         ref={ref}
         {...focusProps}
@@ -189,7 +189,7 @@ function LoadMoreButton({ seriesId, remaining, onLoadMore }: {
   });
 
   return (
-    <div className="px-6 lg:px-10 mt-4">
+    <div className="mt-4">
       <button
         ref={ref}
         {...focusProps}
@@ -552,7 +552,7 @@ export function SeriesDetail() {
   if (isLoading) {
     return (
       <PageTransition>
-        <div className="space-y-4 px-6 lg:px-10 pt-4">
+        <div className="space-y-4 pt-4">
           <Skeleton className="h-64 w-full rounded-xl" />
           <Skeleton className="h-8 w-1/2" />
           <Skeleton className="h-4 w-full" />
@@ -581,7 +581,7 @@ export function SeriesDetail() {
           <FocusContext.Provider value={actionsFocusKey}>
             <div ref={actionsRef}>
             {/* Back button */}
-            <div className="px-6 lg:px-10 pt-4 mb-4">
+            <div className="pt-4 mb-4">
               <button
                 ref={backRef}
                 {...backFocusProps}
@@ -669,13 +669,13 @@ export function SeriesDetail() {
 
           {/* Plot */}
           {info.plot && (
-            <p className="text-text-secondary text-sm lg:text-base leading-relaxed mb-6 px-6 lg:px-10 max-w-3xl">
+            <p className="text-text-secondary text-sm lg:text-base leading-relaxed mb-6 max-w-3xl">
               {info.plot}
             </p>
           )}
 
           {/* Cast/Director */}
-          <div className="flex gap-6 mb-6 text-sm px-6 lg:px-10">
+          <div className="flex gap-6 mb-6 text-sm">
             {info.director && (
               <div>
                 <span className="text-text-muted">Director: </span>
@@ -694,7 +694,7 @@ export function SeriesDetail() {
           <FocusContext.Provider value={controlsFocusKey}>
             <div ref={controlsRef}>
               {/* Season Tabs */}
-              <div className="px-6 lg:px-10 mb-4">
+              <div className="mb-4">
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2" role="tablist">
                   {computedSeasons.map((season) => (
                     <FocusableSeasonTab
@@ -713,7 +713,7 @@ export function SeriesDetail() {
               </div>
 
               {/* Episode Controls: Search + Sort + Count */}
-              <div className="px-6 lg:px-10 mb-4">
+              <div className="mb-4">
                 <div className="flex items-center gap-3 flex-wrap">
                   <FocusableSearchInput
                     value={episodeSearch}
@@ -756,7 +756,7 @@ export function SeriesDetail() {
             <div ref={(el: HTMLDivElement | null) => {
               (episodesRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
               episodeListRef.current = el;
-            }} className="space-y-2 px-6 lg:px-10">
+            }} className="space-y-2">
               {visibleEpisodes.length === 0 && episodeSearch ? (
                 <div className="py-12 text-center">
                   <p className="text-text-muted text-sm">
@@ -787,7 +787,7 @@ export function SeriesDetail() {
 
           {/* Total episodes info */}
           {filteredEpisodes.length > EPISODES_PER_PAGE && (
-            <div className="px-6 lg:px-10 mt-3">
+            <div className="mt-3">
               <p className="text-text-muted text-xs text-center">
                 Showing {Math.min(visibleCount, filteredEpisodes.length)} of{' '}
                 {filteredEpisodes.length} episodes

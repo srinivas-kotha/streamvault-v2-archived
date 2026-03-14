@@ -35,7 +35,7 @@ function AuthenticatedLayout() {
   return (
     <div className="min-h-screen bg-obsidian">
       <TopNav />
-      <main className="min-h-screen pt-14 overflow-y-auto scrollbar-hide">
+      <main className="min-h-screen pt-14 px-6 lg:px-10 overflow-y-auto scrollbar-hide">
         <Outlet />
       </main>
     </div>

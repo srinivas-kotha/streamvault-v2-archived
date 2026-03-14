@@ -11,12 +11,37 @@ import { parseGenres } from '@shared/utils/parseGenres';
 import { PlayerPage } from '@features/player/components/PlayerPage';
 import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
 
+function StartOverButton({ vodId, onStartOver }: { vodId: string; onStartOver: () => void }) {
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: `vod-restart-${vodId}`,
+    onEnterPress: onStartOver,
+  });
+
+  return (
+    <Button
+      ref={ref}
+      {...focusProps}
+      variant="secondary"
+      size="lg"
+      onClick={onStartOver}
+      className={showFocusRing ? 'ring-2 ring-offset-2 ring-offset-obsidian ring-teal' : ''}
+      data-focus-key={`vod-restart-${vodId}`}
+    >
+      <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0113.09-3.09L20 9M20 15a8 8 0 01-13.09 3.09L4 15" />
+      </svg>
+      Start Over
+    </Button>
+  );
+}
+
 export function MovieDetail() {
   const { vodId } = useParams({ from: '/_authenticated/vod/$vodId' });
   const navigate = useNavigate();
   const { data, isLoading } = useVODInfo(vodId);
   const { data: watchHistory } = useWatchHistory();
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+  const [playerStartTime, setPlayerStartTime] = useState(0);
 
   // Find saved progress for this movie
   const savedProgress = useMemo(() => {
@@ -48,7 +73,7 @@ export function MovieDetail() {
 
   const { ref: playRef, showFocusRing: playFocusRing, focusProps: playFocusProps } = useSpatialFocusable({
     focusKey: `vod-play-${vodId}`,
-    onEnterPress: () => setIsPlayerOpen(true),
+    onEnterPress: () => { setPlayerStartTime(savedProgress); setIsPlayerOpen(true); },
   });
 
   // Auto-focus Play button when page loads
@@ -123,7 +148,7 @@ export function MovieDetail() {
                 streamType="vod"
                 streamId={vodId}
                 streamName={info.name}
-                startTime={savedProgress}
+                startTime={playerStartTime}
                 onClose={() => setIsPlayerOpen(false)}
               />
             </div>
@@ -159,18 +184,24 @@ export function MovieDetail() {
                   <Badge key={g} variant="teal">{g}</Badge>
                 ))}
               </div>
-              <Button
-                ref={playRef}
-                {...playFocusProps}
-                size="lg"
-                onClick={() => setIsPlayerOpen(true)}
-                className={playFocusRing ? 'ring-2 ring-offset-2 ring-offset-obsidian ring-teal' : ''}
-              >
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-                {savedProgress > 0 ? 'Resume' : 'Play'}
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  ref={playRef}
+                  {...playFocusProps}
+                  size="lg"
+                  onClick={() => { setPlayerStartTime(savedProgress); setIsPlayerOpen(true); }}
+                  className={playFocusRing ? 'ring-2 ring-offset-2 ring-offset-obsidian ring-teal' : ''}
+                  data-focus-key={`vod-play-${vodId}`}
+                >
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                  {savedProgress > 0 ? 'Resume' : 'Play'}
+                </Button>
+                {savedProgress > 0 && (
+                  <StartOverButton vodId={vodId} onStartOver={() => { setPlayerStartTime(0); setIsPlayerOpen(true); }} />
+                )}
+              </div>
             </div>
           </div>
         </FocusContext.Provider>

@@ -96,7 +96,7 @@ export function LanguageHubPage() {
   if (!lang) {
     return (
       <PageTransition>
-        <div className="px-6 lg:px-10 py-20 text-center">
+        <div className="py-20 text-center">
           <p className="text-text-muted text-lg">Language not found</p>
         </div>
       </PageTransition>
@@ -109,7 +109,7 @@ export function LanguageHubPage() {
       <FocusContext.Provider value={focusKey}>
       <div ref={containerRef} className="space-y-4 pb-12">
         {/* Language Tabs */}
-        <div className="px-6 lg:px-10 pt-2">
+        <div className="pt-2">
           <div className="flex items-center gap-2">
             {LANGUAGE_TABS.map((lt) => (
               <FocusableLanguageTab
@@ -131,7 +131,7 @@ export function LanguageHubPage() {
         </div>
 
         {/* Content Tabs */}
-        <div className="px-6 lg:px-10 relative z-10">
+        <div className="relative z-10">
           <div
             className="flex items-center gap-1 border-b border-border-subtle"
             role="tablist"

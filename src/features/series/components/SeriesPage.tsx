@@ -49,7 +49,7 @@ export function SeriesPage() {
     <PageTransition>
       <FocusContext.Provider value={focusKey}>
         <div ref={containerRef} className="pt-4 pb-12 space-y-4">
-          <h1 className="font-display text-2xl font-bold text-text-primary px-6 lg:px-10">
+          <h1 className="font-display text-2xl font-bold text-text-primary">
             Series
           </h1>
 

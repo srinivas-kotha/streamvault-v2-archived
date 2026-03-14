@@ -129,7 +129,7 @@ export function CategoryGridPage() {
   if (!lang || !categoryId) {
     return (
       <PageTransition>
-        <div className="px-6 lg:px-10 py-20 text-center">
+        <div className="py-20 text-center">
           <p className="text-text-muted text-lg">Category not found</p>
         </div>
       </PageTransition>
@@ -138,7 +138,7 @@ export function CategoryGridPage() {
 
   return (
     <PageTransition>
-      <div className="px-6 lg:px-10 py-6">
+      <div className="py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-text-muted mb-4">
           <Link

@@ -150,7 +150,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
     <div className="space-y-6">
       {/* Category Filter Chips */}
       {categoryChips.length > 1 && (
-        <div className="flex gap-2 px-6 lg:px-10 overflow-x-auto scrollbar-hide pb-1">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           <FocusableChip
             id="live-chip-all"
             label={`All (${totalCount})`}
@@ -172,7 +172,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
       )}
 
       {/* Search Bar */}
-      <div className="flex items-center gap-3 px-6 lg:px-10 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap">
         <FocusableSearchInput
           value={searchQuery}
           onChange={setSearchQuery}
@@ -214,7 +214,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
             icon="content"
           />
         ) : (
-          <div className="px-6 lg:px-10">
+          <div>
             <p className="text-text-muted text-xs mb-3">
               {processedChannels.length} channel
               {processedChannels.length !== 1 ? 's' : ''}

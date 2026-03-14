@@ -207,7 +207,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
     <div className="space-y-5">
       {/* Channel Filter Pills */}
       {channels.length > 1 && (
-        <div className="flex gap-2 px-6 lg:px-10 overflow-x-auto scrollbar-hide pb-1">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           <FocusableChip
             id="series-chip-all"
             label={`All (${totalCount})`}
@@ -227,7 +227,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
       )}
 
       {/* Search + Sort Row */}
-      <div className="flex items-center gap-3 px-6 lg:px-10 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap">
         <FocusableSearchInput
           value={searchQuery}
           onChange={setSearchQuery}
@@ -258,7 +258,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
       {/* Content: Rails mode vs Grid mode */}
       {isLoading ? (
         hasActiveFilters ? (
-          <div className="px-6 lg:px-10">
+          <div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               <SkeletonGrid count={18} aspectRatio="poster" />
             </div>
@@ -303,7 +303,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
         </div>
       ) : processedSeries.length === 0 ? (
         /* Grid mode: empty */
-        <div className="px-6 lg:px-10">
+        <div>
           <EmptyState
             title="No matching series"
             message={
@@ -316,7 +316,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
         </div>
       ) : (
         /* Grid mode: results */
-        <div className="px-6 lg:px-10">
+        <div>
           {debouncedSearch && (
             <p className="text-text-muted text-xs mb-3">
               {processedSeries.length} result{processedSeries.length !== 1 ? 's' : ''}

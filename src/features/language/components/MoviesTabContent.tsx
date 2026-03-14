@@ -215,7 +215,7 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
   return (
     <div className="space-y-6">
       {/* Filter Bar */}
-      <div className="px-6 lg:px-10 space-y-4">
+      <div className="space-y-4">
         {/* Category Chips */}
         {categoryChips.length > 1 && (
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
@@ -304,14 +304,14 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
             </ContentRail>
           ))}
           {!railsLoading && movieRails.length === 0 && (
-            <div className="px-6 lg:px-10 py-12 text-center">
+            <div className="py-12 text-center">
               <p className="text-text-muted text-lg">No {language} movies found</p>
             </div>
           )}
         </div>
       ) : (
         /* Grid mode (filters active) */
-        <div className="px-6 lg:px-10">
+        <div>
           {allLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               <SkeletonGrid count={18} aspectRatio="poster" />
