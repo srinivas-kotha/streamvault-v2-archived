@@ -223,37 +223,22 @@ export function LivePage() {
     return streams.filter((s) => s.name.toLowerCase().includes(q));
   }, [streams, debouncedSearch]);
 
-  const closePlayer = () => {
-    usePlayerStore.getState().stop();
-    navigate({ to: '/live', search: {} });
-  };
-
   return (
+    <>
+      {/* Inline Player — OUTSIDE PageTransition so fixed positioning works on TV */}
+      {play && (
+        <PlayerPage
+          streamType="live"
+          streamId={play}
+          streamName={currentStreamName || undefined}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TanStack Router search params type requires cast
+          onClose={() => navigate({ search: { ...searchParams, play: undefined } } as any)}
+        />
+      )}
+
     <PageTransition>
     <FocusContext.Provider value={contentFocusKey}>
     <div ref={contentRef} className="flex flex-col gap-4 h-full">
-      {/* Inline Player */}
-      {play && (
-        <div className="relative">
-          <button
-            onClick={closePlayer}
-            className="absolute top-3 right-3 z-20 p-2 bg-obsidian/80 rounded-full text-text-muted hover:text-text-primary transition-colors"
-            title="Close player"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <PlayerPage
-            streamType="live"
-            streamId={play}
-            streamName={currentStreamName || undefined}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TanStack Router search params type requires cast
-            onClose={() => navigate({ search: { ...searchParams, play: undefined } } as any)}
-          />
-        </div>
-      )}
-
       {/* Featured Channels Section */}
       {!play && <FeaturedChannels />}
 
@@ -329,5 +314,6 @@ export function LivePage() {
     </div>
     </FocusContext.Provider>
     </PageTransition>
+    </>
   );
 }
