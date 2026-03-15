@@ -591,6 +591,21 @@ export function SeriesDetail() {
   const { info, seasons } = data;
 
   return (
+    <>
+      {/* Inline Player — OUTSIDE PageTransition because CSS transform breaks fixed positioning */}
+      {isPlayerOpen && playerEpisodeId && (
+        <PlayerPage
+          streamType="series"
+          streamId={playerEpisodeId}
+          streamName={playerEpisodeName}
+          startTime={playerStartTime}
+          hasNext={hasNextEp}
+          hasPrev={hasPrevEp}
+          onNext={hasNextEp ? playNextEpisode : undefined}
+          onPrev={hasPrevEp ? playPrevEpisode : undefined}
+          onClose={() => setIsPlayerOpen(false)}
+        />
+      )}
     <PageTransition>
       <FocusContext.Provider value={contentFocusKey}>
         <div ref={contentRef} className="pb-12">
@@ -612,32 +627,6 @@ export function SeriesDetail() {
                 Back to Series
               </button>
             </div>
-
-            {/* Inline Player */}
-            {isPlayerOpen && playerEpisodeId && (
-              <div className="relative mb-6">
-                <button
-                  onClick={() => setIsPlayerOpen(false)}
-                  className="absolute top-3 right-3 z-20 p-2 bg-obsidian/80 rounded-full text-text-muted hover:text-text-primary transition-colors"
-                  title="Close player"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                <PlayerPage
-                  streamType="series"
-                  streamId={playerEpisodeId}
-                  streamName={playerEpisodeName}
-                  startTime={playerStartTime}
-                  hasNext={hasNextEp}
-                  hasPrev={hasPrevEp}
-                  onNext={hasNextEp ? playNextEpisode : undefined}
-                  onPrev={hasPrevEp ? playPrevEpisode : undefined}
-                  onClose={() => setIsPlayerOpen(false)}
-                />
-              </div>
-            )}
 
             {/* Hero with backdrop */}
             <div className="relative overflow-hidden mb-6">
@@ -849,5 +838,6 @@ export function SeriesDetail() {
         </div>
       </FocusContext.Provider>
     </PageTransition>
+    </>
   );
 }
