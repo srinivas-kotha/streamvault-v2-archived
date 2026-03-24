@@ -1,9 +1,11 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { usePlayerStore } from '@lib/store';
 import { PlayerPage } from '@features/player/components/PlayerPage';
-import { isTVMode } from '@shared/utils/isTVMode';
 import { ErrorBoundary } from '@shared/components/ErrorBoundary';
 import { ToastContainer } from '@shared/components/Toast';
+import { InputModeProvider } from '@/providers/InputModeProvider';
+import { LayoutSelector } from '@/layouts/LayoutSelector';
+import { useDeviceContext } from '@/hooks/useDeviceContext';
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -53,14 +55,19 @@ function FullscreenPlayer() {
 }
 
 function RootLayout() {
+  const { isTVMode } = useDeviceContext();
+
   return (
-    <>
+    <InputModeProvider>
       {!isTVMode && <div className="grain-overlay" />}
       <ErrorBoundary>
-        <Outlet />
+        <LayoutSelector>
+          <Outlet />
+        </LayoutSelector>
       </ErrorBoundary>
+      {/* FullscreenPlayer OUTSIDE LayoutSelector — AC-01: no transform ancestors */}
       <FullscreenPlayer />
       <ToastContainer />
-    </>
+    </InputModeProvider>
   );
 }
