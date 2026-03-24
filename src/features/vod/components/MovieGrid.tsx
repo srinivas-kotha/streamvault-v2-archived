@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { PosterCard } from '@/design-system/cards/PosterCard';
 import { EmptyState } from '@shared/components/EmptyState';
+import { VirtualGrid } from '@shared/components/VirtualGrid';
 import type { XtreamVODStream } from '@shared/types/api';
 
 // ---------------------------------------------------------------------------
@@ -25,8 +26,11 @@ export const MovieGrid = memo(function MovieGrid({ movies, onFavoriteToggle }: M
   }
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-      {movies.map((movie) => {
+    <VirtualGrid
+      items={movies}
+      estimateSize={280}
+      overscan={3}
+      renderItem={(movie) => {
         // Extract year from the added timestamp (approximate — no releaseDate on stream list)
         const year = movie.added
           ? new Date(parseInt(movie.added, 10) * 1000).getFullYear()
@@ -34,7 +38,6 @@ export const MovieGrid = memo(function MovieGrid({ movies, onFavoriteToggle }: M
 
         return (
           <PosterCard
-            key={movie.stream_id}
             title={movie.name}
             imageUrl={movie.stream_icon}
             rating={movie.rating_5based > 0 ? movie.rating_5based.toFixed(1) : undefined}
@@ -49,7 +52,7 @@ export const MovieGrid = memo(function MovieGrid({ movies, onFavoriteToggle }: M
             focusKey={`movie-grid-${movie.stream_id}`}
           />
         );
-      })}
-    </div>
+      }}
+    />
   );
 });

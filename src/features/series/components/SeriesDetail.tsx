@@ -2,18 +2,69 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from '@tanstack/react-router';
 import { useSeriesInfo } from '../api';
 import { useWatchHistory } from '@features/history/api';
+import { useIsFavorite, useAddFavorite, useRemoveFavorite } from '@features/favorites/api';
 import { Skeleton } from '@shared/components/Skeleton';
 import { PageTransition } from '@shared/components/PageTransition';
 import { usePlayerStore } from '@lib/store';
 import type { EpisodeEntry } from '@lib/store';
 import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus, doesFocusableExist } from '@shared/hooks/useSpatialNav';
+import { useFocusStyles } from '@/design-system/focus/useFocusStyles';
 import { SeriesDetailHero } from './SeriesDetailHero';
 import { EpisodeControls } from './EpisodeControls';
 import { FocusableEpisodeItem } from './EpisodeItem';
 import type { Episode } from './EpisodeItem';
-import { FocusableSeasonTab, ResumeButton, LoadMoreButton } from './SeriesDetailSubComponents';
+import { ResumeButton, LoadMoreButton } from './SeriesDetailSubComponents';
+import { SeasonNav } from './SeasonNav';
 
 type EpisodeSortKey = 'latest' | 'oldest' | 'episode';
+
+// ── Favorite Button ────────────────────────────────────────────────────────────
+
+function SeriesFavoriteButton({ seriesId, seriesName, seriesIcon }: { seriesId: string; seriesName: string; seriesIcon?: string }) {
+  const { buttonFocus } = useFocusStyles();
+  const isFavorite = useIsFavorite(seriesId);
+  const { mutate: addFavorite } = useAddFavorite();
+  const { mutate: removeFavorite } = useRemoveFavorite();
+
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: `series-favorite-${seriesId}`,
+    onEnterPress: () => handleToggle(),
+  });
+
+  function handleToggle() {
+    if (isFavorite) {
+      removeFavorite(seriesId);
+    } else {
+      addFavorite({ contentId: seriesId, content_type: 'series', content_name: seriesName, content_icon: seriesIcon });
+    }
+  }
+
+  return (
+    <button
+      ref={ref}
+      {...focusProps}
+      onClick={handleToggle}
+      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-[background-color,border-color,color] min-h-[44px] ${
+        isFavorite
+          ? 'bg-teal/15 text-teal border-teal/30'
+          : 'bg-surface-raised text-text-secondary border-border hover:text-text-primary hover:border-teal/20'
+      } ${showFocusRing ? `ring-2 ring-teal ring-offset-1 ring-offset-obsidian ${buttonFocus}` : ''}`}
+      data-focus-key={`series-favorite-${seriesId}`}
+    >
+      {isFavorite ? (
+        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+      )}
+      {isFavorite ? 'Favorited' : 'Favorite'}
+    </button>
+  );
+}
 
 export const EPISODES_PER_PAGE = 50;
 
@@ -159,6 +210,13 @@ export function SeriesDetail() {
                 </button>
               </div>
               <SeriesDetailHero info={info} seasonsCount={seasons.length} channelName={null} />
+              <div className="flex items-center gap-3 mb-4">
+                <SeriesFavoriteButton
+                  seriesId={seriesId}
+                  seriesName={info.name}
+                  seriesIcon={info.cover}
+                />
+              </div>
               {lastWatchedEpisode && (
                 <ResumeButton
                   seriesId={seriesId}
@@ -185,19 +243,13 @@ export function SeriesDetail() {
 
           <FocusContext.Provider value={controlsFocusKey}>
             <div ref={controlsRef}>
-              <div className="mb-4">
-                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2" role="tablist">
-                  {computedSeasons.map((season) => (
-                    <FocusableSeasonTab
-                      key={season.season_number}
-                      seasonNumber={season.season_number}
-                      name={season.name}
-                      episodeCount={season.episode_count}
-                      isActive={activeSeason === season.season_number}
-                      onSelect={() => { setActiveSeason(season.season_number); setEpisodeSearch(''); }}
-                    />
-                  ))}
-                </div>
+              <div className="mb-4 overflow-x-auto scrollbar-hide pb-2">
+                <SeasonNav
+                  seasons={computedSeasons}
+                  activeSeason={activeSeason ?? 0}
+                  seriesId={seriesId}
+                  onSeasonChange={(n) => { setActiveSeason(n); setEpisodeSearch(''); }}
+                />
               </div>
               <EpisodeControls
                 seriesId={seriesId}

@@ -8,6 +8,18 @@ vi.mock('@/shared/utils/isTVMode', () => ({
   isTVMode: false,
 }));
 
+// ── mock VirtualGrid (useVirtualizer requires DOM layout unavailable in jsdom) ─
+
+vi.mock('@shared/components/VirtualGrid', () => ({
+  VirtualGrid: ({ items, renderItem }: any) => (
+    <div data-testid="virtual-grid">
+      {items.map((item: any, index: number) => (
+        <div key={item.stream_id ?? index}>{renderItem(item, index)}</div>
+      ))}
+    </div>
+  ),
+}));
+
 // ── mock PosterCard ────────────────────────────────────────────────────────────
 
 vi.mock('@/design-system/cards/PosterCard', () => ({

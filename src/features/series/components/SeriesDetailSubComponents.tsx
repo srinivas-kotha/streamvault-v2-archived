@@ -1,46 +1,14 @@
 /**
  * Sub-components for SeriesDetail:
- * - FocusableSeasonTab
  * - ResumeButton
  * - LoadMoreButton
  *
  * Extracted to keep SeriesDetail.tsx under 300 lines (AC-03).
+ * Season tab rendering moved to SeasonNav component.
  */
 import { useSpatialFocusable } from '@shared/hooks/useSpatialNav';
 import { useFocusStyles } from '@/design-system/focus/useFocusStyles';
 import { formatDuration } from '@shared/utils/formatDuration';
-
-// ── FocusableSeasonTab ────────────────────────────────────────────────────────
-
-export function FocusableSeasonTab({ seasonNumber, name, episodeCount, isActive, onSelect }: {
-  seasonNumber: number;
-  name: string;
-  episodeCount: number;
-  isActive: boolean;
-  onSelect: () => void;
-}) {
-  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
-    focusKey: `series-season-${seasonNumber}`,
-    onEnterPress: onSelect,
-  });
-
-  return (
-    <button
-      ref={ref}
-      {...focusProps}
-      role="tab"
-      aria-selected={isActive}
-      onClick={onSelect}
-      className={`px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color] min-h-[44px] ${
-        isActive
-          ? 'bg-teal/15 text-teal border border-teal/30'
-          : 'bg-surface-raised text-text-secondary border border-border hover:text-text-primary hover:border-teal/20'
-      } ${showFocusRing ? 'ring-2 ring-teal ring-offset-1 ring-offset-obsidian' : ''}`}
-    >
-      {name} ({episodeCount})
-    </button>
-  );
-}
 
 // ── ResumeButton ──────────────────────────────────────────────────────────────
 

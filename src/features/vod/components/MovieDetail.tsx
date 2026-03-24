@@ -2,6 +2,7 @@ import { useMemo, useEffect } from 'react';
 import { useParams, useRouter } from '@tanstack/react-router';
 import { useVODInfo } from '../api';
 import { useWatchHistory } from '@features/history/api';
+import { useIsFavorite, useAddFavorite, useRemoveFavorite } from '@features/favorites/api';
 import { StarRating } from '@shared/components/StarRating';
 import { Badge } from '@shared/components/Badge';
 import { Button } from '@shared/components/Button';
@@ -33,6 +34,50 @@ function StartOverButton({ vodId, onStartOver }: { vodId: string; onStartOver: (
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0113.09-3.09L20 9M20 15a8 8 0 01-13.09 3.09L4 15" />
       </svg>
       Start Over
+    </Button>
+  );
+}
+
+function FavoriteButton({ vodId, movieName, movieIcon }: { vodId: string; movieName: string; movieIcon?: string }) {
+  const { buttonFocus } = useFocusStyles();
+  const isFavorite = useIsFavorite(vodId);
+  const { mutate: addFavorite } = useAddFavorite();
+  const { mutate: removeFavorite } = useRemoveFavorite();
+
+  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
+    focusKey: `vod-favorite-${vodId}`,
+    onEnterPress: () => handleToggle(),
+  });
+
+  function handleToggle() {
+    if (isFavorite) {
+      removeFavorite(vodId);
+    } else {
+      addFavorite({ contentId: vodId, content_type: 'vod', content_name: movieName, content_icon: movieIcon });
+    }
+  }
+
+  return (
+    <Button
+      ref={ref}
+      {...focusProps}
+      variant="secondary"
+      size="lg"
+      onClick={handleToggle}
+      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+      className={showFocusRing ? `${buttonFocus} scale-105 bg-surface-hover shadow-[0_0_16px_rgba(45,212,191,0.2)] border-teal/40` : ''}
+      data-focus-key={`vod-favorite-${vodId}`}
+    >
+      {isFavorite ? (
+        <svg className="w-5 h-5 mr-2 text-teal" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+      )}
+      {isFavorite ? 'Favorited' : 'Favorite'}
     </Button>
   );
 }
@@ -158,7 +203,7 @@ export function MovieDetail() {
                   <Badge key={g} variant="teal">{g}</Badge>
                 ))}
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap">
                 <Button
                   ref={playRef}
                   {...playFocusProps}
@@ -178,6 +223,11 @@ export function MovieDetail() {
                     onStartOver={() => playStream(vodId, 'vod', info.name, 0)}
                   />
                 )}
+                <FavoriteButton
+                  vodId={vodId}
+                  movieName={info.name}
+                  movieIcon={info.movie_image}
+                />
               </div>
             </div>
           </div>
