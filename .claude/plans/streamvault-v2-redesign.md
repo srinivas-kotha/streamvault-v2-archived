@@ -944,8 +944,29 @@ function BufferingOverlay() {
 | Unit | Vitest | 80%+ utilities/hooks | Pure functions, store logic, formatters |
 | Component | Vitest + Testing Library | Key components | Rendering, user interaction, ARIA |
 | Integration | Vitest + MSW | API layer | Query hooks, error handling, auth flow |
-| E2E | Playwright | Critical paths | Login, browse, play, search, favorites |
+| E2E | Playwright + Playwright MCP | Critical paths | Login, browse, play, search, favorites |
 | Visual | Playwright screenshots | Key pages | Regression on redesign |
+
+### E2E Testing Enforcement (LOCKED — applies to ALL sprints)
+
+**Tool**: Playwright test suite (CI) + Playwright MCP (`@playwright/mcp@latest`) for interactive validation.
+
+**Per-sprint E2E requirement**: Every feature sprint (2-7) MUST have corresponding E2E tests written by echo in parallel. E2E tests are NOT deferred to Sprint 8 — they are written incrementally as features land. Sprint 8 consolidates and fills gaps, it does not start from zero.
+
+**Gate G5 validation**: During go/no-go, architect uses Playwright MCP to interactively walk through the sprint's critical paths in a real browser. This is in addition to echo's automated E2E suite. If architect cannot reproduce the happy path via Playwright MCP, the gate FAILS.
+
+**E2E acceptance criteria**: Every feature issue (#87-#120) includes explicit `### E2E Testing (Playwright MCP -- Gate G5)` acceptance criteria. These are mandatory — a PR without passing E2E criteria cannot merge.
+
+| Sprint | Echo E2E Focus | Architect MCP Validation |
+|--------|---------------|------------------------|
+| 2 | Home page rails, D-pad navigation, card rendering | Home loads with 3+ rails, navigate between them |
+| 3A | VOD browse→detail→play, series season nav | Browse VOD, open detail, verify metadata |
+| 3B | Search, favorites, watch history, live TV | Search→results→detail, add/remove favorite |
+| 4 | Player mount/play/close, single instance, controls | Play stream, verify controls, back closes player |
+| 5 | EPG timeline, channel switching | EPG renders, program click works |
+| 6 | Login/logout, settings persistence | Login flow, logout protection |
+| 7 | Lighthouse >=90, page nav <2s | Page load timing verification |
+| 8 | Full suite consolidation + visual regression | All critical paths end-to-end |
 
 ### Component Test Examples
 
@@ -1784,13 +1805,14 @@ DURING SPRINT:
 AFTER SPRINT:
 9. Dev pushes branch: git push origin branch
 10. Dev creates PR: gh pr create
-11. echo runs full test suite on PR branch
+11. echo runs full test suite on PR branch (unit + component + E2E)
 12. foxtrot runs code review + security scan
 13. architect reviews ALL diffs for AC-01 to AC-12 compliance
-14. GO/NO-GO GATE (see below)
-15. On PASS: gh pr merge --squash --delete-branch
-16. On FAIL: fix findings, re-run gate
-17. Clean up worktree: git worktree remove path
+14. architect validates sprint critical paths via Playwright MCP (interactive browser walkthrough)
+15. GO/NO-GO GATE (see below)
+16. On PASS: gh pr merge --squash --delete-branch
+17. On FAIL: fix findings, re-run gate
+18. Clean up worktree: git worktree remove path
 
 ### Go/No-Go Gate (Dual Sign-off Required)
 
@@ -1800,7 +1822,7 @@ AFTER SPRINT:
 | G2: No deviation from plan | architect | YES |
 | G3: TDD failing tests written BEFORE implementation | echo | YES |
 | G4: All unit/component tests pass 100% green | echo | YES |
-| G5: E2E critical paths pass | echo | YES |
+| G5: E2E critical paths pass (Playwright tests + architect MCP walkthrough) | echo + architect | YES |
 | G6: axe-core 0 accessibility violations | echo | YES |
 | G7: Code review no security issues | foxtrot | YES |
 | G8: npm run build clean 0 errors | foxtrot | YES |
@@ -1818,6 +1840,7 @@ ALL 11 gates must PASS. A single FAIL blocks the merge. No exceptions.
 4. Quality escalation: substandard work sent back with specific fixes
 5. Scope guard: features not in PRD rejected, deferred to v2.1+
 6. Sprint retrospective: document what went well/wrong after each merge
+7. E2E validation: use Playwright MCP to interactively verify each sprint's critical paths before signing off on Gate G5 (NOT optional — automated tests alone are insufficient)
 
 ### Parallelization Map
 
