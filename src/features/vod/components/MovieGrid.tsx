@@ -1,0 +1,55 @@
+import { memo } from 'react';
+import { useNavigate } from '@tanstack/react-router';
+import { PosterCard } from '@/design-system/cards/PosterCard';
+import { EmptyState } from '@shared/components/EmptyState';
+import type { XtreamVODStream } from '@shared/types/api';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface MovieGridProps {
+  movies: XtreamVODStream[];
+  onFavoriteToggle?: (movie: XtreamVODStream) => void;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export const MovieGrid = memo(function MovieGrid({ movies, onFavoriteToggle }: MovieGridProps) {
+  const navigate = useNavigate();
+
+  if (movies.length === 0) {
+    return <EmptyState title="No movies found" />;
+  }
+
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+      {movies.map((movie) => {
+        // Extract year from the added timestamp (approximate — no releaseDate on stream list)
+        const year = movie.added
+          ? new Date(parseInt(movie.added, 10) * 1000).getFullYear()
+          : undefined;
+
+        return (
+          <PosterCard
+            key={movie.stream_id}
+            title={movie.name}
+            imageUrl={movie.stream_icon}
+            rating={movie.rating_5based > 0 ? movie.rating_5based.toFixed(1) : undefined}
+            year={year}
+            onClick={() =>
+              navigate({
+                to: '/vod/$vodId',
+                params: { vodId: String(movie.stream_id) },
+              })
+            }
+            onFavoriteToggle={onFavoriteToggle ? () => onFavoriteToggle(movie) : undefined}
+            focusKey={`movie-grid-${movie.stream_id}`}
+          />
+        );
+      })}
+    </div>
+  );
+});
