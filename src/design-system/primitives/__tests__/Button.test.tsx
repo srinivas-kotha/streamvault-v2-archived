@@ -88,7 +88,7 @@ describe('Button — default type', () => {
 
 describe('Button — ref forwarding', () => {
   it('forwards ref to the underlying DOM element', () => {
-    const ref = createRef<HTMLElement>();
+    const ref = createRef<HTMLButtonElement>();
     render(<Button ref={ref}>Ref test</Button>);
     expect(ref.current).not.toBeNull();
     expect(ref.current?.tagName).toBe('BUTTON');
