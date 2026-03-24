@@ -32,7 +32,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: [],
+    setupFiles: ['./src/test/setup.ts'],
   },
   build: {
     target: ['es2019', 'chrome69'],
