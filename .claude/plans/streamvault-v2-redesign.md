@@ -1722,3 +1722,141 @@ Added to Sprint 0 (Toast primitive).
 | 10 | Merge + Deploy | 1-2 days | Rollback plan (C9) |
 | **Total** | | **~45-62 days** | **~12-16 weeks at 50% allocation** |
 
+
+---
+
+## Appendix D: Agent Team and Worktree Enforcement (LOCKED)
+
+This section is LOCKED. No deviation permitted. Every sprint MUST follow this workflow exactly.
+
+### Agent Team Roster
+
+| Agent | Role | Model | Isolation | Responsibility |
+|-------|------|-------|-----------|----------------|
+| architect | Lead Architect and Project Lead | Opus | Read-only | Reviews ALL agent output, enforces AC-01 to AC-12, validates patterns, sprint sign-off, resolves conflicts, ensures zero deviation from plan |
+| alpha | Design System and Foundation Lead | Sonnet | worktree | Tokens, theme, layouts, routing, spatial nav bootstrap (Sprints 0-1) |
+| bravo | Pages and Content Developer | Sonnet | worktree | Home, VOD, Series, Live, Search, Favorites, Auth, Settings, EPG (Sprints 2, 3A, 3B, 5, 6) |
+| charlie | Player Architect | Sonnet | worktree | Single global player, state machine, HLS/mpegts, all controls, recovery (Sprint 4) |
+| delta | Performance and Compatibility Engineer | Sonnet | worktree | Bundle optimization, memory profiling, cross-device testing (Sprints 7, 9) |
+| echo | QA and Test Engineer | Sonnet | worktree | TDD test-first, component tests, E2E, accessibility, visual regression (Sprint 8, continuous) |
+| foxtrot | Quality Reviewer | Sonnet | Read-only | Code review, security scan, go/no-go gate execution |
+
+### Worktree Branch Mapping (Strict)
+
+Every issue gets its own worktree branch. PRs created per issue. No direct commits to main.
+
+| Issue | Branch | Agent |
+|-------|--------|-------|
+| 84 | feat/sv2-design-system | alpha |
+| 85 | feat/sv2-app-shell | alpha |
+| 86 | feat/sv2-back-nav | alpha |
+| 87 | feat/sv2-home-page | bravo |
+| 88 | feat/sv2-content-cards | bravo |
+| 89 | feat/sv2-vod-pages | bravo |
+| 90 | feat/sv2-series-pages | bravo |
+| 91 | feat/sv2-live-page | bravo |
+| 109 | feat/sv2-search-page | bravo |
+| 110 | feat/sv2-favorites-page | bravo |
+| 111 | feat/sv2-watch-history | bravo |
+| 112-116 | feat/sv2-player | charlie |
+| 117 | feat/sv2-epg | bravo |
+| 118 | feat/sv2-auth | bravo |
+| 119 | feat/sv2-settings-sw | bravo |
+| 120 | feat/sv2-perf | delta |
+| 121 | feat/sv2-tests | echo |
+| 122 | feat/sv2-device-testing | delta+echo |
+| 123 | N/A (merge to main) | architect+foxtrot |
+
+### Sprint Execution Workflow (MANDATORY)
+
+BEFORE SPRINT:
+1. architect reviews sprint scope against THIS plan
+2. architect writes architectural brief (key constraints, banned patterns)
+3. echo writes FAILING tests first (TDD contract from issue)
+4. Dev creates worktree: git worktree add path -b branch
+
+DURING SPRINT:
+5. Dev implements in worktree (isolation: worktree)
+6. echo writes E2E tests in parallel on separate worktree
+7. architect spot-checks mid-sprint (no drift from plan)
+8. Dev runs npm run build (must be clean before proceeding)
+
+AFTER SPRINT:
+9. Dev pushes branch: git push origin branch
+10. Dev creates PR: gh pr create
+11. echo runs full test suite on PR branch
+12. foxtrot runs code review + security scan
+13. architect reviews ALL diffs for AC-01 to AC-12 compliance
+14. GO/NO-GO GATE (see below)
+15. On PASS: gh pr merge --squash --delete-branch
+16. On FAIL: fix findings, re-run gate
+17. Clean up worktree: git worktree remove path
+
+### Go/No-Go Gate (Dual Sign-off Required)
+
+| Gate | Owner | Blocker |
+|------|-------|---------|
+| G1: Architectural review AC-01 through AC-12 | architect | YES |
+| G2: No deviation from plan | architect | YES |
+| G3: TDD failing tests written BEFORE implementation | echo | YES |
+| G4: All unit/component tests pass 100% green | echo | YES |
+| G5: E2E critical paths pass | echo | YES |
+| G6: axe-core 0 accessibility violations | echo | YES |
+| G7: Code review no security issues | foxtrot | YES |
+| G8: npm run build clean 0 errors | foxtrot | YES |
+| G9: No transition-all no backdrop-filter no Framer Motion | foxtrot | YES |
+| G10: No component exceeds 300 lines | foxtrot | YES |
+| G11: PR references issue number and acceptance criteria | foxtrot | YES |
+
+ALL 11 gates must PASS. A single FAIL blocks the merge. No exceptions.
+
+### Architect Continuous Responsibilities
+
+1. Plan adherence: every line of code traces to this plan or PRD
+2. Constraint enforcement: AC-01 through AC-12 verified on every PR
+3. Cross-agent coordination: interface contracts defined before implementation
+4. Quality escalation: substandard work sent back with specific fixes
+5. Scope guard: features not in PRD rejected, deferred to v2.1+
+6. Sprint retrospective: document what went well/wrong after each merge
+
+### Parallelization Map
+
+Sprint 0-1: alpha (design+shell) and echo (test infra)
+Sprint 2: bravo (home+cards) and echo (component test templates)
+Sprint 3A: bravo (VOD+Series) and echo (home E2E)
+Sprint 3B: bravo (Live+Search+Fav) and echo (VOD/Series E2E)
+Sprint 4: charlie (player isolated) and echo (browse E2E)
+Sprint 5: bravo (EPG+live) and echo (player E2E)
+Sprint 6: bravo (auth+settings+SW) and echo (live TV E2E)
+Sprint 7: delta (performance) and echo (auth/settings E2E)
+Sprint 8: echo (full test suite) and delta (perf automation)
+Sprint 9: delta+echo (cross-device HITL)
+Sprint 10: architect+foxtrot (final gate HITL)
+
+### Issues Reference
+
+| Issue | Title | Sprint |
+|-------|-------|--------|
+| 84 | Design system tokens + Tailwind theme + base components | 0 |
+| 85 | App shell: device detection, layouts, TanStack Router, spatial nav | 1 |
+| 86 | Back navigation: unified handler Fire TV/Samsung/LG | 1 |
+| 87 | Home page: hero banner + content rails + skeletons | 2 |
+| 88 | ContentCard components: Poster, Landscape, Channel, Episode | 2 |
+| 89 | VOD pages: category browser + movie grid + MovieDetail | 3A |
+| 90 | Series pages: SeriesDetail decomposition + season nav | 3A |
+| 91 | Live TV page: category grid + channel cards | 3B |
+| 109 | Search page: universal search + filters | 3B |
+| 110 | Favorites page: grid + type filter + optimistic toggle | 3B |
+| 111 | Watch history: continue watching + history management | 3B |
+| 112 | Player shell: single global instance + state machine | 4 |
+| 113 | Player controls: desktop + TV + mobile variants | 4 |
+| 114 | Player features: resume, auto-next, selectors | 4 |
+| 115 | Player TV: hold-to-seek, long-press, channel switching | 4 |
+| 116 | Player recovery: error UI, sleep/wake, resilience | 4 |
+| 117 | EPG timeline + live TV enhancements | 5 |
+| 118 | Auth pages: login redesign + auto-login + CSRF | 6 |
+| 119 | Settings + service worker + toast + a11y polish | 6 |
+| 120 | Performance optimization: bundle, memory, FPS | 7 |
+| 121 | Test suite: component + integration + E2E | 8 |
+| 122 | Cross-device testing: all platforms | 9 |
+| 123 | Final review + merge + deploy | 10 |
