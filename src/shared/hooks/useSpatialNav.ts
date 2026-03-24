@@ -97,7 +97,7 @@ interface UseSpatialContainerOptions {
 export function useSpatialContainer(options: UseSpatialContainerOptions = {}) {
   const { ref, focusSelf, focusKey, hasFocusedChild } = useFocusable({
     focusKey: options.focusKey,
-    focusable: options.focusable ?? true,
+    focusable: options.focusable ?? false,
     saveLastFocusedChild: options.saveLastFocusedChild ?? true,
     trackChildren: options.trackChildren ?? true,
     autoRestoreFocus: options.autoRestoreFocus,

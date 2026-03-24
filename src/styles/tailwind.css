@@ -1,49 +1,88 @@
 @import "tailwindcss";
+@import './fonts.css';
+
+/* Hover-capable device guard — prevents hover effects on TV remotes */
+@custom-variant hover-capable (@media (hover: hover));
 
 @theme {
-  /* Srinibytes "Ambient Depth" palette */
-  --color-obsidian: #0A0A0F;
-  --color-surface: #12121A;
-  --color-surface-raised: #1A1A24;
-  --color-surface-hover: #22222E;
-  --color-border: #2A2A38;
-  --color-border-subtle: #1E1E2A;
+  /* Background Colors */
+  --color-bg-primary: #0a0a0f;
+  --color-bg-secondary: #141418;
+  --color-bg-tertiary: #1a1a22;
+  --color-bg-overlay: rgba(10,10,15,0.85);
+  --color-bg-hover: #1e1e28;
 
-  /* Brand colors */
-  --color-teal: #2DD4BF;
-  --color-teal-dim: #14B8A6;
-  --color-teal-glow: rgba(45, 212, 191, 0.15);
-  --color-indigo: #818CF8;
-  --color-indigo-dim: #6366F1;
-  --color-indigo-glow: rgba(129, 140, 248, 0.15);
+  /* Accent Colors */
+  --color-accent-teal: #14b8a6;
+  --color-accent-indigo: #6366f1;
+  --color-accent-teal-dim: #0d9488;
+  --color-accent-indigo-dim: #4f46e5;
 
-  /* Semantic */
-  --color-accent: var(--color-teal);
-  --color-accent-dim: var(--color-teal-dim);
-  --color-secondary: var(--color-indigo);
-  --color-error: #EF4444;
-  --color-warning: #F59E0B;
-  --color-success: #10B981;
+  /* Text Colors */
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #64748b;
 
-  /* Text */
-  --color-text-primary: #F1F5F9;
-  --color-text-secondary: #94A3B8;
-  --color-text-muted: #7E8FA3;
+  /* Status Colors */
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Focus */
+  --color-focus: #14b8a6;
+  --shadow-focus: 0 0 0 2px rgba(20,184,166,0.6);
+  --shadow-focus-tv: 0 0 0 3px rgba(20,184,166,0.8), 0 0 20px rgba(20,184,166,0.15);
+
+  /* Gradients */
+  --gradient-brand: linear-gradient(135deg, #14b8a6, #6366f1);
+  --gradient-hero: linear-gradient(to top, #0a0a0f 0%, transparent 60%);
+  --gradient-card: linear-gradient(to top, rgba(10,10,15,0.9) 0%, transparent 100%);
 
   /* Typography */
-  --font-sans: 'General Sans', system-ui, -apple-system, sans-serif;
-  --font-display: 'Satoshi', system-ui, -apple-system, sans-serif;
+  --font-family-heading: 'Satoshi', system-ui, sans-serif;
+  --font-family-body: 'General Sans', system-ui, sans-serif;
+  --font-family-mono: 'JetBrains Mono', monospace;
 
-  /* Shadows */
-  --shadow-glow-teal: 0 0 20px rgba(45, 212, 191, 0.15);
-  --shadow-glow-indigo: 0 0 20px rgba(129, 140, 248, 0.15);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 2.5rem;
 
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* Spacing */
+  --spacing-page-x: clamp(1rem, 4vw, 3rem);
+  --spacing-rail-gap: 0.75rem;
+  --spacing-section-gap: 2rem;
+
+  /* Transitions */
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 200ms ease-out;
+  --transition-slow: 300ms ease-out;
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Z-Index Scale */
+  --z-base: 0;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-overlay: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+  --z-player: 60;
+}
+
+/* TV Mode Scaling */
+.tv-mode {
+  font-size: 20px;
 }
 
 /* Hide scrollbar but keep scroll functionality */
@@ -59,21 +98,16 @@
   contain: style;
 }
 
-/* Grain texture overlay */
-.grain-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 100;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-}
-
-/* Glassmorphism card */
-.glass-card {
-  backdrop-filter: blur(16px);
-  background: rgba(26, 26, 36, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+/* Grain texture overlay — desktop/mouse only (invisible on TV at 10ft, costs compositor work) */
+@media (hover: hover) {
+  .grain-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
 }
 
 /* Ambient teal glow on hover */
@@ -84,19 +118,6 @@
   .ambient-glow:hover {
     box-shadow: 0 0 20px rgba(45, 212, 191, 0.15), 0 0 40px rgba(45, 212, 191, 0.05);
   }
-}
-
-/* Focus ring for keyboard navigation */
-.focus-ring:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--color-obsidian), 0 0 0 4px rgba(45, 212, 191, 0.5);
-}
-
-/* TV-optimized focus ring (thicker, more visible at distance) */
-.tv-focus-ring {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--color-obsidian), 0 0 0 5px rgba(45, 212, 191, 0.6), 0 0 30px rgba(45, 212, 191, 0.2);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 /* TV safe zone (5% inset for overscan) */

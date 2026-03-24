@@ -17,11 +17,13 @@
     "@tanstack/react-query": "^5.62.0",
     "@tanstack/react-router": "^1.92.0",
     "@tanstack/react-virtual": "^3.11.0",
+    "clsx": "^2.1.1",
     "hls.js": "^1.5.17",
     "mpegts.js": "^1.8.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.0",
+    "tailwind-merge": "^3.5.0",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
@@ -40,7 +42,7 @@
     "globals": "^15.13.0",
     "jsdom": "^25.0.0",
     "postcss": "^8.4.49",
-    "sharp": "^0.34.5",
+    "rollup-plugin-visualizer": "^6.0.11",
     "tailwindcss": "^4.0.0",
     "typescript": "~5.7.0",
     "typescript-eslint": "^8.18.0",

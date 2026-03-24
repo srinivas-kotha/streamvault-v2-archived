@@ -3,6 +3,7 @@ import { useToastStore } from '@lib/toastStore';
 const typeStyles = {
   success: 'bg-teal-600 text-white',
   error: 'bg-red-600 text-white',
+  warning: 'bg-amber-600 text-white',
   info: 'bg-indigo-600 text-white',
 } as const;
 
@@ -17,7 +18,7 @@ export function ToastContainer() {
       {toasts.slice(-3).map((toast) => (
         <div
           key={toast.id}
-          className={`animate-fade-in flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg ${typeStyles[toast.type]}`}
+          className={`animate-fade-in flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg ${typeStyles[toast.severity]}`}
           role="alert"
         >
           <span className="text-sm font-medium">{toast.message}</span>

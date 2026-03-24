@@ -3,12 +3,14 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
 import { fileURLToPath } from 'url';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
   plugins: [
     TanStackRouterVite({ routesDirectory: './src/routes', generatedRouteTree: './src/routeTree.gen.ts' }),
     react(),
     tailwindcss(),
+    ...(process.env.ANALYZE === 'true' ? [visualizer({ open: true, gzipSize: true, brotliSize: true })] : []),
   ],
   resolve: {
     alias: {
@@ -33,7 +35,7 @@ export default defineConfig({
     setupFiles: [],
   },
   build: {
-    target: 'chrome80',
+    target: ['es2019', 'chrome69'],
     rollupOptions: {
       output: {
         manualChunks: {
