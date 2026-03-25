@@ -42,7 +42,7 @@ function FocusableProgramBlock({
   pixelsPerMinute: number;
   onClick: () => void;
 }) {
-  const { showFocusRing } = useSpatialFocusable({
+  const { ref, showFocusRing } = useSpatialFocusable({
     focusKey,
     onEnterPress: onClick,
     onFocus: (layout) => {
@@ -51,16 +51,18 @@ function FocusableProgramBlock({
   });
 
   return (
-    <EPGProgramBlock
-      title={title}
-      startTimestamp={startTimestamp}
-      endTimestamp={endTimestamp}
-      timelineStart={timelineStart}
-      pixelsPerMinute={pixelsPerMinute}
-      onClick={onClick}
-      focusKey={focusKey}
-      showFocusRing={showFocusRing}
-    />
+    <div ref={ref}>
+      <EPGProgramBlock
+        title={title}
+        startTimestamp={startTimestamp}
+        endTimestamp={endTimestamp}
+        timelineStart={timelineStart}
+        pixelsPerMinute={pixelsPerMinute}
+        onClick={onClick}
+        focusKey={focusKey}
+        showFocusRing={showFocusRing}
+      />
+    </div>
   );
 }
 

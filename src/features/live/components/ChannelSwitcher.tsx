@@ -41,6 +41,13 @@ export function ChannelSwitcher({
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Enter") {
         onConfirm(channel);
+      } else if (
+        e.key === "Escape" ||
+        e.key === "Backspace" ||
+        e.key === "GoBack" ||
+        e.keyCode === 4
+      ) {
+        onDismiss();
       }
     }
 
