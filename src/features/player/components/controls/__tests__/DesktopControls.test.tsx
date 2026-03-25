@@ -81,7 +81,9 @@ describe("DesktopControls — play/pause", () => {
 describe("DesktopControls — progress bar", () => {
   it("renders progress bar", () => {
     render(<DesktopControls />);
-    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+    expect(
+      screen.getByRole("slider", { name: /video progress/i }),
+    ).toBeInTheDocument();
   });
 
   it("displays current time formatted", () => {

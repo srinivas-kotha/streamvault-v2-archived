@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import './fonts.css';
+@import "./fonts.css";
 
 /* Hover-capable device guard — prevents hover effects on TV remotes */
 @custom-variant hover-capable (@media (hover: hover));
@@ -9,7 +9,7 @@
   --color-bg-primary: #0a0a0f;
   --color-bg-secondary: #141418;
   --color-bg-tertiary: #1a1a22;
-  --color-bg-overlay: rgba(10,10,15,0.85);
+  --color-bg-overlay: rgba(10, 10, 15, 0.85);
   --color-bg-hover: #1e1e28;
 
   /* Accent Colors */
@@ -31,18 +31,23 @@
 
   /* Focus */
   --color-focus: #14b8a6;
-  --shadow-focus: 0 0 0 2px rgba(20,184,166,0.6);
-  --shadow-focus-tv: 0 0 0 3px rgba(20,184,166,0.8), 0 0 20px rgba(20,184,166,0.15);
+  --shadow-focus: 0 0 0 2px rgba(20, 184, 166, 0.6);
+  --shadow-focus-tv:
+    0 0 0 3px rgba(20, 184, 166, 0.8), 0 0 20px rgba(20, 184, 166, 0.15);
 
   /* Gradients */
   --gradient-brand: linear-gradient(135deg, #14b8a6, #6366f1);
   --gradient-hero: linear-gradient(to top, #0a0a0f 0%, transparent 60%);
-  --gradient-card: linear-gradient(to top, rgba(10,10,15,0.9) 0%, transparent 100%);
+  --gradient-card: linear-gradient(
+    to top,
+    rgba(10, 10, 15, 0.9) 0%,
+    transparent 100%
+  );
 
   /* Typography */
-  --font-family-heading: 'Satoshi', system-ui, sans-serif;
-  --font-family-body: 'General Sans', system-ui, sans-serif;
-  --font-family-mono: 'JetBrains Mono', monospace;
+  --font-family-heading: "Satoshi", system-ui, sans-serif;
+  --font-family-body: "General Sans", system-ui, sans-serif;
+  --font-family-mono: "JetBrains Mono", monospace;
 
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -116,7 +121,9 @@
 }
 @media (hover: hover) {
   .ambient-glow:hover {
-    box-shadow: 0 0 20px rgba(45, 212, 191, 0.15), 0 0 40px rgba(45, 212, 191, 0.05);
+    box-shadow:
+      0 0 20px rgba(45, 212, 191, 0.15),
+      0 0 40px rgba(45, 212, 191, 0.05);
   }
 }
 
@@ -170,8 +177,14 @@
 
 /* Page transition animation (replaces framer-motion) */
 @keyframes page-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-page-in {
@@ -180,10 +193,88 @@
 
 /* Toast fade-in */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
   animation: fade-in 0.2s ease-out both;
+}
+
+/* ============================================================
+   Reduced Motion — Sprint 6C Accessibility
+   Applies when user has prefers-reduced-motion: reduce set
+   OR when the .motion-reduced class is added to <html> by the
+   useReducedMotion hook in RootLayout.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  /* Kill all CSS animations and transitions */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Page transitions: instant */
+  .animate-page-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Toast animations: instant */
+  .animate-fade-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Skeleton shimmer: static */
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  /* Spinner: stop spinning (shows static indicator) */
+  .animate-spin {
+    animation: none !important;
+  }
+}
+
+/* Class-based variant for JS-driven control via useReducedMotion hook */
+html.motion-reduced *,
+html.motion-reduced *::before,
+html.motion-reduced *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+html.motion-reduced .animate-page-in {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+html.motion-reduced .animate-fade-in {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+html.motion-reduced .animate-pulse {
+  animation: none !important;
+}
+
+html.motion-reduced .animate-spin {
+  animation: none !important;
 }

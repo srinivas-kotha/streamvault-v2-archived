@@ -110,7 +110,15 @@ export function TVControls() {
               <span>{formatDuration(Math.floor(currentTime))}</span>
               <span>{formatDuration(Math.floor(duration))}</span>
             </div>
-            <div className="w-full h-2 bg-white/30 rounded-full mb-4">
+            <div
+              role="slider"
+              aria-label="Video progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress)}
+              aria-valuetext={`${formatDuration(Math.floor(currentTime))} of ${formatDuration(Math.floor(duration))}`}
+              className="w-full h-2 bg-white/30 rounded-full mb-4"
+            >
               <div
                 className="h-full bg-teal rounded-full"
                 style={{ width: `${progress}%` }}
@@ -131,7 +139,11 @@ export function TVControls() {
         )}
 
         {/* Controls row */}
-        <div className="flex items-center justify-center gap-8">
+        <div
+          role="toolbar"
+          aria-label="Player controls"
+          className="flex items-center justify-center gap-8"
+        >
           <button
             onClick={handlePlayPause}
             className="p-4 text-white text-4xl focus:outline-none"

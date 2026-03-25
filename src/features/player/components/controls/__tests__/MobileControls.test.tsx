@@ -89,7 +89,7 @@ describe("MobileControls — controls content", () => {
   });
 
   it("shows progress bar", () => {
-    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+    expect(screen.getByRole("slider")).toBeInTheDocument();
   });
 
   it("shows quality selector button", () => {

@@ -58,7 +58,10 @@ export function TopNav() {
           ref={topNavRef}
           className="fixed top-0 left-0 right-0 z-50 bg-obsidian/95 backdrop-blur-sm"
         >
-          <nav className="flex items-center justify-between h-12 px-4 lg:px-10">
+          <nav
+            aria-label="Main navigation"
+            className="flex items-center justify-between h-12 px-4 lg:px-10"
+          >
             <Link
               to="/"
               className="font-display text-lg font-bold text-text-primary flex-shrink-0"
@@ -87,7 +90,10 @@ export function TopNav() {
             : "bg-gradient-to-b from-obsidian/80 to-transparent"
         }`}
       >
-        <nav className="flex items-center justify-between h-16 px-4 lg:px-10">
+        <nav
+          aria-label="Main navigation"
+          className="flex items-center justify-between h-16 px-4 lg:px-10"
+        >
           {/* Logo */}
           <Link
             to="/"

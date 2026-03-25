@@ -71,10 +71,12 @@ export function ProgressBar({
 
       <div
         ref={trackRef}
-        role="progressbar"
+        role="slider"
+        aria-label="Video progress"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={progressPct}
+        aria-valuetext={`${formatDuration(Math.floor(currentTime))} of ${formatDuration(Math.floor(duration))}`}
         data-testid="progress-track"
         tabIndex={isFocused ? 0 : -1}
         onClick={handleClick}

@@ -33,6 +33,7 @@ function FocusableInput({
   enterKeyHint?: "next" | "go" | "done";
   onEnterKey?: () => void;
 }) {
+  const errorId = `${id}-error`;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const {
     ref: focusRef,
@@ -57,6 +58,8 @@ function FocusableInput({
         type={type}
         autoComplete={autoComplete}
         enterKeyHint={enterKeyHint}
+        aria-invalid={error ? "true" : "false"}
+        aria-describedby={error ? errorId : undefined}
         className={[
           "w-full px-4 py-3 rounded-[var(--radius-lg)] text-text-primary",
           "bg-bg-primary/60 backdrop-blur-sm border",
@@ -86,7 +89,13 @@ function FocusableInput({
         {...registerRest}
       />
       {error && (
-        <p className="text-[var(--color-error)] text-xs mt-1.5">{error}</p>
+        <p
+          id={errorId}
+          role="alert"
+          className="text-[var(--color-error)] text-xs mt-1.5"
+        >
+          {error}
+        </p>
       )}
     </div>
   );
@@ -292,6 +301,7 @@ export function LoginPage() {
               {loginMutation.isError && (
                 <div
                   role="alert"
+                  aria-live="assertive"
                   className="bg-[var(--color-error)]/10 border border-[var(--color-error)]/30 rounded-[var(--radius-md)] px-4 py-3 text-[var(--color-error)] text-sm"
                 >
                   {loginMutation.error?.message || "Invalid credentials"}
