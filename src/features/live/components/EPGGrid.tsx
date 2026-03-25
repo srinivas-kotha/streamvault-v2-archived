@@ -1,11 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { useEPG } from '../api';
-import { usePlayerStore } from '@lib/store';
-import { EPGTimeAxis, useEPGTimeRange } from './EPGTimeAxis';
-import { EPGProgramBlock } from './EPGProgramBlock';
-import type { XtreamLiveStream } from '@shared/types/api';
-import { upgradeProtocol } from '@shared/components/LazyImage';
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useEPG } from "../api";
+import { usePlayerStore } from "@lib/store";
+import { EPGTimeAxis, useEPGTimeRange } from "./EPGTimeAxis";
+import { EPGProgramBlock } from "./EPGProgramBlock";
+import type { XtreamLiveStream } from "@shared/types/api";
+import { upgradeProtocol } from "@shared/components/LazyImage";
+import {
+  useSpatialFocusable,
+  useSpatialContainer,
+  FocusContext,
+} from "@shared/hooks/useSpatialNav";
 
 interface EPGGridProps {
   channels: XtreamLiveStream[];
@@ -15,6 +20,56 @@ const PIXELS_PER_MINUTE = 4;
 const CHANNEL_COL_WIDTH = 200;
 const ROW_HEIGHT = 44;
 
+/**
+ * FocusableProgramBlock — wraps EPGProgramBlock with spatial nav.
+ * Must be a separate component so useSpatialFocusable is called unconditionally
+ * (React hooks cannot be called inside .map() loops conditionally).
+ */
+function FocusableProgramBlock({
+  focusKey,
+  title,
+  startTimestamp,
+  endTimestamp,
+  timelineStart,
+  pixelsPerMinute,
+  onClick,
+}: {
+  focusKey: string;
+  title: string;
+  startTimestamp: number;
+  endTimestamp: number;
+  timelineStart: Date;
+  pixelsPerMinute: number;
+  onClick: () => void;
+}) {
+  const { showFocusRing } = useSpatialFocusable({
+    focusKey,
+    onEnterPress: onClick,
+    onFocus: (layout) => {
+      layout.node?.scrollIntoView({ behavior: "instant", block: "nearest" });
+    },
+  });
+
+  return (
+    <EPGProgramBlock
+      title={title}
+      startTimestamp={startTimestamp}
+      endTimestamp={endTimestamp}
+      timelineStart={timelineStart}
+      pixelsPerMinute={pixelsPerMinute}
+      onClick={onClick}
+      focusKey={focusKey}
+      showFocusRing={showFocusRing}
+    />
+  );
+}
+
+/**
+ * EPGChannelRow — renders program blocks for a single channel row.
+ * Uses useSpatialContainer with focusable: false so Up/Down D-pad nav
+ * can cross row boundaries without the container rect blocking it.
+ * isFocusBoundary with left/right directions keeps Left/Right within the row.
+ */
 function EPGChannelRow({
   channel,
   startTime,
@@ -30,6 +85,13 @@ function EPGChannelRow({
 }) {
   const { data: epg } = useEPG(channel.stream_id);
 
+  const { ref, focusKey: rowFocusKey } = useSpatialContainer({
+    focusKey: `epg-row-${channel.stream_id}`,
+    focusable: false,
+    isFocusBoundary: true,
+    focusBoundaryDirections: ["left", "right"],
+  });
+
   // Filter EPG items that overlap with our time range
   const visiblePrograms = (epg || []).filter((item) => {
     const start = Number(item.start_timestamp);
@@ -40,30 +102,36 @@ function EPGChannelRow({
   });
 
   return (
-    <div className="relative" style={{ height: ROW_HEIGHT }}>
-      {visiblePrograms.length > 0 ? (
-        visiblePrograms.map((program) => (
-          <EPGProgramBlock
-            key={program.id}
-            title={program.title}
-            startTimestamp={Number(program.start_timestamp)}
-            endTimestamp={Number(program.stop_timestamp)}
-            timelineStart={startTime}
-            pixelsPerMinute={pixelsPerMinute}
+    <FocusContext.Provider value={rowFocusKey}>
+      <div ref={ref} className="relative" style={{ height: ROW_HEIGHT }}>
+        {visiblePrograms.length > 0 ? (
+          visiblePrograms.map((program, idx) => {
+            const programFocusKey = `epg-program-${channel.stream_id}-${idx}`;
+            return (
+              <FocusableProgramBlock
+                key={program.id}
+                focusKey={programFocusKey}
+                title={program.title}
+                startTimestamp={Number(program.start_timestamp)}
+                endTimestamp={Number(program.stop_timestamp)}
+                timelineStart={startTime}
+                pixelsPerMinute={pixelsPerMinute}
+                onClick={onClick}
+              />
+            );
+          })
+        ) : (
+          <div
+            className="absolute inset-0.5 rounded bg-surface/40 border border-white/5 flex items-center px-2 cursor-pointer hover:border-teal/20 transition-[border-color,background-color]"
             onClick={onClick}
-          />
-        ))
-      ) : (
-        <div
-          className="absolute inset-0.5 rounded bg-surface/40 border border-white/5 flex items-center px-2 cursor-pointer hover:border-teal/20 transition-[border-color,background-color]"
-          onClick={onClick}
-        >
-          <span className="text-[11px] text-text-muted/50 truncate">
-            No EPG data
-          </span>
-        </div>
-      )}
-    </div>
+          >
+            <span className="text-[11px] text-text-muted/50 truncate">
+              No EPG data
+            </span>
+          </div>
+        )}
+      </div>
+    </FocusContext.Provider>
   );
 }
 
@@ -104,8 +172,8 @@ export function EPGGrid({ channels }: EPGGridProps) {
   }, [startTime]);
 
   function handleChannelClick(channel: XtreamLiveStream) {
-    playStream(String(channel.stream_id), 'live', channel.name);
-    navigate({ to: '/live', search: { play: String(channel.stream_id) } });
+    playStream(String(channel.stream_id), "live", channel.name);
+    navigate({ to: "/live", search: { play: String(channel.stream_id) } });
   }
 
   return (
@@ -138,7 +206,7 @@ export function EPGGrid({ channels }: EPGGridProps) {
                     alt=""
                     className="w-6 h-6 rounded object-contain flex-shrink-0"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
+                      (e.target as HTMLImageElement).style.display = "none";
                     }}
                   />
                 ) : (
@@ -161,7 +229,7 @@ export function EPGGrid({ channels }: EPGGridProps) {
           ref={scrollRef}
           className="flex-1 overflow-x-auto overflow-y-auto max-h-[calc(100vh-16rem)]"
         >
-          <div style={{ width: totalWidth, minWidth: '100%' }}>
+          <div style={{ width: totalWidth, minWidth: "100%" }}>
             {/* Time axis */}
             <EPGTimeAxis
               startTime={startTime}

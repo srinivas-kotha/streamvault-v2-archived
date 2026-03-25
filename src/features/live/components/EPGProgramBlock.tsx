@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from "react";
 
 interface EPGProgramBlockProps {
   title: string;
@@ -7,6 +7,10 @@ interface EPGProgramBlockProps {
   timelineStart: Date;
   pixelsPerMinute: number;
   onClick?: () => void;
+  /** Spatial nav focus key — set by EPGGrid via useSpatialFocusable */
+  focusKey?: string;
+  /** Whether to display a focus ring (set to true when element has D-pad focus) */
+  showFocusRing?: boolean;
 }
 
 export function EPGProgramBlock({
@@ -16,6 +20,8 @@ export function EPGProgramBlock({
   timelineStart,
   pixelsPerMinute,
   onClick,
+  focusKey,
+  showFocusRing = false,
 }: EPGProgramBlockProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -30,8 +36,8 @@ export function EPGProgramBlock({
 
     const fmt = (ts: number) =>
       new Date(ts * 1000).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
+        hour: "2-digit",
+        minute: "2-digit",
         hour12: false,
       });
 
@@ -47,15 +53,20 @@ export function EPGProgramBlock({
 
   return (
     <div
+      data-focus-key={focusKey}
       onClick={onClick}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
-      className={`absolute top-0.5 bottom-0.5 rounded px-1.5 flex items-center overflow-hidden cursor-pointer transition-[background-color,border-color] text-xs select-none ${
+      className={`absolute top-0.5 bottom-0.5 rounded px-1.5 flex items-center overflow-hidden cursor-pointer transition-[background-color,border-color,box-shadow] text-xs select-none ${
+        showFocusRing
+          ? "ring-2 ring-teal/80 ring-offset-1 ring-offset-obsidian z-20"
+          : ""
+      } ${
         isNow
-          ? 'bg-teal/15 border border-teal/40 text-text-primary'
+          ? "bg-teal/15 border border-teal/40 text-text-primary"
           : isPast
-            ? 'bg-surface/60 border border-white/5 text-text-muted/60'
-            : 'bg-surface-raised border border-white/10 text-text-secondary hover:border-teal/20 hover:bg-surface-raised/80'
+            ? "bg-surface/60 border border-white/5 text-text-muted/60"
+            : "bg-surface-raised border border-white/10 text-text-secondary hover:border-teal/20 hover:bg-surface-raised/80"
       }`}
       style={{ left, width }}
     >

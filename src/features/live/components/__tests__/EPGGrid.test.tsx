@@ -27,7 +27,6 @@ vi.mock("@shared/hooks/useSpatialNav", () => ({
       onKeyDown: (e: KeyboardEvent) => {
         if ((e.key === "Enter" || e.key === "Return") && onEnterPress) {
           onEnterPress();
-          mockOnEnterPress();
         }
       },
     },
@@ -38,7 +37,7 @@ vi.mock("@shared/hooks/useSpatialNav", () => ({
     focusable: false,
   })),
   FocusContext: { Provider: ({ children }: any) => children },
-  setFocus: mockSetFocus,
+  setFocus: vi.fn(),
 }));
 
 // ── mock router ───────────────────────────────────────────────────────────────
@@ -66,8 +65,8 @@ vi.mock("@shared/components/LazyImage", () => ({
 vi.mock("../EPGTimeAxis", () => ({
   EPGTimeAxis: () => <div data-testid="epg-time-axis" />,
   useEPGTimeRange: () => ({
-    startTime: new Date("2024-01-01T08:00:00Z"),
-    endTime: new Date("2024-01-01T14:00:00Z"),
+    startTime: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+    endTime: new Date(Date.now() + 4 * 60 * 60 * 1000), // 4 hours from now
   }),
 }));
 
@@ -184,7 +183,7 @@ beforeEach(() => {
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 describe("EPGGrid — spatial navigation: D-pad movement", () => {
-  it("renders a focusable container per channel row (focusable: false for nav transparency)", () => {
+  it("renders a focusable container per channel row (focusable: false for nav transparency)", async () => {
     renderEPGGrid();
     // Each row container should use useSpatialContainer with focusable: false
     // so cross-row Up/Down nav is not blocked by the container's bounding rect.
@@ -217,7 +216,7 @@ describe("EPGGrid — spatial navigation: D-pad movement", () => {
     });
   });
 
-  it("focused program block shows a focus ring via showFocusRing prop", () => {
+  it("focused program block shows a focus ring via showFocusRing prop", async () => {
     // When useSpatialFocusable returns showFocusRing: true for a specific focusKey,
     // EPGProgramBlock should render a visible focus ring element.
     // This test will fail until EPGProgramBlock accepts and applies showFocusRing.
@@ -236,7 +235,7 @@ describe("EPGGrid — spatial navigation: D-pad movement", () => {
     expect(screen.getAllByTestId("focus-ring").length).toBeGreaterThan(0);
   });
 
-  it("channel row container uses focusable: false to allow D-pad Up/Down to cross rows", () => {
+  it("channel row container uses focusable: false to allow D-pad Up/Down to cross rows", async () => {
     renderEPGGrid();
     const { useSpatialContainer } = vi.mocked(
       await import("@shared/hooks/useSpatialNav"),
