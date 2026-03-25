@@ -1,27 +1,31 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { usePlayerStore } from '@lib/store';
-import { SearchPage } from '../SearchPage';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { usePlayerStore } from "@lib/store";
+import { SearchPage } from "../SearchPage";
 
 // ── mock spatial nav ──────────────────────────────────────────────────────────
 
-vi.mock('@shared/hooks/useSpatialNav', () => ({
-  useSpatialFocusable: () => ({ ref: { current: null }, showFocusRing: false, focusProps: {} }),
-  useSpatialContainer: () => ({ ref: { current: null }, focusKey: 'test-key' }),
+vi.mock("@shared/hooks/useSpatialNav", () => ({
+  useSpatialFocusable: () => ({
+    ref: { current: null },
+    showFocusRing: false,
+    focusProps: {},
+  }),
+  useSpatialContainer: () => ({ ref: { current: null }, focusKey: "test-key" }),
   FocusContext: { Provider: ({ children }: any) => children },
   setFocus: vi.fn(),
 }));
 
 // ── mock PageTransition ───────────────────────────────────────────────────────
 
-vi.mock('@shared/components/PageTransition', () => ({
+vi.mock("@shared/components/PageTransition", () => ({
   PageTransition: ({ children }: any) => <div>{children}</div>,
 }));
 
 // ── mock shared components ────────────────────────────────────────────────────
 
-vi.mock('@shared/components/ContentCard', () => ({
+vi.mock("@shared/components/ContentCard", () => ({
   ContentCard: ({ title, onClick, badge }: any) => (
     <div
       data-testid="content-card"
@@ -35,7 +39,7 @@ vi.mock('@shared/components/ContentCard', () => ({
   ),
 }));
 
-vi.mock('@shared/components/Skeleton', () => ({
+vi.mock("@shared/components/Skeleton", () => ({
   SkeletonGrid: ({ count }: any) => (
     <div data-testid="skeleton-grid">
       {Array.from({ length: count }).map((_: any, i: number) => (
@@ -45,7 +49,7 @@ vi.mock('@shared/components/Skeleton', () => ({
   ),
 }));
 
-vi.mock('@shared/components/EmptyState', () => ({
+vi.mock("@shared/components/EmptyState", () => ({
   EmptyState: ({ title, message }: any) => (
     <div data-testid="empty-state">
       <span data-testid="empty-title">{title}</span>
@@ -56,13 +60,13 @@ vi.mock('@shared/components/EmptyState', () => ({
 
 // ── mock debounce ─────────────────────────────────────────────────────────────
 
-vi.mock('@shared/hooks/useDebounce', () => ({
+vi.mock("@shared/hooks/useDebounce", () => ({
   useDebounce: (v: any, _delay?: number) => v,
 }));
 
 // ── mock category utilities ───────────────────────────────────────────────────
 
-vi.mock('@shared/utils/categoryParser', () => ({
+vi.mock("@shared/utils/categoryParser", () => ({
   getDetectedLanguages: () => [],
   getLiveCategoriesForLanguage: () => [],
   getMovieCategoriesForLanguage: () => [],
@@ -72,7 +76,7 @@ vi.mock('@shared/utils/categoryParser', () => ({
 // ── mock router ───────────────────────────────────────────────────────────────
 
 const mockNavigate = vi.fn();
-vi.mock('@tanstack/react-router', () => ({
+vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mockNavigate,
   useParams: () => ({}),
   useSearch: () => ({}),
@@ -85,19 +89,19 @@ const mockUseLiveCategories = vi.fn();
 const mockUseVODCategories = vi.fn();
 const mockUseSeriesCategories = vi.fn();
 
-vi.mock('@features/search/api', () => ({
+vi.mock("@features/search/api", () => ({
   useSearch: (query: string) => mockUseSearch(query),
 }));
 
-vi.mock('@features/live/api', () => ({
+vi.mock("@features/live/api", () => ({
   useLiveCategories: () => mockUseLiveCategories(),
 }));
 
-vi.mock('@features/vod/api', () => ({
+vi.mock("@features/vod/api", () => ({
   useVODCategories: () => mockUseVODCategories(),
 }));
 
-vi.mock('@features/series/api', () => ({
+vi.mock("@features/series/api", () => ({
   useSeriesCategories: () => mockUseSeriesCategories(),
 }));
 
@@ -105,31 +109,41 @@ vi.mock('@features/series/api', () => ({
 
 const mockLiveResults = [
   {
-    num: 1, name: 'Star Maa', stream_type: 'live', stream_id: 201,
-    stream_icon: 'https://img.example.com/starmaa.png', epg_channel_id: 'star-maa',
-    added: '1700000000', is_adult: '0', category_id: '10', category_ids: [10],
-    custom_sid: '', tv_archive: 0, direct_source: '', tv_archive_duration: 0,
+    id: "201",
+    name: "Star Maa",
+    type: "live" as const,
+    categoryId: "10",
+    icon: "https://img.example.com/starmaa.png",
+    added: "1700000000",
+    isAdult: false,
   },
 ];
 
 const mockVODResults = [
   {
-    num: 1, name: 'Baahubali', stream_type: 'movie', stream_id: 301,
-    stream_icon: 'https://img.example.com/baahubali.jpg', rating: '8.5',
-    rating_5based: 4.25, added: '1700000000', is_adult: '0', category_id: '20',
-    category_ids: [20], container_extension: 'mkv', custom_sid: '', direct_source: '',
+    id: "301",
+    name: "Baahubali",
+    type: "vod" as const,
+    categoryId: "20",
+    icon: "https://img.example.com/baahubali.jpg",
+    rating: "8.5",
+    added: "1700000000",
+    isAdult: false,
   },
 ];
 
 const mockSeriesResults = [
   {
-    num: 1, name: 'Sacred Games', series_id: 401,
-    cover: 'https://img.example.com/sacredgames.jpg',
-    plot: 'Crime thriller set in Mumbai', cast: 'Nawazuddin Siddiqui',
-    director: 'Anurag Kashyap', genre: 'Crime, Thriller',
-    releaseDate: '2018-07-06', last_modified: '1700000000',
-    rating: '8.7', rating_5based: 4.35, backdrop_path: [],
-    category_id: '30', category_ids: [30],
+    id: "401",
+    name: "Sacred Games",
+    type: "series" as const,
+    categoryId: "30",
+    icon: "https://img.example.com/sacredgames.jpg",
+    genre: "Crime, Thriller",
+    year: "2018",
+    rating: "8.7",
+    added: "1700000000",
+    isAdult: false,
   },
 ];
 
@@ -157,7 +171,11 @@ function renderSearchPage() {
 beforeEach(() => {
   vi.clearAllMocks();
   // Default: no query, no results
-  mockUseSearch.mockReturnValue({ data: undefined, isLoading: false, isFetching: false });
+  mockUseSearch.mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isFetching: false,
+  });
   mockUseLiveCategories.mockReturnValue({ data: [] });
   mockUseVODCategories.mockReturnValue({ data: [] });
   mockUseSeriesCategories.mockReturnValue({ data: [] });
@@ -178,41 +196,53 @@ beforeEach(() => {
 
 // ── tests ─────────────────────────────────────────────────────────────────────
 
-describe('SearchPage — search input', () => {
-  it('renders search input with correct placeholder', () => {
+describe("SearchPage — search input", () => {
+  it("renders search input with correct placeholder", () => {
     renderSearchPage();
-    expect(screen.getByPlaceholderText('Search live TV, movies, series...')).toBeTruthy();
+    expect(
+      screen.getByPlaceholderText("Search live TV, movies, series..."),
+    ).toBeTruthy();
   });
 
-  it('shows prompt empty state before any query is entered', () => {
+  it("shows prompt empty state before any query is entered", () => {
     renderSearchPage();
-    const emptyState = screen.getByTestId('empty-state');
+    const emptyState = screen.getByTestId("empty-state");
     expect(emptyState).toBeTruthy();
-    expect(screen.getByText('Search StreamVault')).toBeTruthy();
+    expect(screen.getByText("Search StreamVault")).toBeTruthy();
   });
 
-  it('shows loading skeleton grid while searching', () => {
-    mockUseSearch.mockReturnValue({ data: undefined, isLoading: true, isFetching: true });
+  it("shows loading skeleton grid while searching", () => {
+    mockUseSearch.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isFetching: true,
+    });
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'ba' } }); // 2+ chars triggers search display
-    expect(screen.getByTestId('skeleton-grid')).toBeTruthy();
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "ba" } }); // 2+ chars triggers search display
+    expect(screen.getByTestId("skeleton-grid")).toBeTruthy();
   });
 
-  it('typing fewer than 2 characters does not show results or tabs', () => {
+  it("typing fewer than 2 characters does not show results or tabs", () => {
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'a' } }); // only 1 char
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "a" } }); // only 1 char
     // Tabs and results should NOT appear
-    expect(screen.queryByText('All')).toBeNull();
-    expect(screen.queryByTestId('content-card')).toBeNull();
+    expect(screen.queryByText("All")).toBeNull();
+    expect(screen.queryByTestId("content-card")).toBeNull();
   });
 
-  it('shows clear button when query is non-empty', () => {
+  it("shows clear button when query is non-empty", () => {
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'star' } });
-    const clearBtn = screen.getByLabelText('Clear search');
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "star" } });
+    const clearBtn = screen.getByLabelText("Clear search");
     expect(clearBtn).toBeTruthy();
   });
 });
@@ -221,74 +251,104 @@ describe('SearchPage — search input', () => {
 function getTabButton(label: string) {
   // Tabs render as <button> elements; match by accessible name (includes count span text).
   // Use getAllByRole to handle count span children gracefully.
-  const buttons = screen.getAllByRole('button');
+  const buttons = screen.getAllByRole("button");
   const match = buttons.find((b) => b.textContent?.startsWith(label));
   if (!match) throw new Error(`Tab button "${label}" not found`);
   return match;
 }
 
-describe('SearchPage — tabs', () => {
-  it('renders All, Live TV, Movies, Series tabs when query has 2+ chars', () => {
-    mockUseSearch.mockReturnValue({ data: mockSearchResults, isLoading: false, isFetching: false });
+describe("SearchPage — tabs", () => {
+  it("renders All, Live TV, Movies, Series tabs when query has 2+ chars", () => {
+    mockUseSearch.mockReturnValue({
+      data: mockSearchResults,
+      isLoading: false,
+      isFetching: false,
+    });
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'ba' } });
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "ba" } });
     // Each tab renders as a button whose textContent starts with the label
-    expect(getTabButton('All')).toBeTruthy();
-    expect(getTabButton('Live TV')).toBeTruthy();
-    expect(getTabButton('Movies')).toBeTruthy();
-    expect(getTabButton('Series')).toBeTruthy();
+    expect(getTabButton("All")).toBeTruthy();
+    expect(getTabButton("Live TV")).toBeTruthy();
+    expect(getTabButton("Movies")).toBeTruthy();
+    expect(getTabButton("Series")).toBeTruthy();
   });
 
-  it('clicking Live TV tab shows only live results', () => {
-    mockUseSearch.mockReturnValue({ data: mockSearchResults, isLoading: false, isFetching: false });
+  it("clicking Live TV tab shows only live results", () => {
+    mockUseSearch.mockReturnValue({
+      data: mockSearchResults,
+      isLoading: false,
+      isFetching: false,
+    });
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'ba' } });
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "ba" } });
 
-    fireEvent.click(getTabButton('Live TV'));
+    fireEvent.click(getTabButton("Live TV"));
 
     // Should show Star Maa (live) but not Baahubali (vod) or Sacred Games (series)
-    expect(screen.getByText('Star Maa')).toBeTruthy();
-    expect(screen.queryByText('Baahubali')).toBeNull();
-    expect(screen.queryByText('Sacred Games')).toBeNull();
+    expect(screen.getByText("Star Maa")).toBeTruthy();
+    expect(screen.queryByText("Baahubali")).toBeNull();
+    expect(screen.queryByText("Sacred Games")).toBeNull();
   });
 
-  it('clicking Movies tab shows only VOD results', () => {
-    mockUseSearch.mockReturnValue({ data: mockSearchResults, isLoading: false, isFetching: false });
+  it("clicking Movies tab shows only VOD results", () => {
+    mockUseSearch.mockReturnValue({
+      data: mockSearchResults,
+      isLoading: false,
+      isFetching: false,
+    });
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'ba' } });
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "ba" } });
 
-    fireEvent.click(getTabButton('Movies'));
+    fireEvent.click(getTabButton("Movies"));
 
-    expect(screen.getByText('Baahubali')).toBeTruthy();
-    expect(screen.queryByText('Star Maa')).toBeNull();
-    expect(screen.queryByText('Sacred Games')).toBeNull();
+    expect(screen.getByText("Baahubali")).toBeTruthy();
+    expect(screen.queryByText("Star Maa")).toBeNull();
+    expect(screen.queryByText("Sacred Games")).toBeNull();
   });
 
-  it('clicking Series tab shows only series results', () => {
-    mockUseSearch.mockReturnValue({ data: mockSearchResults, isLoading: false, isFetching: false });
+  it("clicking Series tab shows only series results", () => {
+    mockUseSearch.mockReturnValue({
+      data: mockSearchResults,
+      isLoading: false,
+      isFetching: false,
+    });
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'ba' } });
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "ba" } });
 
-    fireEvent.click(getTabButton('Series'));
+    fireEvent.click(getTabButton("Series"));
 
-    expect(screen.getByText('Sacred Games')).toBeTruthy();
-    expect(screen.queryByText('Star Maa')).toBeNull();
-    expect(screen.queryByText('Baahubali')).toBeNull();
+    expect(screen.getByText("Sacred Games")).toBeTruthy();
+    expect(screen.queryByText("Star Maa")).toBeNull();
+    expect(screen.queryByText("Baahubali")).toBeNull();
   });
 });
 
-describe('SearchPage — results', () => {
-  it('renders content cards for all result types in All tab', () => {
-    mockUseSearch.mockReturnValue({ data: mockSearchResults, isLoading: false, isFetching: false });
+describe("SearchPage — results", () => {
+  it("renders content cards for all result types in All tab", () => {
+    mockUseSearch.mockReturnValue({
+      data: mockSearchResults,
+      isLoading: false,
+      isFetching: false,
+    });
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'ba' } });
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "ba" } });
 
-    const cards = screen.getAllByTestId('content-card');
+    const cards = screen.getAllByTestId("content-card");
     // 1 live + 1 vod + 1 series = 3 cards
     expect(cards.length).toBe(3);
   });
@@ -300,62 +360,87 @@ describe('SearchPage — results', () => {
       isFetching: false,
     });
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'xyzxyz' } });
-    expect(screen.getByText('No results found')).toBeTruthy();
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "xyzxyz" } });
+    expect(screen.getByText("No results found")).toBeTruthy();
   });
 
-  it('clicking a live result calls playStream and navigates to /live', () => {
-    mockUseSearch.mockReturnValue({ data: mockSearchResults, isLoading: false, isFetching: false });
+  it("clicking a live result calls playStream and navigates to /live", () => {
+    mockUseSearch.mockReturnValue({
+      data: mockSearchResults,
+      isLoading: false,
+      isFetching: false,
+    });
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'ba' } });
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "ba" } });
 
-    fireEvent.click(getTabButton('Live TV'));
-    const liveCard = screen.getByText('Star Maa');
+    fireEvent.click(getTabButton("Live TV"));
+    const liveCard = screen.getByText("Star Maa");
     fireEvent.click(liveCard);
 
     expect(mockNavigate).toHaveBeenCalledWith(
-      expect.objectContaining({ to: '/live', search: expect.objectContaining({ play: '201' }) }),
+      expect.objectContaining({
+        to: "/live",
+        search: expect.objectContaining({ play: "201" }),
+      }),
     );
   });
 
-  it('clicking a VOD result navigates to /vod/$vodId', () => {
-    mockUseSearch.mockReturnValue({ data: mockSearchResults, isLoading: false, isFetching: false });
+  it("clicking a VOD result navigates to /vod/$vodId", () => {
+    mockUseSearch.mockReturnValue({
+      data: mockSearchResults,
+      isLoading: false,
+      isFetching: false,
+    });
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'ba' } });
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "ba" } });
 
-    fireEvent.click(getTabButton('Movies'));
-    fireEvent.click(screen.getByText('Baahubali'));
+    fireEvent.click(getTabButton("Movies"));
+    fireEvent.click(screen.getByText("Baahubali"));
 
     expect(mockNavigate).toHaveBeenCalledWith({
-      to: '/vod/$vodId',
-      params: { vodId: '301' },
+      to: "/vod/$vodId",
+      params: { vodId: "301" },
     });
   });
 
-  it('clicking a series result navigates to /series/$seriesId', () => {
-    mockUseSearch.mockReturnValue({ data: mockSearchResults, isLoading: false, isFetching: false });
+  it("clicking a series result navigates to /series/$seriesId", () => {
+    mockUseSearch.mockReturnValue({
+      data: mockSearchResults,
+      isLoading: false,
+      isFetching: false,
+    });
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    fireEvent.change(input, { target: { value: 'ba' } });
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    fireEvent.change(input, { target: { value: "ba" } });
 
-    fireEvent.click(getTabButton('Series'));
-    fireEvent.click(screen.getByText('Sacred Games'));
+    fireEvent.click(getTabButton("Series"));
+    fireEvent.click(screen.getByText("Sacred Games"));
 
     expect(mockNavigate).toHaveBeenCalledWith({
-      to: '/series/$seriesId',
-      params: { seriesId: '401' },
+      to: "/series/$seriesId",
+      params: { seriesId: "401" },
     });
   });
 });
 
-describe('SearchPage — D-pad accessibility', () => {
-  it('search input is accessible via keyboard (has placeholder role)', () => {
+describe("SearchPage — D-pad accessibility", () => {
+  it("search input is accessible via keyboard (has placeholder role)", () => {
     renderSearchPage();
-    const input = screen.getByPlaceholderText('Search live TV, movies, series...');
-    expect(input.tagName).toBe('INPUT');
-    expect((input as HTMLInputElement).type).toBe('text');
+    const input = screen.getByPlaceholderText(
+      "Search live TV, movies, series...",
+    );
+    expect(input.tagName).toBe("INPUT");
+    expect((input as HTMLInputElement).type).toBe("text");
   });
 });

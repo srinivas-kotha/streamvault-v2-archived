@@ -32,68 +32,48 @@ vi.mock("@shared/hooks/useSpatialNav", () => ({
 
 // ── mock data ─────────────────────────────────────────────────────────────────
 
-const NOW_SEC = Math.floor(Date.now() / 1000);
+const NOW_MS = Date.now();
+const toISO = (ms: number) => new Date(ms).toISOString();
 
 const mockCurrentProgram = {
   id: "prog-now",
-  epg_id: "star-maa",
+  channelId: "star-maa",
   title: "Morning News",
-  lang: "en",
-  start: "2024-01-01 08:00:00",
-  end: "2024-01-01 09:00:00",
   description: "Your daily morning news bulletin covering top stories.",
-  channel_id: "star-maa",
-  start_timestamp: String(NOW_SEC - 1800), // started 30min ago
-  stop_timestamp: String(NOW_SEC + 1800), // ends in 30min — currently airing
+  start: toISO(NOW_MS - 1800000), // started 30min ago
+  end: toISO(NOW_MS + 1800000), // ends in 30min — currently airing
 };
 
 const mockFutureProgram = {
   id: "prog-future",
-  epg_id: "star-maa",
+  channelId: "star-maa",
   title: "Sports Hour",
-  lang: "en",
-  start: "2024-01-01 09:00:00",
-  end: "2024-01-01 10:00:00",
   description: "Live sports coverage.",
-  channel_id: "star-maa",
-  start_timestamp: String(NOW_SEC + 3600), // starts in 1 hour
-  stop_timestamp: String(NOW_SEC + 7200), // ends in 2 hours
+  start: toISO(NOW_MS + 3600000), // starts in 1 hour
+  end: toISO(NOW_MS + 7200000), // ends in 2 hours
 };
 
 const mockPastProgram = {
   id: "prog-past",
-  epg_id: "star-maa",
+  channelId: "star-maa",
   title: "Last Night Show",
-  lang: "en",
-  start: "2024-01-01 06:00:00",
-  end: "2024-01-01 07:00:00",
   description: "Late night talk show recap.",
-  channel_id: "star-maa",
-  start_timestamp: String(NOW_SEC - 7200), // ended 2 hours ago
-  stop_timestamp: String(NOW_SEC - 3600), // ended 1 hour ago
+  start: toISO(NOW_MS - 7200000), // ended 2 hours ago
+  end: toISO(NOW_MS - 3600000), // ended 1 hour ago
 };
 
 const mockChannel = {
-  num: 1,
+  id: "201",
   name: "Star Maa",
-  stream_id: 201,
-  stream_icon: "https://img.example.com/starmaa.png",
-  epg_channel_id: "star-maa",
-  stream_type: "live",
+  type: "live" as const,
+  categoryId: "10",
+  icon: "https://img.example.com/starmaa.png",
   added: "1700000000",
-  is_adult: "0",
-  category_id: "10",
-  category_ids: [10],
-  custom_sid: "",
-  tv_archive: 0,
-  direct_source: "",
-  tv_archive_duration: 0,
+  isAdult: false,
 };
 
 const mockChannelWithArchive = {
   ...mockChannel,
-  tv_archive: 1,
-  tv_archive_duration: 7,
 };
 
 const mockOnWatch = vi.fn();
@@ -197,28 +177,31 @@ describe("ProgramInfoPopup — Watch button", () => {
   it("clicking Watch calls onWatch with stream id", () => {
     renderPopup({ program: mockCurrentProgram });
     fireEvent.click(screen.getByRole("button", { name: /watch/i }));
-    expect(mockOnWatch).toHaveBeenCalledWith(mockChannel.stream_id);
+    expect(mockOnWatch).toHaveBeenCalledWith(mockChannel.id);
   });
 });
 
 describe("ProgramInfoPopup — Catch-up button", () => {
-  it("shows Catch-up button for past program on archive-enabled channel", () => {
+  // Phase 2 note: tv_archive field removed. Catch-up is not supported.
+  // All catch-up scenarios should show no catch-up button.
+
+  it("does NOT show Catch-up for past program (tv_archive removed in Phase 2)", () => {
     renderPopup({
       program: mockPastProgram,
       channel: mockChannelWithArchive,
     });
-    expect(screen.getByRole("button", { name: /catch.?up/i })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /catch.?up/i })).toBeNull();
   });
 
-  it("does NOT show Catch-up for past program when tv_archive is 0", () => {
+  it("does NOT show Catch-up for past program with base channel", () => {
     renderPopup({
       program: mockPastProgram,
-      channel: mockChannel, // tv_archive: 0
+      channel: mockChannel,
     });
     expect(screen.queryByRole("button", { name: /catch.?up/i })).toBeNull();
   });
 
-  it("does NOT show Catch-up for currently airing program (even with archive)", () => {
+  it("does NOT show Catch-up for currently airing program", () => {
     renderPopup({
       program: mockCurrentProgram,
       channel: mockChannelWithArchive,
@@ -226,7 +209,7 @@ describe("ProgramInfoPopup — Catch-up button", () => {
     expect(screen.queryByRole("button", { name: /catch.?up/i })).toBeNull();
   });
 
-  it("does NOT show Catch-up for future program (even with archive)", () => {
+  it("does NOT show Catch-up for future program", () => {
     renderPopup({
       program: mockFutureProgram,
       channel: mockChannelWithArchive,
@@ -234,17 +217,14 @@ describe("ProgramInfoPopup — Catch-up button", () => {
     expect(screen.queryByRole("button", { name: /catch.?up/i })).toBeNull();
   });
 
-  it("clicking Catch-up calls onCatchup with program timestamps", () => {
+  it("onCatchup prop is accepted without error (API surface preserved)", () => {
+    // Catch-up is not surfaced to user but the prop is still accepted
     renderPopup({
       program: mockPastProgram,
       channel: mockChannelWithArchive,
     });
-    fireEvent.click(screen.getByRole("button", { name: /catch.?up/i }));
-    expect(mockOnCatchup).toHaveBeenCalledWith({
-      streamId: mockChannel.stream_id,
-      startTimestamp: Number(mockPastProgram.start_timestamp),
-      stopTimestamp: Number(mockPastProgram.stop_timestamp),
-    });
+    // No catch-up button visible, but component renders without crashing
+    expect(screen.getByRole("dialog")).toBeTruthy();
   });
 });
 

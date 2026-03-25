@@ -3,7 +3,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useSpatialFocusable } from "@shared/hooks/useSpatialNav";
 import { useEPG } from "../api";
 import type { XtreamLiveStream } from "@shared/types/api";
-import { Badge } from "@shared/components/Badge";
 import { usePlayerStore } from "@lib/store";
 import { upgradeProtocol } from "@shared/components/LazyImage";
 import { LiveIndicator } from "./LiveIndicator";
@@ -17,22 +16,20 @@ export const ChannelCard = memo(function ChannelCard({
 }: ChannelCardProps) {
   const navigate = useNavigate();
   const playStream = usePlayerStore((s) => s.playStream);
-  const { data: epg } = useEPG(channel.stream_id);
+  const { data: epg } = useEPG(channel.id);
 
   const nowPlaying = epg?.find((item) => {
-    const now = Date.now() / 1000;
-    return (
-      Number(item.start_timestamp) <= now && Number(item.stop_timestamp) >= now
-    );
+    const now = new Date();
+    return new Date(item.start) <= now && new Date(item.end) >= now;
   });
 
   const handlePlay = useCallback(() => {
-    playStream(String(channel.stream_id), "live", channel.name);
-    navigate({ to: "/live", search: { play: String(channel.stream_id) } });
+    playStream(channel.id, "live", channel.name);
+    navigate({ to: "/live", search: { play: channel.id } });
   }, [channel, playStream, navigate]);
 
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
-    focusKey: `channel-${channel.stream_id}`,
+    focusKey: `channel-${channel.id}`,
     onEnterPress: handlePlay,
   });
 
@@ -49,9 +46,9 @@ export const ChannelCard = memo(function ChannelCard({
     >
       {/* Icon */}
       <div className="aspect-square relative bg-surface flex items-center justify-center overflow-hidden">
-        {channel.stream_icon ? (
+        {channel.icon ? (
           <img
-            src={upgradeProtocol(channel.stream_icon)}
+            src={upgradeProtocol(channel.icon)}
             alt={channel.name}
             loading="lazy"
             className="w-full h-full object-contain p-3"
@@ -71,12 +68,7 @@ export const ChannelCard = memo(function ChannelCard({
           <LiveIndicator size="sm" />
         </div>
 
-        {/* Archive badge */}
-        {channel.tv_archive === 1 && (
-          <div className="absolute top-2 right-2">
-            <Badge variant="indigo">DVR</Badge>
-          </div>
-        )}
+        {/* Archive badge - tv_archive removed in Phase 2 */}
       </div>
 
       {/* Info */}

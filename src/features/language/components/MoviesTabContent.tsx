@@ -1,48 +1,59 @@
-import { useState, useMemo, useRef } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { useLanguageMovieRails, useLanguageAllMovies } from '../api';
-import { ContentRail } from '@shared/components/ContentRail';
-import { FocusableCard } from '@shared/components/FocusableCard';
-import { ContentCard } from '@shared/components/ContentCard';
-import { SkeletonGrid } from '@shared/components/Skeleton';
-import { EmptyState } from '@shared/components/EmptyState';
-import { useDebounce } from '@shared/hooks/useDebounce';
-import { useSpatialFocusable } from '@shared/hooks/useSpatialNav';
-import { isNewContent } from '@shared/utils/isNewContent';
-import type { XtreamVODStream } from '@shared/types/api';
+import { useState, useMemo, useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useLanguageMovieRails, useLanguageAllMovies } from "../api";
+import { ContentRail } from "@shared/components/ContentRail";
+import { FocusableCard } from "@shared/components/FocusableCard";
+import { ContentCard } from "@shared/components/ContentCard";
+import { SkeletonGrid } from "@shared/components/Skeleton";
+import { EmptyState } from "@shared/components/EmptyState";
+import { useDebounce } from "@shared/hooks/useDebounce";
+import { useSpatialFocusable } from "@shared/hooks/useSpatialNav";
+import { isNewContent } from "@shared/utils/isNewContent";
+import type { XtreamVODStream } from "@shared/types/api";
 
-type SortKey = 'name_asc' | 'name_desc' | 'recent' | 'rating';
+type SortKey = "name_asc" | "name_desc" | "recent" | "rating";
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'name_asc', label: 'A-Z' },
-  { key: 'name_desc', label: 'Z-A' },
-  { key: 'recent', label: 'Recently Added' },
-  { key: 'rating', label: 'Rating' },
+  { key: "name_asc", label: "A-Z" },
+  { key: "name_desc", label: "Z-A" },
+  { key: "recent", label: "Recently Added" },
+  { key: "rating", label: "Rating" },
 ];
 
-type MovieWithCategory = XtreamVODStream & { category_id: string; category_name: string };
-
-function sortMovies(items: MovieWithCategory[], sortKey: SortKey): MovieWithCategory[] {
+function sortMovies(
+  items: XtreamVODStream[],
+  sortKey: SortKey,
+): XtreamVODStream[] {
   const sorted = [...items];
   switch (sortKey) {
-    case 'name_asc':
+    case "name_asc":
       return sorted.sort((a, b) => a.name.localeCompare(b.name));
-    case 'name_desc':
+    case "name_desc":
       return sorted.sort((a, b) => b.name.localeCompare(a.name));
-    case 'recent':
+    case "recent":
       return sorted.sort(
-        (a, b) => parseInt(b.added || '0', 10) - parseInt(a.added || '0', 10),
+        (a, b) => parseInt(b.added || "0", 10) - parseInt(a.added || "0", 10),
       );
-    case 'rating':
+    case "rating":
       return sorted.sort(
-        (a, b) => parseFloat(b.rating || '0') - parseFloat(a.rating || '0'),
+        (a, b) => parseFloat(b.rating || "0") - parseFloat(a.rating || "0"),
       );
     default:
       return sorted;
   }
 }
 
-function FocusableChip({ id, label, isActive, onSelect }: { id: string; label: string; isActive: boolean; onSelect: () => void }) {
+function FocusableChip({
+  id,
+  label,
+  isActive,
+  onSelect,
+}: {
+  id: string;
+  label: string;
+  isActive: boolean;
+  onSelect: () => void;
+}) {
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
     focusKey: id,
     onEnterPress: onSelect,
@@ -55,10 +66,10 @@ function FocusableChip({ id, label, isActive, onSelect }: { id: string; label: s
       onClick={onSelect}
       className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-[background-color,border-color,color] min-h-[36px] whitespace-nowrap ${
         isActive
-          ? 'bg-teal/15 text-teal border border-teal/30'
+          ? "bg-teal/15 text-teal border border-teal/30"
           : showFocusRing
-            ? 'bg-surface-raised text-text-primary border border-teal/50 ring-2 ring-teal/40'
-            : 'bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border'
+            ? "bg-surface-raised text-text-primary border border-teal/50 ring-2 ring-teal/40"
+            : "bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border"
       }`}
     >
       {label}
@@ -66,7 +77,17 @@ function FocusableChip({ id, label, isActive, onSelect }: { id: string; label: s
   );
 }
 
-function FocusableSortButton({ id, label, isActive, onSelect }: { id: string; label: string; isActive: boolean; onSelect: () => void }) {
+function FocusableSortButton({
+  id,
+  label,
+  isActive,
+  onSelect,
+}: {
+  id: string;
+  label: string;
+  isActive: boolean;
+  onSelect: () => void;
+}) {
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
     focusKey: id,
     onEnterPress: onSelect,
@@ -79,10 +100,10 @@ function FocusableSortButton({ id, label, isActive, onSelect }: { id: string; la
       onClick={onSelect}
       className={`px-3 py-2 rounded-lg text-xs font-medium transition-[background-color,border-color,color] min-h-[36px] ${
         isActive
-          ? 'bg-teal/15 text-teal'
+          ? "bg-teal/15 text-teal"
           : showFocusRing
-            ? 'text-text-primary ring-2 ring-teal/40'
-            : 'text-text-muted hover:text-text-secondary'
+            ? "text-text-primary ring-2 ring-teal/40"
+            : "text-text-muted hover:text-text-secondary"
       }`}
     >
       {label}
@@ -90,7 +111,17 @@ function FocusableSortButton({ id, label, isActive, onSelect }: { id: string; la
   );
 }
 
-function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { value: string; onChange: (v: string) => void; placeholder: string; focusKey: string }) {
+function FocusableSearchInput({
+  value,
+  onChange,
+  placeholder,
+  focusKey,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  focusKey: string;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
     focusKey,
@@ -101,9 +132,23 @@ function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { valu
   });
 
   return (
-    <div ref={ref} {...focusProps} className={`relative flex-1 min-w-[200px] max-w-sm ${showFocusRing ? 'ring-2 ring-teal/50 rounded-lg' : ''}`}>
-      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    <div
+      ref={ref}
+      {...focusProps}
+      className={`relative flex-1 min-w-[200px] max-w-sm ${showFocusRing ? "ring-2 ring-teal/50 rounded-lg" : ""}`}
+    >
+      <svg
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        />
       </svg>
       <input
         ref={inputRef}
@@ -113,7 +158,7 @@ function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { valu
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
           // Escape blurs back to spatial nav
-          if (e.key === 'Escape') {
+          if (e.key === "Escape") {
             inputRef.current?.blur();
           }
         }}
@@ -121,11 +166,21 @@ function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { valu
       />
       {value && (
         <button
-          onClick={() => onChange('')}
+          onClick={() => onChange("")}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       )}
@@ -133,7 +188,13 @@ function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { valu
   );
 }
 
-function FocusableClearButton({ id, onSelect }: { id: string; onSelect: () => void }) {
+function FocusableClearButton({
+  id,
+  onSelect,
+}: {
+  id: string;
+  onSelect: () => void;
+}) {
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
     focusKey: id,
     onEnterPress: onSelect,
@@ -146,8 +207,8 @@ function FocusableClearButton({ id, onSelect }: { id: string; onSelect: () => vo
       onClick={onSelect}
       className={`px-3 py-2 rounded-lg text-xs font-medium transition-[background-color,border-color,color] min-h-[36px] border border-border-subtle hover:border-border ${
         showFocusRing
-          ? 'text-text-primary ring-2 ring-teal/40'
-          : 'text-text-muted hover:text-text-primary'
+          ? "text-text-primary ring-2 ring-teal/40"
+          : "text-text-muted hover:text-text-primary"
       }`}
     >
       Clear filters
@@ -162,21 +223,25 @@ interface MoviesTabContentProps {
 
 export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
   const navigate = useNavigate();
-  const { rails: movieRails, isLoading: railsLoading } = useLanguageMovieRails(language);
+  const { rails: movieRails, isLoading: railsLoading } =
+    useLanguageMovieRails(language);
   const { allMovies, isLoading: allLoading } = useLanguageAllMovies(language);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>('name_asc');
+  const [sortKey, setSortKey] = useState<SortKey>("name_asc");
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  const hasActiveFilters = !!debouncedSearch || activeCategory !== null || sortKey !== 'name_asc';
+  const hasActiveFilters =
+    !!debouncedSearch || activeCategory !== null || sortKey !== "name_asc";
 
   // Latest movies rail: top 20 by added date
   const latestMovies = useMemo(() => {
     if (!allMovies.length) return [];
     return [...allMovies]
-      .sort((a, b) => parseInt(b.added || '0', 10) - parseInt(a.added || '0', 10))
+      .sort(
+        (a, b) => parseInt(b.added || "0", 10) - parseInt(a.added || "0", 10),
+      )
       .slice(0, 20);
   }, [allMovies]);
 
@@ -201,7 +266,7 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
     let result = allMovies;
 
     if (activeCategory) {
-      result = result.filter((m) => m.category_id === activeCategory);
+      result = result.filter((m) => m.categoryId === activeCategory);
     }
 
     if (debouncedSearch) {
@@ -209,15 +274,16 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
       result = result.filter((m) => m.name.toLowerCase().includes(q));
     }
 
-    result = sortMovies(result, sortKey);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    result = sortMovies(result, sortKey) as any;
 
     return result;
   }, [allMovies, activeCategory, debouncedSearch, sortKey]);
 
   const clearFilters = () => {
-    setSearchQuery('');
+    setSearchQuery("");
     setActiveCategory(null);
-    setSortKey('name_asc');
+    setSortKey("name_asc");
   };
 
   return (
@@ -291,17 +357,17 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
             <ContentRail title="Latest Movies">
               {latestMovies.map((item) => (
                 <FocusableCard
-                  key={item.stream_id}
-                  focusKey={`vod-latest-${item.stream_id}`}
-                  image={item.stream_icon}
+                  key={item.id}
+                  focusKey={`vod-latest-${item.id}`}
+                  image={item.icon || ""}
                   title={item.name}
                   subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
-                  isNew={isNewContent(item.added)}
+                  isNew={isNewContent(item.added ?? undefined)}
                   aspectRatio="poster"
                   onClick={() =>
                     navigate({
-                      to: '/vod/$vodId',
-                      params: { vodId: String(item.stream_id) },
+                      to: "/vod/$vodId",
+                      params: { vodId: item.id },
                     })
                   }
                 />
@@ -316,17 +382,17 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
             >
               {rail.items.map((item) => (
                 <FocusableCard
-                  key={item.stream_id}
-                  focusKey={`vod-${item.stream_id}`}
-                  image={item.stream_icon}
+                  key={item.id}
+                  focusKey={`vod-${item.id}`}
+                  image={item.icon || ""}
                   title={item.name}
                   subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
-                  isNew={isNewContent(item.added)}
+                  isNew={isNewContent(item.added ?? undefined)}
                   aspectRatio="poster"
                   onClick={() =>
                     navigate({
-                      to: '/vod/$vodId',
-                      params: { vodId: String(item.stream_id) },
+                      to: "/vod/$vodId",
+                      params: { vodId: item.id },
                     })
                   }
                 />
@@ -335,7 +401,9 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
           ))}
           {!railsLoading && movieRails.length === 0 && (
             <div className="py-12 text-center">
-              <p className="text-text-muted text-lg">No {language} movies found</p>
+              <p className="text-text-muted text-lg">
+                No {language} movies found
+              </p>
             </div>
           )}
         </div>
@@ -348,7 +416,9 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
             </div>
           ) : processedMovies.length === 0 ? (
             <EmptyState
-              title={debouncedSearch ? 'No matching movies' : 'No movies available'}
+              title={
+                debouncedSearch ? "No matching movies" : "No movies available"
+              }
               message={
                 debouncedSearch
                   ? `No results for "${debouncedSearch}". Try a different search.`
@@ -362,21 +432,21 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
               {debouncedSearch && (
                 <p className="text-text-muted text-xs mb-3">
                   {processedMovies.length} result
-                  {processedMovies.length !== 1 ? 's' : ''}
+                  {processedMovies.length !== 1 ? "s" : ""}
                 </p>
               )}
 
               <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
                 {processedMovies.map((movie) => (
                   <ContentCard
-                    key={movie.stream_id}
-                    image={movie.stream_icon}
+                    key={movie.id}
+                    image={movie.icon || ""}
                     title={movie.name}
                     subtitle={movie.rating ? `⭐ ${movie.rating}` : undefined}
                     onClick={() =>
                       navigate({
-                        to: '/vod/$vodId',
-                        params: { vodId: String(movie.stream_id) },
+                        to: "/vod/$vodId",
+                        params: { vodId: movie.id },
                       })
                     }
                   />

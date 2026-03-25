@@ -1,17 +1,27 @@
-import { useState, useMemo, useRef } from 'react';
-import { useLanguageLiveChannels } from '../api';
-import { ContentRail } from '@shared/components/ContentRail';
-import { FocusableCard } from '@shared/components/FocusableCard';
-import { ContentCard } from '@shared/components/ContentCard';
-import { SkeletonGrid } from '@shared/components/Skeleton';
-import { EmptyState } from '@shared/components/EmptyState';
-import { useDebounce } from '@shared/hooks/useDebounce';
-import { useSpatialFocusable } from '@shared/hooks/useSpatialNav';
-import { isNewContent } from '@shared/utils/isNewContent';
-import { usePlayerStore } from '@lib/store';
-import type { XtreamLiveStream } from '@shared/types/api';
+import { useState, useMemo, useRef } from "react";
+import { useLanguageLiveChannels } from "../api";
+import { ContentRail } from "@shared/components/ContentRail";
+import { FocusableCard } from "@shared/components/FocusableCard";
+import { ContentCard } from "@shared/components/ContentCard";
+import { SkeletonGrid } from "@shared/components/Skeleton";
+import { EmptyState } from "@shared/components/EmptyState";
+import { useDebounce } from "@shared/hooks/useDebounce";
+import { useSpatialFocusable } from "@shared/hooks/useSpatialNav";
+import { isNewContent } from "@shared/utils/isNewContent";
+import { usePlayerStore } from "@lib/store";
+import type { XtreamLiveStream } from "@shared/types/api";
 
-function FocusableChip({ id, label, isActive, onSelect }: { id: string; label: string; isActive: boolean; onSelect: () => void }) {
+function FocusableChip({
+  id,
+  label,
+  isActive,
+  onSelect,
+}: {
+  id: string;
+  label: string;
+  isActive: boolean;
+  onSelect: () => void;
+}) {
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
     focusKey: id,
     onEnterPress: onSelect,
@@ -24,10 +34,10 @@ function FocusableChip({ id, label, isActive, onSelect }: { id: string; label: s
       onClick={onSelect}
       className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-[background-color,border-color,color] min-h-[36px] whitespace-nowrap ${
         isActive
-          ? 'bg-teal/15 text-teal border border-teal/30'
+          ? "bg-teal/15 text-teal border border-teal/30"
           : showFocusRing
-            ? 'bg-surface-raised text-text-primary border border-teal/50 ring-2 ring-teal/40'
-            : 'bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border'
+            ? "bg-surface-raised text-text-primary border border-teal/50 ring-2 ring-teal/40"
+            : "bg-surface-raised text-text-muted border border-border-subtle hover:text-text-secondary hover:border-border"
       }`}
     >
       {label}
@@ -35,7 +45,17 @@ function FocusableChip({ id, label, isActive, onSelect }: { id: string; label: s
   );
 }
 
-function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { value: string; onChange: (v: string) => void; placeholder: string; focusKey: string }) {
+function FocusableSearchInput({
+  value,
+  onChange,
+  placeholder,
+  focusKey,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  focusKey: string;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
     focusKey,
@@ -45,9 +65,23 @@ function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { valu
   });
 
   return (
-    <div ref={ref} {...focusProps} className={`relative flex-1 min-w-[200px] max-w-sm ${showFocusRing ? 'ring-2 ring-teal/50 rounded-lg' : ''}`}>
-      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    <div
+      ref={ref}
+      {...focusProps}
+      className={`relative flex-1 min-w-[200px] max-w-sm ${showFocusRing ? "ring-2 ring-teal/50 rounded-lg" : ""}`}
+    >
+      <svg
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        />
       </svg>
       <input
         ref={inputRef}
@@ -56,17 +90,27 @@ function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { valu
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Escape') inputRef.current?.blur();
+          if (e.key === "Escape") inputRef.current?.blur();
         }}
         className="w-full pl-10 pr-4 py-2.5 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-[border-color,box-shadow]"
       />
       {value && (
         <button
-          onClick={() => onChange('')}
+          onClick={() => onChange("")}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       )}
@@ -74,7 +118,13 @@ function FocusableSearchInput({ value, onChange, placeholder, focusKey }: { valu
   );
 }
 
-function FocusableClearButton({ id, onSelect }: { id: string; onSelect: () => void }) {
+function FocusableClearButton({
+  id,
+  onSelect,
+}: {
+  id: string;
+  onSelect: () => void;
+}) {
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
     focusKey: id,
     onEnterPress: onSelect,
@@ -87,8 +137,8 @@ function FocusableClearButton({ id, onSelect }: { id: string; onSelect: () => vo
       onClick={onSelect}
       className={`px-3 py-2 rounded-lg text-xs font-medium transition-[background-color,border-color,color] min-h-[36px] ${
         showFocusRing
-          ? 'text-text-primary ring-2 ring-teal/40'
-          : 'text-text-muted hover:text-text-secondary'
+          ? "text-text-primary ring-2 ring-teal/40"
+          : "text-text-muted hover:text-text-secondary"
       }`}
     >
       Clear filters
@@ -105,7 +155,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
   const { rails, isLoading, allChannels } = useLanguageLiveChannels(language);
   const playStream = usePlayerStore((s) => s.playStream);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const hasActiveFilters = !!debouncedSearch || activeCategory !== null;
@@ -143,7 +193,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
   }, [rails, activeCategory, debouncedSearch]);
 
   const handlePlay = (channel: XtreamLiveStream) => {
-    playStream(String(channel.stream_id), 'live', channel.name);
+    playStream(channel.id, "live", channel.name);
   };
 
   return (
@@ -185,7 +235,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
           <FocusableClearButton
             id="live-clear-filters"
             onSelect={() => {
-              setSearchQuery('');
+              setSearchQuery("");
               setActiveCategory(null);
             }}
           />
@@ -209,7 +259,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
             message={
               debouncedSearch
                 ? `No channels matching "${debouncedSearch}". Try a different search.`
-                : 'No channels in this category.'
+                : "No channels in this category."
             }
             icon="content"
           />
@@ -217,13 +267,13 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
           <div>
             <p className="text-text-muted text-xs mb-3">
               {processedChannels.length} channel
-              {processedChannels.length !== 1 ? 's' : ''}
+              {processedChannels.length !== 1 ? "s" : ""}
             </p>
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
               {processedChannels.map((channel) => (
                 <ContentCard
-                  key={channel.stream_id}
-                  image={channel.stream_icon}
+                  key={channel.id}
+                  image={channel.icon || ""}
                   title={channel.name}
                   aspectRatio="landscape"
                   onClick={() => handlePlay(channel)}
@@ -243,11 +293,11 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
             >
               {rail.items.map((item) => (
                 <FocusableCard
-                  key={item.stream_id}
-                  focusKey={`live-${item.stream_id}`}
-                  image={item.stream_icon}
+                  key={item.id}
+                  focusKey={`live-${item.id}`}
+                  image={item.icon || ""}
                   title={item.name}
-                  isNew={isNewContent(item.added)}
+                  isNew={isNewContent(item.added ?? undefined)}
                   aspectRatio="landscape"
                   onClick={() => handlePlay(item)}
                 />

@@ -1,27 +1,31 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { usePlayerStore } from '@lib/store';
-import { LivePage } from '../LivePage';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { usePlayerStore } from "@lib/store";
+import { LivePage } from "../LivePage";
 
 // ── mock spatial nav (no DOM layout in jsdom) ────────────────────────────────
 
-vi.mock('@shared/hooks/useSpatialNav', () => ({
-  useSpatialFocusable: () => ({ ref: { current: null }, showFocusRing: false, focusProps: {} }),
-  useSpatialContainer: () => ({ ref: { current: null }, focusKey: 'test-key' }),
+vi.mock("@shared/hooks/useSpatialNav", () => ({
+  useSpatialFocusable: () => ({
+    ref: { current: null },
+    showFocusRing: false,
+    focusProps: {},
+  }),
+  useSpatialContainer: () => ({ ref: { current: null }, focusKey: "test-key" }),
   FocusContext: { Provider: ({ children }: any) => children },
   setFocus: vi.fn(),
 }));
 
 // ── mock PageTransition ───────────────────────────────────────────────────────
 
-vi.mock('@shared/components/PageTransition', () => ({
+vi.mock("@shared/components/PageTransition", () => ({
   PageTransition: ({ children }: any) => <div>{children}</div>,
 }));
 
 // ── mock shared components ────────────────────────────────────────────────────
 
-vi.mock('@shared/components/Skeleton', () => ({
+vi.mock("@shared/components/Skeleton", () => ({
   SkeletonGrid: ({ count }: any) => (
     <div data-testid="skeleton-grid">
       {Array.from({ length: count }).map((_: any, i: number) => (
@@ -31,7 +35,7 @@ vi.mock('@shared/components/Skeleton', () => ({
   ),
 }));
 
-vi.mock('@shared/components/EmptyState', () => ({
+vi.mock("@shared/components/EmptyState", () => ({
   EmptyState: ({ title, message }: any) => (
     <div data-testid="empty-state">
       <span data-testid="empty-title">{title}</span>
@@ -42,14 +46,14 @@ vi.mock('@shared/components/EmptyState', () => ({
 
 // ── mock ChannelGrid (renders clickable cards per channel) ────────────────────
 
-vi.mock('../ChannelGrid', () => ({
+vi.mock("../ChannelGrid", () => ({
   ChannelGrid: ({ channels }: any) => (
     <div data-testid="channel-grid">
       {channels.map((ch: any) => (
         <div
-          key={ch.stream_id}
+          key={ch.id}
           data-testid="channel-card"
-          data-stream-id={String(ch.stream_id)}
+          data-stream-id={ch.id}
           role="button"
           aria-label={ch.name}
         >
@@ -63,11 +67,11 @@ vi.mock('../ChannelGrid', () => ({
 
 // ── mock EPGGrid ──────────────────────────────────────────────────────────────
 
-vi.mock('../EPGGrid', () => ({
+vi.mock("../EPGGrid", () => ({
   EPGGrid: ({ channels }: any) => (
     <div data-testid="epg-grid">
       {channels.map((ch: any) => (
-        <div key={ch.stream_id} data-testid="epg-row" data-stream-id={String(ch.stream_id)}>
+        <div key={ch.id} data-testid="epg-row" data-stream-id={ch.id}>
           {ch.name}
           {ch.now && <span data-testid="epg-now">{ch.now.title}</span>}
           {ch.next && <span data-testid="epg-next">{ch.next.title}</span>}
@@ -79,13 +83,13 @@ vi.mock('../EPGGrid', () => ({
 
 // ── mock FeaturedChannels ─────────────────────────────────────────────────────
 
-vi.mock('../FeaturedChannels', () => ({
+vi.mock("../FeaturedChannels", () => ({
   FeaturedChannels: () => <div data-testid="featured-channels" />,
 }));
 
 // ── mock PlayerPage ───────────────────────────────────────────────────────────
 
-vi.mock('@features/player/components/PlayerPage', () => ({
+vi.mock("@features/player/components/PlayerPage", () => ({
   PlayerPage: (props: any) => (
     <div
       data-testid="player-page"
@@ -97,14 +101,14 @@ vi.mock('@features/player/components/PlayerPage', () => ({
 
 // ── mock debounce (pass-through) ──────────────────────────────────────────────
 
-vi.mock('@shared/hooks/useDebounce', () => ({
+vi.mock("@shared/hooks/useDebounce", () => ({
   useDebounce: (v: any) => v,
 }));
 
 // ── mock router ───────────────────────────────────────────────────────────────
 
 const mockNavigate = vi.fn();
-vi.mock('@tanstack/react-router', () => ({
+vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mockNavigate,
   useSearch: () => ({}),
   useParams: () => ({}),
@@ -115,7 +119,7 @@ vi.mock('@tanstack/react-router', () => ({
 const mockUseLiveCategories = vi.fn();
 const mockUseLiveStreams = vi.fn();
 
-vi.mock('@features/live/api', () => ({
+vi.mock("@features/live/api", () => ({
   useLiveCategories: () => mockUseLiveCategories(),
   useLiveStreams: (catId: string) => mockUseLiveStreams(catId),
   useFeaturedChannels: () => ({ data: [], isLoading: false }),
@@ -125,59 +129,38 @@ vi.mock('@features/live/api', () => ({
 // ── mock data ─────────────────────────────────────────────────────────────────
 
 const mockCategories = [
-  { category_id: '10', category_name: 'Telugu', parent_id: 0 },
-  { category_id: '11', category_name: 'Hindi', parent_id: 0 },
-  { category_id: '12', category_name: 'Sports', parent_id: 0 },
+  { id: "10", name: "Telugu", parentId: null, type: "live" as const },
+  { id: "11", name: "Hindi", parentId: null, type: "live" as const },
+  { id: "12", name: "Sports", parentId: null, type: "live" as const },
 ];
 
 const mockChannels = [
   {
-    num: 1,
-    name: 'Star Maa',
-    stream_type: 'live',
-    stream_id: 201,
-    stream_icon: 'https://img.example.com/starmaa.png',
-    epg_channel_id: 'star-maa',
-    added: '1700000000',
-    is_adult: '0',
-    category_id: '10',
-    category_ids: [10],
-    custom_sid: '',
-    tv_archive: 0,
-    direct_source: '',
-    tv_archive_duration: 0,
+    id: "201",
+    name: "Star Maa",
+    type: "live" as const,
+    categoryId: "10",
+    icon: "https://img.example.com/starmaa.png",
+    added: "1700000000",
+    isAdult: false,
   },
   {
-    num: 2,
-    name: 'Zee Telugu',
-    stream_type: 'live',
-    stream_id: 202,
-    stream_icon: 'https://img.example.com/zeetelugu.png',
-    epg_channel_id: 'zee-telugu',
-    added: '1700000001',
-    is_adult: '0',
-    category_id: '10',
-    category_ids: [10],
-    custom_sid: '',
-    tv_archive: 0,
-    direct_source: '',
-    tv_archive_duration: 0,
+    id: "202",
+    name: "Zee Telugu",
+    type: "live" as const,
+    categoryId: "10",
+    icon: "https://img.example.com/zeetelugu.png",
+    added: "1700000001",
+    isAdult: false,
   },
   {
-    num: 3,
-    name: 'ETV Telugu',
-    stream_type: 'live',
-    stream_id: 203,
-    stream_icon: 'https://img.example.com/etv.png',
-    epg_channel_id: 'etv-telugu',
-    added: '1700000002',
-    is_adult: '0',
-    category_id: '10',
-    category_ids: [10],
-    custom_sid: '',
-    tv_archive: 0,
-    direct_source: '',
-    tv_archive_duration: 0,
+    id: "203",
+    name: "ETV Telugu",
+    type: "live" as const,
+    categoryId: "10",
+    icon: "https://img.example.com/etv.png",
+    added: "1700000002",
+    isAdult: false,
   },
 ];
 
@@ -198,7 +181,10 @@ function renderLivePage() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockUseLiveCategories.mockReturnValue({ data: mockCategories, isLoading: false });
+  mockUseLiveCategories.mockReturnValue({
+    data: mockCategories,
+    isLoading: false,
+  });
   mockUseLiveStreams.mockReturnValue({ data: mockChannels, isLoading: false });
 
   // Reset player store
@@ -218,119 +204,119 @@ beforeEach(() => {
 
 // ── tests ─────────────────────────────────────────────────────────────────────
 
-describe('LivePage — category sidebar', () => {
-  it('renders a category button for each live category', () => {
+describe("LivePage — category sidebar", () => {
+  it("renders a category button for each live category", () => {
     renderLivePage();
-    expect(screen.getByText('Telugu')).toBeTruthy();
-    expect(screen.getByText('Hindi')).toBeTruthy();
-    expect(screen.getByText('Sports')).toBeTruthy();
+    expect(screen.getByText("Telugu")).toBeTruthy();
+    expect(screen.getByText("Hindi")).toBeTruthy();
+    expect(screen.getByText("Sports")).toBeTruthy();
   });
 
   it('renders "Live TV" sidebar heading', () => {
     renderLivePage();
-    expect(screen.getByText('Live TV')).toBeTruthy();
+    expect(screen.getByText("Live TV")).toBeTruthy();
   });
 
-  it('shows loading skeleton pulse divs while categories are loading', () => {
+  it("shows loading skeleton pulse divs while categories are loading", () => {
     mockUseLiveCategories.mockReturnValue({ data: undefined, isLoading: true });
     const { container } = renderLivePage();
-    const skeletons = container.querySelectorAll('.animate-pulse');
+    const skeletons = container.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThan(0);
   });
 
-  it('selecting a category calls useLiveStreams with that categoryId', () => {
+  it("selecting a category calls useLiveStreams with that categoryId", () => {
     renderLivePage();
     // Categories auto-sort; Telugu has priority 0 — find the Telugu button
-    const teluguBtn = screen.getByText('Telugu');
+    const teluguBtn = screen.getByText("Telugu");
     fireEvent.click(teluguBtn);
-    expect(mockUseLiveStreams).toHaveBeenCalledWith('10');
+    expect(mockUseLiveStreams).toHaveBeenCalledWith("10");
   });
 });
 
-describe('LivePage — channel grid', () => {
-  it('renders a channel card for each channel in the active category', () => {
+describe("LivePage — channel grid", () => {
+  it("renders a channel card for each channel in the active category", () => {
     renderLivePage();
-    const cards = screen.getAllByTestId('channel-card');
+    const cards = screen.getAllByTestId("channel-card");
     expect(cards.length).toBe(mockChannels.length);
   });
 
-  it('channel cards display channel name', () => {
+  it("channel cards display channel name", () => {
     renderLivePage();
-    expect(screen.getByText('Star Maa')).toBeTruthy();
-    expect(screen.getByText('Zee Telugu')).toBeTruthy();
-    expect(screen.getByText('ETV Telugu')).toBeTruthy();
+    expect(screen.getByText("Star Maa")).toBeTruthy();
+    expect(screen.getByText("Zee Telugu")).toBeTruthy();
+    expect(screen.getByText("ETV Telugu")).toBeTruthy();
   });
 
-  it('channel cards include a live indicator', () => {
+  it("channel cards include a live indicator", () => {
     renderLivePage();
-    const indicators = screen.getAllByTestId('live-indicator');
+    const indicators = screen.getAllByTestId("live-indicator");
     expect(indicators.length).toBe(mockChannels.length);
   });
 
-  it('renders loading skeleton while streams are loading', () => {
+  it("renders loading skeleton while streams are loading", () => {
     mockUseLiveStreams.mockReturnValue({ data: undefined, isLoading: true });
     renderLivePage();
-    expect(screen.getByTestId('skeleton-grid')).toBeTruthy();
+    expect(screen.getByTestId("skeleton-grid")).toBeTruthy();
   });
 
-  it('shows empty state when no channels in category', () => {
+  it("shows empty state when no channels in category", () => {
     mockUseLiveStreams.mockReturnValue({ data: [], isLoading: false });
     renderLivePage();
-    expect(screen.getByTestId('empty-state')).toBeTruthy();
-    expect(screen.getByText('No channels found')).toBeTruthy();
+    expect(screen.getByTestId("empty-state")).toBeTruthy();
+    expect(screen.getByText("No channels found")).toBeTruthy();
   });
 });
 
-describe('LivePage — filter input', () => {
-  it('renders the channel filter input', () => {
+describe("LivePage — filter input", () => {
+  it("renders the channel filter input", () => {
     renderLivePage();
-    const input = screen.getByPlaceholderText('Filter channels...');
+    const input = screen.getByPlaceholderText("Filter channels...");
     expect(input).toBeTruthy();
   });
 
-  it('typing in filter input filters channels by name', () => {
+  it("typing in filter input filters channels by name", () => {
     renderLivePage();
-    const input = screen.getByPlaceholderText('Filter channels...');
-    fireEvent.change(input, { target: { value: 'Star' } });
+    const input = screen.getByPlaceholderText("Filter channels...");
+    fireEvent.change(input, { target: { value: "Star" } });
     // ChannelGrid should receive filtered array — only cards with "Star" in name visible
-    const cards = screen.getAllByTestId('channel-card');
+    const cards = screen.getAllByTestId("channel-card");
     // Since useDebounce is pass-through in tests, filter applies immediately
     expect(cards.length).toBe(1);
-    expect(screen.getByText('Star Maa')).toBeTruthy();
+    expect(screen.getByText("Star Maa")).toBeTruthy();
   });
 });
 
-describe('LivePage — view mode toggle', () => {
-  it('renders grid/EPG view toggle buttons', () => {
+describe("LivePage — view mode toggle", () => {
+  it("renders grid/EPG view toggle buttons", () => {
     renderLivePage();
-    const gridToggle = screen.getByTitle('Grid view');
-    const epgToggle = screen.getByTitle('EPG guide');
+    const gridToggle = screen.getByTitle("Grid view");
+    const epgToggle = screen.getByTitle("EPG guide");
     expect(gridToggle).toBeTruthy();
     expect(epgToggle).toBeTruthy();
   });
 
-  it('clicking EPG toggle switches to EPG view', () => {
+  it("clicking EPG toggle switches to EPG view", () => {
     renderLivePage();
-    const epgToggle = screen.getByTitle('EPG guide');
+    const epgToggle = screen.getByTitle("EPG guide");
     fireEvent.click(epgToggle);
-    expect(screen.getByTestId('epg-grid')).toBeTruthy();
-    expect(screen.queryByTestId('channel-grid')).toBeNull();
+    expect(screen.getByTestId("epg-grid")).toBeTruthy();
+    expect(screen.queryByTestId("channel-grid")).toBeNull();
   });
 });
 
-describe('LivePage — player integration (AC-01)', () => {
-  it('does NOT render PlayerPage when no stream is playing', () => {
+describe("LivePage — player integration (AC-01)", () => {
+  it("does NOT render PlayerPage when no stream is playing", () => {
     renderLivePage();
-    expect(screen.queryByTestId('player-page')).toBeNull();
+    expect(screen.queryByTestId("player-page")).toBeNull();
   });
 
-  it('renders PlayerPage when `play` search param is set', () => {
+  it("renders PlayerPage when `play` search param is set", () => {
     // Override the useSearch mock to return a play param
     vi.mocked(vi.importActual).mockImplementation?.(() => {});
     // Re-mock router with play param set
-    vi.doMock('@tanstack/react-router', () => ({
+    vi.doMock("@tanstack/react-router", () => ({
       useNavigate: () => mockNavigate,
-      useSearch: () => ({ play: '201' }),
+      useSearch: () => ({ play: "201" }),
       useParams: () => ({}),
     }));
     // Re-render with play param by forcing re-import — test via direct render
@@ -345,6 +331,6 @@ describe('LivePage — player integration (AC-01)', () => {
     // conditional rendering path exists. Implementation verified by unit inspection.
     void rerender;
     // AC-01: FullscreenPlayer OUTSIDE layout — no inline player on default load
-    expect(screen.queryByTestId('player-page')).toBeNull();
+    expect(screen.queryByTestId("player-page")).toBeNull();
   });
 });

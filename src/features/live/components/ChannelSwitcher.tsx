@@ -32,7 +32,7 @@ export function ChannelSwitcher({
       onDismiss();
     }, 3000);
     return () => clearTimeout(timer);
-  }, [isVisible, channel.stream_id, onDismiss]);
+  }, [isVisible, channel.id, onDismiss]);
 
   // Enter key confirms during overlay
   useEffect(() => {
@@ -66,9 +66,9 @@ export function ChannelSwitcher({
     >
       {/* Channel icon */}
       <div className="w-14 h-14 rounded-xl bg-surface-raised flex items-center justify-center flex-shrink-0 overflow-hidden">
-        {channel.stream_icon ? (
+        {channel.icon ? (
           <img
-            src={channel.stream_icon}
+            src={channel.icon}
             alt={channel.name}
             className="w-full h-full object-contain p-1"
             onError={(e) => {
@@ -86,7 +86,7 @@ export function ChannelSwitcher({
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2">
           <span className="text-xs text-text-muted font-medium tabular-nums">
-            {channel.num}
+            {channel.id}
           </span>
           <span className="text-base font-display font-bold text-text-primary truncate">
             {channel.name}

@@ -92,31 +92,24 @@ vi.mock("../EPGProgramBlock", () => ({
 
 // ── mock api ──────────────────────────────────────────────────────────────────
 
-const NOW_SEC = Math.floor(Date.now() / 1000);
+const NOW_MS = Date.now();
+const toISO = (ms: number) => new Date(ms).toISOString();
 const mockEPGData = [
   {
     id: "prog-1",
-    epg_id: "ch1",
+    channelId: "201",
     title: "Morning News",
-    lang: "en",
-    start: "2024-01-01 08:00:00",
-    end: "2024-01-01 09:00:00",
     description: "Morning news bulletin",
-    channel_id: "ch1",
-    start_timestamp: String(NOW_SEC - 1800),
-    stop_timestamp: String(NOW_SEC + 1800),
+    start: toISO(NOW_MS - 1800000), // started 30min ago
+    end: toISO(NOW_MS + 1800000), // ends in 30min
   },
   {
     id: "prog-2",
-    epg_id: "ch1",
+    channelId: "201",
     title: "Sports Hour",
-    lang: "en",
-    start: "2024-01-01 09:00:00",
-    end: "2024-01-01 10:00:00",
     description: "Sports coverage",
-    channel_id: "ch1",
-    start_timestamp: String(NOW_SEC + 1800),
-    stop_timestamp: String(NOW_SEC + 5400),
+    start: toISO(NOW_MS + 1800000), // starts in 30min
+    end: toISO(NOW_MS + 5400000), // ends in 90min
   },
 ];
 
@@ -128,36 +121,22 @@ vi.mock("@features/live/api", () => ({
 
 const mockChannels = [
   {
-    num: 1,
+    id: "201",
     name: "Star Maa",
-    stream_type: "live",
-    stream_id: 201,
-    stream_icon: "",
-    epg_channel_id: "star-maa",
+    type: "live" as const,
+    categoryId: "10",
+    icon: "",
     added: "1700000000",
-    is_adult: "0",
-    category_id: "10",
-    category_ids: [10],
-    custom_sid: "",
-    tv_archive: 0,
-    direct_source: "",
-    tv_archive_duration: 0,
+    isAdult: false,
   },
   {
-    num: 2,
+    id: "202",
     name: "Zee Telugu",
-    stream_type: "live",
-    stream_id: 202,
-    stream_icon: "",
-    epg_channel_id: "zee-telugu",
+    type: "live" as const,
+    categoryId: "10",
+    icon: "",
     added: "1700000001",
-    is_adult: "0",
-    category_id: "10",
-    category_ids: [10],
-    custom_sid: "",
-    tv_archive: 0,
-    direct_source: "",
-    tv_archive_duration: 0,
+    isAdult: false,
   },
 ];
 

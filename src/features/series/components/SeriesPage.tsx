@@ -1,17 +1,24 @@
-import { useMemo, useEffect } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
-import { useSeriesByLanguage, type SeriesWithChannel } from '../api';
-import { ContentRail } from '@shared/components/ContentRail';
-import { FocusableCard } from '@shared/components/FocusableCard';
-import { PageTransition } from '@shared/components/PageTransition';
-import { isNewContent } from '@shared/utils/isNewContent';
+import { useMemo, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  useSpatialContainer,
+  FocusContext,
+  setFocus,
+} from "@shared/hooks/useSpatialNav";
+import { useSeriesByLanguage, type SeriesWithChannel } from "../api";
+import { ContentRail } from "@shared/components/ContentRail";
+import { FocusableCard } from "@shared/components/FocusableCard";
+import { PageTransition } from "@shared/components/PageTransition";
+import { isNewContent } from "@shared/utils/isNewContent";
 
 export function SeriesPage() {
   const navigate = useNavigate();
-  const { ref: containerRef, focusKey } = useSpatialContainer({ focusKey: 'SERIES_PAGE', focusable: false });
+  const { ref: containerRef, focusKey } = useSpatialContainer({
+    focusKey: "SERIES_PAGE",
+    focusable: false,
+  });
 
-  const { allSeries, channels, isLoading } = useSeriesByLanguage('Telugu');
+  const { allSeries, channels, isLoading } = useSeriesByLanguage("Telugu");
 
   // Auto-focus first channel rail after data loads
   useEffect(() => {
@@ -19,14 +26,21 @@ export function SeriesPage() {
     const firstChannelId = channels[0]?.id;
     if (!firstChannelId) return;
     const timer = setTimeout(() => {
-      try { setFocus(`series-channel-${firstChannelId}`); } catch { /* not mounted */ }
+      try {
+        setFocus(`series-channel-${firstChannelId}`);
+      } catch {
+        /* not mounted */
+      }
     }, 150);
     return () => clearTimeout(timer);
   }, [isLoading, channels]);
 
   // Group series by channel, preserving channel order from the API
   const seriesByChannel = useMemo(() => {
-    const grouped = new Map<string, { name: string; items: SeriesWithChannel[] }>();
+    const grouped = new Map<
+      string,
+      { name: string; items: SeriesWithChannel[] }
+    >();
 
     for (const ch of channels) {
       grouped.set(ch.id, { name: ch.name, items: [] });
@@ -70,16 +84,16 @@ export function SeriesPage() {
               >
                 {channel.items.map((item) => (
                   <FocusableCard
-                    key={item.series_id}
-                    focusKey={`series-${item.series_id}`}
-                    image={item.cover}
+                    key={item.id}
+                    focusKey={`series-${item.id}`}
+                    image={item.icon || ""}
                     title={item.name}
                     aspectRatio="poster"
-                    isNew={isNewContent(item.last_modified)}
+                    isNew={isNewContent(item.added ?? undefined)}
                     onClick={() =>
                       navigate({
-                        to: '/series/$seriesId',
-                        params: { seriesId: String(item.series_id) },
+                        to: "/series/$seriesId",
+                        params: { seriesId: item.id },
                       })
                     }
                   />

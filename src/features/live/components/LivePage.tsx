@@ -1,20 +1,33 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from "react";
 
-import { useLiveCategories, useLiveStreams } from '../api';
-import { ChannelGrid } from './ChannelGrid';
-import { EPGGrid } from './EPGGrid';
-import { FeaturedChannels } from './FeaturedChannels';
-import { SkeletonGrid } from '@shared/components/Skeleton';
-import { EmptyState } from '@shared/components/EmptyState';
-import { useDebounce } from '@shared/hooks/useDebounce';
-import { PageTransition } from '@shared/components/PageTransition';
-import { useSpatialFocusable, useSpatialContainer, FocusContext, setFocus } from '@shared/hooks/useSpatialNav';
-import type { XtreamCategory } from '@shared/types/api';
+import { useLiveCategories, useLiveStreams } from "../api";
+import { ChannelGrid } from "./ChannelGrid";
+import { EPGGrid } from "./EPGGrid";
+import { FeaturedChannels } from "./FeaturedChannels";
+import { SkeletonGrid } from "@shared/components/Skeleton";
+import { EmptyState } from "@shared/components/EmptyState";
+import { useDebounce } from "@shared/hooks/useDebounce";
+import { PageTransition } from "@shared/components/PageTransition";
+import {
+  useSpatialFocusable,
+  useSpatialContainer,
+  FocusContext,
+  setFocus,
+} from "@shared/hooks/useSpatialNav";
+import type { XtreamCategory } from "@shared/types/api";
 
-type ViewMode = 'grid' | 'epg';
+type ViewMode = "grid" | "epg";
 
 // Telugu/Indian categories first
-const PRIORITY_KEYWORDS = ['telugu', 'india', 'indian', 'hindi', 'tamil', 'kannada', 'malayalam'];
+const PRIORITY_KEYWORDS = [
+  "telugu",
+  "india",
+  "indian",
+  "hindi",
+  "tamil",
+  "kannada",
+  "malayalam",
+];
 
 function categoryPriority(name: string): number {
   const lower = name.toLowerCase();
@@ -42,29 +55,35 @@ function SidebarCategoryButton({
   onSelect: (id: string) => void;
 }) {
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
-    focusKey: `sidebar-cat-${cat.category_id}`,
-    onEnterPress: () => onSelect(cat.category_id),
+    focusKey: `sidebar-cat-${cat.id}`,
+    onEnterPress: () => onSelect(cat.id),
   });
 
   return (
     <button
       ref={ref}
       {...focusProps}
-      onClick={() => onSelect(cat.category_id)}
+      onClick={() => onSelect(cat.id)}
       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-[background-color,color] ${
         isActive
-          ? 'bg-teal/10 text-teal border-l-2 border-teal font-medium'
+          ? "bg-teal/10 text-teal border-l-2 border-teal font-medium"
           : showFocusRing
-            ? 'bg-surface-raised text-text-primary ring-2 ring-teal/50 ring-offset-1 ring-offset-obsidian'
-            : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised'
+            ? "bg-surface-raised text-text-primary ring-2 ring-teal/50 ring-offset-1 ring-offset-obsidian"
+            : "text-text-secondary hover:text-text-primary hover:bg-surface-raised"
       }`}
     >
-      {cat.category_name}
+      {cat.name}
     </button>
   );
 }
 
-function FocusableViewToggle({ isActive, onSelect, title, icon, id }: {
+function FocusableViewToggle({
+  isActive,
+  onSelect,
+  title,
+  icon,
+  id,
+}: {
   mode?: string;
   isActive: boolean;
   onSelect: () => void;
@@ -84,10 +103,10 @@ function FocusableViewToggle({ isActive, onSelect, title, icon, id }: {
       onClick={onSelect}
       className={`p-2 transition-colors ${
         isActive
-          ? 'bg-teal/15 text-teal'
+          ? "bg-teal/15 text-teal"
           : showFocusRing
-            ? 'text-text-primary ring-2 ring-teal/50'
-            : 'text-text-muted hover:text-text-primary'
+            ? "text-text-primary ring-2 ring-teal/50"
+            : "text-text-muted hover:text-text-primary"
       }`}
       title={title}
     >
@@ -96,13 +115,20 @@ function FocusableViewToggle({ isActive, onSelect, title, icon, id }: {
   );
 }
 
-function FocusableLiveSearch({ searchQuery, setSearchQuery }: {
+function FocusableLiveSearch({
+  searchQuery,
+  setSearchQuery,
+}: {
   searchQuery: string;
   setSearchQuery: (q: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { ref: focusRef, showFocusRing, focusProps } = useSpatialFocusable({
-    focusKey: 'live-search',
+  const {
+    ref: focusRef,
+    showFocusRing,
+    focusProps,
+  } = useSpatialFocusable({
+    focusKey: "live-search",
     onEnterPress: () => inputRef.current?.focus(),
   });
 
@@ -115,36 +141,49 @@ function FocusableLiveSearch({ searchQuery, setSearchQuery }: {
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className={`w-full px-4 py-2 bg-surface-raised border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-[border-color,box-shadow] ${
-          showFocusRing ? 'border-teal ring-2 ring-teal/50' : 'border-border'
+          showFocusRing ? "border-teal ring-2 ring-teal/50" : "border-border"
         }`}
       />
     </div>
   );
 }
 
-function SidebarNav({ categories, activeCatId, isLoading, onSelect }: SidebarNavProps) {
+function SidebarNav({
+  categories,
+  activeCatId,
+  isLoading,
+  onSelect,
+}: SidebarNavProps) {
   const { ref, focusKey } = useSpatialContainer({
-    focusKey: 'live-sidebar',
+    focusKey: "live-sidebar",
     isFocusBoundary: true,
-    focusBoundaryDirections: ['left'],
+    focusBoundaryDirections: ["left"],
   });
 
   return (
     <FocusContext.Provider value={focusKey}>
-      <div ref={ref} className="w-56 flex-shrink-0 overflow-y-auto space-y-1 pr-2 max-h-[calc(100vh-8rem)]">
-        <h2 className="font-display text-lg font-bold text-text-primary mb-3">Live TV</h2>
+      <div
+        ref={ref}
+        className="w-56 flex-shrink-0 overflow-y-auto space-y-1 pr-2 max-h-[calc(100vh-8rem)]"
+      >
+        <h2 className="font-display text-lg font-bold text-text-primary mb-3">
+          Live TV
+        </h2>
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-9 bg-surface-raised rounded-lg animate-pulse" />
+              <div
+                key={i}
+                className="h-9 bg-surface-raised rounded-lg animate-pulse"
+              />
             ))}
           </div>
         ) : (
           categories.map((cat) => (
             <SidebarCategoryButton
-              key={cat.category_id}
+              key={cat.id}
               cat={cat}
-              isActive={activeCatId === cat.category_id}
+              isActive={activeCatId === cat.id}
               onSelect={onSelect}
             />
           ))
@@ -168,20 +207,42 @@ const EPG_ICON = (
   </svg>
 );
 
-function LiveControlsBar({ searchQuery, setSearchQuery, viewMode, setViewMode }: {
+function LiveControlsBar({
+  searchQuery,
+  setSearchQuery,
+  viewMode,
+  setViewMode,
+}: {
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   viewMode: ViewMode;
   setViewMode: (m: ViewMode) => void;
 }) {
-  const { focusKey: controlsFocusKey } = useSpatialContainer({ focusKey: 'live-controls' });
+  const { focusKey: controlsFocusKey } = useSpatialContainer({
+    focusKey: "live-controls",
+  });
   return (
     <FocusContext.Provider value={controlsFocusKey}>
       <div className="flex items-center gap-3 mb-4">
-        <FocusableLiveSearch searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        <FocusableLiveSearch
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
         <div className="flex items-center bg-surface-raised border border-border rounded-lg overflow-hidden">
-          <FocusableViewToggle id="toggle-view-grid" isActive={viewMode === 'grid'} onSelect={() => setViewMode('grid')} title="Grid view" icon={GRID_ICON} />
-          <FocusableViewToggle id="toggle-view-epg" isActive={viewMode === 'epg'} onSelect={() => setViewMode('epg')} title="EPG guide" icon={EPG_ICON} />
+          <FocusableViewToggle
+            id="toggle-view-grid"
+            isActive={viewMode === "grid"}
+            onSelect={() => setViewMode("grid")}
+            title="Grid view"
+            icon={GRID_ICON}
+          />
+          <FocusableViewToggle
+            id="toggle-view-epg"
+            isActive={viewMode === "epg"}
+            onSelect={() => setViewMode("epg")}
+            title="EPG guide"
+            icon={EPG_ICON}
+          />
         </div>
       </div>
     </FocusContext.Provider>
@@ -191,31 +252,47 @@ function LiveControlsBar({ searchQuery, setSearchQuery, viewMode, setViewMode }:
 // ── LivePage ──────────────────────────────────────────────────────────────────
 
 export function LivePage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const debouncedSearch = useDebounce(searchQuery);
 
-  const { ref: contentRef, focusKey: contentFocusKey } = useSpatialContainer({ focusKey: 'live-content', focusable: false });
-  const { ref: layoutRef, focusKey: layoutFocusKey } = useSpatialContainer({ focusKey: 'live-layout' });
-  const { ref: mainRef, focusKey: mainFocusKey } = useSpatialContainer({ focusKey: 'live-main' });
-  const { focusKey: channelGridFocusKey } = useSpatialContainer({ focusKey: 'live-channel-grid' });
+  const { ref: contentRef, focusKey: contentFocusKey } = useSpatialContainer({
+    focusKey: "live-content",
+    focusable: false,
+  });
+  const { ref: layoutRef, focusKey: layoutFocusKey } = useSpatialContainer({
+    focusKey: "live-layout",
+  });
+  const { ref: mainRef, focusKey: mainFocusKey } = useSpatialContainer({
+    focusKey: "live-main",
+  });
+  const { focusKey: channelGridFocusKey } = useSpatialContainer({
+    focusKey: "live-channel-grid",
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      try { setFocus('live-sidebar'); } catch { /* not mounted */ }
+      try {
+        setFocus("live-sidebar");
+      } catch {
+        /* not mounted */
+      }
     }, 150);
     return () => clearTimeout(timer);
   }, []);
 
   const { data: categories, isLoading: catLoading } = useLiveCategories();
-  const firstCatId = categories?.[0]?.category_id || '';
+  const firstCatId = categories?.[0]?.id || "";
   const activeCatId = selectedCategory || firstCatId;
-  const { data: streams, isLoading: streamsLoading } = useLiveStreams(activeCatId);
+  const { data: streams, isLoading: streamsLoading } =
+    useLiveStreams(activeCatId);
 
   const sortedCategories = useMemo(() => {
     if (!categories) return [];
-    return [...categories].sort((a, b) => categoryPriority(a.category_name) - categoryPriority(b.category_name));
+    return [...categories].sort(
+      (a, b) => categoryPriority(a.name) - categoryPriority(b.name),
+    );
   }, [categories]);
 
   const filteredStreams = useMemo(() => {
@@ -227,38 +304,56 @@ export function LivePage() {
 
   return (
     <PageTransition>
-    <FocusContext.Provider value={contentFocusKey}>
-    <div ref={contentRef} className="flex flex-col gap-4 h-full">
-      {/* Featured Channels — AC-01: playback via playerStore in ChannelCard/FeaturedChannels */}
-      <FeaturedChannels />
+      <FocusContext.Provider value={contentFocusKey}>
+        <div ref={contentRef} className="flex flex-col gap-4 h-full">
+          {/* Featured Channels — AC-01: playback via playerStore in ChannelCard/FeaturedChannels */}
+          <FeaturedChannels />
 
-      <FocusContext.Provider value={layoutFocusKey}>
-      <div ref={layoutRef} className="flex gap-6 flex-1 min-h-0">
-        <SidebarNav categories={sortedCategories} activeCatId={activeCatId} isLoading={catLoading} onSelect={setSelectedCategory} />
+          <FocusContext.Provider value={layoutFocusKey}>
+            <div ref={layoutRef} className="flex gap-6 flex-1 min-h-0">
+              <SidebarNav
+                categories={sortedCategories}
+                activeCatId={activeCatId}
+                isLoading={catLoading}
+                onSelect={setSelectedCategory}
+              />
 
-        <FocusContext.Provider value={mainFocusKey}>
-        <div ref={mainRef} className="flex-1 min-w-0">
-          <LiveControlsBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} viewMode={viewMode} setViewMode={setViewMode} />
+              <FocusContext.Provider value={mainFocusKey}>
+                <div ref={mainRef} className="flex-1 min-w-0">
+                  <LiveControlsBar
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                  />
 
-          <FocusContext.Provider value={channelGridFocusKey}>
-          {streamsLoading ? (
-            <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-              <SkeletonGrid count={18} aspectRatio="square" />
+                  <FocusContext.Provider value={channelGridFocusKey}>
+                    {streamsLoading ? (
+                      <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+                        <SkeletonGrid count={18} aspectRatio="square" />
+                      </div>
+                    ) : filteredStreams.length === 0 ? (
+                      <EmptyState
+                        title="No channels found"
+                        message={
+                          debouncedSearch
+                            ? "Try a different search term"
+                            : "This category is empty"
+                        }
+                        icon="content"
+                      />
+                    ) : viewMode === "epg" ? (
+                      <EPGGrid channels={filteredStreams} />
+                    ) : (
+                      <ChannelGrid channels={filteredStreams} />
+                    )}
+                  </FocusContext.Provider>
+                </div>
+              </FocusContext.Provider>
             </div>
-          ) : filteredStreams.length === 0 ? (
-            <EmptyState title="No channels found" message={debouncedSearch ? 'Try a different search term' : 'This category is empty'} icon="content" />
-          ) : viewMode === 'epg' ? (
-            <EPGGrid channels={filteredStreams} />
-          ) : (
-            <ChannelGrid channels={filteredStreams} />
-          )}
           </FocusContext.Provider>
         </div>
-        </FocusContext.Provider>
-      </div>
       </FocusContext.Provider>
-    </div>
-    </FocusContext.Provider>
     </PageTransition>
   );
 }

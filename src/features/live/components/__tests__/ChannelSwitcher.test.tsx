@@ -38,53 +38,36 @@ vi.mock("@lib/store", () => ({
 
 // ── mock data ─────────────────────────────────────────────────────────────────
 
-const NOW_SEC = Math.floor(Date.now() / 1000);
+const NOW_MS = Date.now();
+const toISO = (ms: number) => new Date(ms).toISOString();
 
 const mockCurrentChannel = {
-  num: 1,
+  id: "201",
   name: "Star Maa",
-  stream_id: 201,
-  stream_icon: "https://img.example.com/starmaa.png",
-  epg_channel_id: "star-maa",
-  stream_type: "live",
+  type: "live" as const,
+  categoryId: "10",
+  icon: "https://img.example.com/starmaa.png",
   added: "1700000000",
-  is_adult: "0",
-  category_id: "10",
-  category_ids: [10],
-  custom_sid: "",
-  tv_archive: 0,
-  direct_source: "",
-  tv_archive_duration: 0,
+  isAdult: false,
 };
 
 const mockNextChannel = {
-  num: 2,
+  id: "202",
   name: "Zee Telugu",
-  stream_id: 202,
-  stream_icon: "https://img.example.com/zeetelugu.png",
-  epg_channel_id: "zee-telugu",
-  stream_type: "live",
+  type: "live" as const,
+  categoryId: "10",
+  icon: "https://img.example.com/zeetelugu.png",
   added: "1700000001",
-  is_adult: "0",
-  category_id: "10",
-  category_ids: [10],
-  custom_sid: "",
-  tv_archive: 0,
-  direct_source: "",
-  tv_archive_duration: 0,
+  isAdult: false,
 };
 
 const mockCurrentProgram = {
   id: "prog-1",
-  epg_id: "star-maa",
+  channelId: "201",
   title: "Morning News",
-  lang: "en",
-  start: "2024-01-01 08:00:00",
-  end: "2024-01-01 09:00:00",
   description: "Morning news bulletin",
-  channel_id: "star-maa",
-  start_timestamp: String(NOW_SEC - 1800),
-  stop_timestamp: String(NOW_SEC + 1800),
+  start: toISO(NOW_MS - 1800000),
+  end: toISO(NOW_MS + 1800000),
 };
 
 const mockOnConfirm = vi.fn();
@@ -126,7 +109,7 @@ describe("ChannelSwitcher — rendering", () => {
 
   it("renders the channel number", () => {
     renderChannelSwitcher();
-    expect(screen.getByText("1")).toBeTruthy();
+    expect(screen.getByText("201")).toBeTruthy();
   });
 
   it("renders the current program title", () => {
