@@ -64,13 +64,6 @@ export function DesktopControls({ playerRef }: DesktopControlsProps) {
     setMuted(!isMuted);
   }, [isMuted, setMuted]);
 
-  const handleVolumeChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setVolume(Number(e.target.value));
-    },
-    [setVolume],
-  );
-
   return (
     <div
       data-testid="desktop-controls-overlay"
@@ -86,7 +79,11 @@ export function DesktopControls({ playerRef }: DesktopControlsProps) {
       )}
 
       {/* Controls bar */}
-      <div className="flex items-center gap-2 px-4 pb-4 pt-2">
+      <div
+        role="toolbar"
+        aria-label="Player controls"
+        className="flex items-center gap-2 px-4 pb-4 pt-2"
+      >
         {/* Play/Pause */}
         <button
           onClick={handlePlayPause}
@@ -151,13 +148,16 @@ export function DesktopControls({ playerRef }: DesktopControlsProps) {
         <input
           type="range"
           min={0}
-          max={1}
-          step={0.05}
-          value={isMuted ? 0 : volume}
-          onChange={handleVolumeChange}
+          max={100}
+          step={5}
+          value={Math.round((isMuted ? 0 : volume) * 100)}
+          onChange={(e) => setVolume(Number(e.target.value) / 100)}
           className="w-20 h-1 accent-teal"
           aria-label="Volume"
+          aria-valuemin={0}
+          aria-valuemax={100}
           aria-valuenow={Math.round((isMuted ? 0 : volume) * 100)}
+          aria-valuetext={`${Math.round((isMuted ? 0 : volume) * 100)} percent`}
         />
 
         {/* Time */}

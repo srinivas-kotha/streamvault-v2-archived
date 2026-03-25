@@ -201,9 +201,11 @@ export function MobileControls({ playerRef }: MobileControlsProps) {
                 </div>
                 <div
                   role="progressbar"
+                  aria-label="Video progress"
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={Math.round(progress)}
+                  aria-valuetext={`${formatDuration(Math.floor(currentTime))} of ${formatDuration(Math.floor(duration))}`}
                   className="w-full h-1.5 bg-white/20 rounded-full"
                 >
                   <div

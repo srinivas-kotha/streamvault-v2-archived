@@ -37,9 +37,9 @@ import { ProgressBar } from "../ProgressBar";
 // ── Progress rendering ────────────────────────────────────────────────────────
 
 describe("ProgressBar — rendering", () => {
-  it("renders a progressbar role element", () => {
+  it("renders a slider role element (interactive seek bar)", () => {
     render(<ProgressBar />);
-    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+    expect(screen.getByRole("slider")).toBeInTheDocument();
   });
 
   it("progress bar reflects currentTime/duration ratio", () => {
@@ -159,7 +159,7 @@ describe("ProgressBar — keyboard seek (TV)", () => {
     usePlayerStore.setState({ currentTime: 120, duration: 3600 });
     render(<ProgressBar isFocused />);
 
-    fireEvent.keyDown(screen.getByRole("progressbar"), { key: "ArrowLeft" });
+    fireEvent.keyDown(screen.getByRole("slider"), { key: "ArrowLeft" });
     expect(usePlayerStore.getState().currentTime).toBe(110);
   });
 
@@ -167,7 +167,7 @@ describe("ProgressBar — keyboard seek (TV)", () => {
     usePlayerStore.setState({ currentTime: 120, duration: 3600 });
     render(<ProgressBar isFocused />);
 
-    fireEvent.keyDown(screen.getByRole("progressbar"), { key: "ArrowRight" });
+    fireEvent.keyDown(screen.getByRole("slider"), { key: "ArrowRight" });
     expect(usePlayerStore.getState().currentTime).toBe(130);
   });
 
@@ -175,7 +175,7 @@ describe("ProgressBar — keyboard seek (TV)", () => {
     usePlayerStore.setState({ currentTime: 5, duration: 3600 });
     render(<ProgressBar isFocused />);
 
-    fireEvent.keyDown(screen.getByRole("progressbar"), { key: "ArrowLeft" });
+    fireEvent.keyDown(screen.getByRole("slider"), { key: "ArrowLeft" });
     expect(usePlayerStore.getState().currentTime).toBe(0);
   });
 
@@ -183,7 +183,7 @@ describe("ProgressBar — keyboard seek (TV)", () => {
     usePlayerStore.setState({ currentTime: 3595, duration: 3600 });
     render(<ProgressBar isFocused />);
 
-    fireEvent.keyDown(screen.getByRole("progressbar"), { key: "ArrowRight" });
+    fireEvent.keyDown(screen.getByRole("slider"), { key: "ArrowRight" });
     expect(usePlayerStore.getState().currentTime).toBe(3600);
   });
 });
@@ -194,23 +194,17 @@ describe("ProgressBar — accessibility", () => {
   it("has aria-valuenow reflecting current progress percentage", () => {
     usePlayerStore.setState({ currentTime: 900, duration: 3600 }); // 25%
     render(<ProgressBar />);
-    const bar = screen.getByRole("progressbar");
+    const bar = screen.getByRole("slider");
     expect(bar).toHaveAttribute("aria-valuenow", "25");
   });
 
   it("has aria-valuemin of 0", () => {
     render(<ProgressBar />);
-    expect(screen.getByRole("progressbar")).toHaveAttribute(
-      "aria-valuemin",
-      "0",
-    );
+    expect(screen.getByRole("slider")).toHaveAttribute("aria-valuemin", "0");
   });
 
   it("has aria-valuemax of 100", () => {
     render(<ProgressBar />);
-    expect(screen.getByRole("progressbar")).toHaveAttribute(
-      "aria-valuemax",
-      "100",
-    );
+    expect(screen.getByRole("slider")).toHaveAttribute("aria-valuemax", "100");
   });
 });

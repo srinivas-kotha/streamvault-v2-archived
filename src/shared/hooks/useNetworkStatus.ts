@@ -1,2 +1,24 @@
-// TODO: Implement in Sprint 3 — hook tracking online/offline status and connection quality
-export {}
+import { useEffect, useState } from "react";
+
+export function useNetworkStatus(): { isOnline: boolean } {
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+
+  useEffect(() => {
+    function handleOnline() {
+      setIsOnline(true);
+    }
+    function handleOffline() {
+      setIsOnline(false);
+    }
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  return { isOnline };
+}
