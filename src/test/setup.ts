@@ -1,8 +1,18 @@
 /**
- * Vitest setup file — polyfills missing browser APIs in jsdom.
+ * Vitest setup file — polyfills missing browser APIs in jsdom
+ * and configures MSW for API mocking.
  */
 
 import "@testing-library/jest-dom";
+import { server } from "./mocks/server";
+
+// ── MSW server lifecycle ────────────────────────────────────────────────────
+
+beforeAll(() => server.listen({ onUnhandledRequest: "warn" }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+// ── jsdom polyfills ─────────────────────────────────────────────────────────
 
 // jsdom does not implement PointerEvent — polyfill it as a subclass of MouseEvent
 if (typeof globalThis.PointerEvent === "undefined") {

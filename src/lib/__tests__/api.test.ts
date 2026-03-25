@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { api, ApiError } from "../api";
+import { server } from "@/test/mocks/server";
+
+// Disable MSW for this file — tests use manual fetch mocks
+beforeAll(() => server.close());
+afterAll(() => server.listen({ onUnhandledRequest: "warn" }));
 
 // Mock global fetch
 const mockFetch = vi.fn();
@@ -9,6 +14,8 @@ vi.stubGlobal("fetch", mockFetch);
 const locationHrefSetter = vi.fn();
 
 beforeEach(() => {
+  // Re-apply fetch stub (MSW may have replaced it in setup.ts beforeAll)
+  vi.stubGlobal("fetch", mockFetch);
   vi.clearAllMocks();
   // Reset document.cookie
   Object.defineProperty(document, "cookie", {
