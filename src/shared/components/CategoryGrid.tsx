@@ -1,13 +1,22 @@
-import { useSpatialFocusable, useSpatialContainer, FocusContext } from '@shared/hooks/useSpatialNav';
+import {
+  useSpatialFocusable,
+  useSpatialContainer,
+  FocusContext,
+} from "@shared/hooks/useSpatialNav";
 
 interface CategoryGridProps {
-  categories: Array<{ category_id: string; category_name: string }>;
+  categories: Array<{ id: string; name: string }>;
   selectedId: string | null;
   onSelect: (id: string) => void;
   focusKey?: string;
 }
 
-function FocusableCategoryButton({ id, label, isActive, onSelect }: {
+function FocusableCategoryButton({
+  id,
+  label,
+  isActive,
+  onSelect,
+}: {
   id: string;
   label: string;
   isActive: boolean;
@@ -25,10 +34,10 @@ function FocusableCategoryButton({ id, label, isActive, onSelect }: {
       onClick={onSelect}
       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-[background-color,border-color,color] ${
         isActive
-          ? 'bg-teal/15 text-teal border border-teal/30'
+          ? "bg-teal/15 text-teal border border-teal/30"
           : showFocusRing
-            ? 'bg-surface-raised text-text-primary border border-teal ring-2 ring-teal/50'
-            : 'bg-surface-raised text-text-secondary border border-border hover:border-border hover:text-text-primary'
+            ? "bg-surface-raised text-text-primary border border-teal ring-2 ring-teal/50"
+            : "bg-surface-raised text-text-secondary border border-border hover:border-border hover:text-text-primary"
       }`}
     >
       {label}
@@ -36,8 +45,13 @@ function FocusableCategoryButton({ id, label, isActive, onSelect }: {
   );
 }
 
-export function CategoryGrid({ categories, selectedId, onSelect, focusKey: propFocusKey }: CategoryGridProps) {
-  const parentId = propFocusKey || 'category-grid';
+export function CategoryGrid({
+  categories,
+  selectedId,
+  onSelect,
+  focusKey: propFocusKey,
+}: CategoryGridProps) {
+  const parentId = propFocusKey || "category-grid";
 
   const { ref: containerRef, focusKey } = useSpatialContainer({
     focusKey: parentId,
@@ -50,15 +64,15 @@ export function CategoryGrid({ categories, selectedId, onSelect, focusKey: propF
           id={`${parentId}-all`}
           label="All"
           isActive={!selectedId}
-          onSelect={() => onSelect('')}
+          onSelect={() => onSelect("")}
         />
         {categories.map((cat) => (
           <FocusableCategoryButton
-            id={`${parentId}-${cat.category_id}`}
-            key={cat.category_id}
-            label={cat.category_name}
-            isActive={selectedId === cat.category_id}
-            onSelect={() => onSelect(cat.category_id)}
+            id={`${parentId}-${cat.id}`}
+            key={cat.id}
+            label={cat.name}
+            isActive={selectedId === cat.id}
+            onSelect={() => onSelect(cat.id)}
           />
         ))}
       </div>

@@ -1,64 +1,68 @@
-import { useMemo } from 'react';
-import { useQuery, useQueries } from '@tanstack/react-query';
-import { api } from '@lib/api';
-import { STALE_TIMES } from '@lib/queryConfig';
-import type { XtreamCategory, XtreamSeriesItem, XtreamSeriesInfo } from '@shared/types/api';
+import { useMemo } from "react";
+import { useQuery, useQueries } from "@tanstack/react-query";
+import { api } from "@lib/api";
+import { STALE_TIMES } from "@lib/queryConfig";
+import type {
+  XtreamCategory,
+  XtreamSeriesItem,
+  XtreamSeriesInfo,
+} from "@shared/types/api";
 
 // ── Channel-to-language mapping (fallback until category parser is rewritten) ──
 
 const SERIES_CHANNEL_LANGUAGE: Record<string, string> = {
   // Telugu TV channels (ordered by popularity)
-  '455': 'Telugu', // ZEE TELUGU
-  '453': 'Telugu', // STAR MAA
-  '469': 'Telugu', // AHA
-  '493': 'Telugu', // ETV
-  '494': 'Telugu', // GEMINI
-  '552': 'Telugu', // SONY TELUGU
+  "455": "Telugu", // ZEE TELUGU
+  "453": "Telugu", // STAR MAA
+  "469": "Telugu", // AHA
+  "493": "Telugu", // ETV
+  "494": "Telugu", // GEMINI
+  "552": "Telugu", // SONY TELUGU
   // OTT Platforms (mixed-language — filtered by series name)
-  '104': 'Multi', // ZEE5+ALT BALAJI
-  '105': 'Multi', // SONY LIV
-  '106': 'Multi', // NETFLIX
-  '102': 'Multi', // DISNEY+ HOTSTAR
-  '310': 'Multi', // JIO CINEMA
+  "104": "Multi", // ZEE5+ALT BALAJI
+  "105": "Multi", // SONY LIV
+  "106": "Multi", // NETFLIX
+  "102": "Multi", // DISNEY+ HOTSTAR
+  "310": "Multi", // JIO CINEMA
   // Hindi TV channels
-  '442': 'Hindi', // COLORS HINDI
-  '443': 'Hindi', // SONY (SET)
-  '444': 'Hindi', // STAR PLUS
-  '446': 'Hindi', // STAR BHARAT
-  '445': 'Hindi', // ZEE TV
-  '447': 'Hindi', // SAB
-  '448': 'Hindi', // AND TV
-  '491': 'Hindi', // MTV HINDI
-  '596': 'Hindi', // SUN NEO HINDI
-  '161': 'Hindi', // HINDI TV SERIES
-  '276': 'Hindi', // INDIAN Reality Shows
-  '200': 'Hindi', // BIGG BOSS OTT
+  "442": "Hindi", // COLORS HINDI
+  "443": "Hindi", // SONY (SET)
+  "444": "Hindi", // STAR PLUS
+  "446": "Hindi", // STAR BHARAT
+  "445": "Hindi", // ZEE TV
+  "447": "Hindi", // SAB
+  "448": "Hindi", // AND TV
+  "491": "Hindi", // MTV HINDI
+  "596": "Hindi", // SUN NEO HINDI
+  "161": "Hindi", // HINDI TV SERIES
+  "276": "Hindi", // INDIAN Reality Shows
+  "200": "Hindi", // BIGG BOSS OTT
 };
 
 const CHANNEL_NAMES: Record<string, string> = {
-  '453': 'Star Maa',
-  '455': 'Zee Telugu',
-  '494': 'Gemini',
-  '493': 'ETV',
-  '552': 'Sony Telugu',
-  '469': 'Aha',
-  '442': 'Colors Hindi',
-  '443': 'Sony SET',
-  '444': 'Star Plus',
-  '446': 'Star Bharat',
-  '445': 'Zee TV',
-  '447': 'SAB',
-  '448': 'And TV',
-  '491': 'MTV Hindi',
-  '596': 'Sun Neo Hindi',
-  '161': 'Hindi TV',
-  '276': 'Reality Shows',
-  '200': 'Bigg Boss OTT',
-  '102': 'Disney+ Hotstar',
-  '104': 'ZEE5',
-  '105': 'Sony LIV',
-  '106': 'Netflix',
-  '310': 'Jio Cinema',
+  "453": "Star Maa",
+  "455": "Zee Telugu",
+  "494": "Gemini",
+  "493": "ETV",
+  "552": "Sony Telugu",
+  "469": "Aha",
+  "442": "Colors Hindi",
+  "443": "Sony SET",
+  "444": "Star Plus",
+  "446": "Star Bharat",
+  "445": "Zee TV",
+  "447": "SAB",
+  "448": "And TV",
+  "491": "MTV Hindi",
+  "596": "Sun Neo Hindi",
+  "161": "Hindi TV",
+  "276": "Reality Shows",
+  "200": "Bigg Boss OTT",
+  "102": "Disney+ Hotstar",
+  "104": "ZEE5",
+  "105": "Sony LIV",
+  "106": "Netflix",
+  "310": "Jio Cinema",
 };
 
 // ── Types ──
@@ -82,7 +86,7 @@ export function getChannelIdsForLanguage(language: string): string[] {
   return Object.entries(SERIES_CHANNEL_LANGUAGE)
     .filter(([, l]) => {
       const mapped = l.toLowerCase();
-      return mapped === lang || mapped === 'multi';
+      return mapped === lang || mapped === "multi";
     })
     .map(([id]) => id);
 }
@@ -90,7 +94,7 @@ export function getChannelIdsForLanguage(language: string): string[] {
 /** Get all supported languages. */
 export function getSupportedLanguages(): string[] {
   const langs = new Set(Object.values(SERIES_CHANNEL_LANGUAGE));
-  return ['Telugu', 'Hindi'].filter((l) => langs.has(l));
+  return ["Telugu", "Hindi"].filter((l) => langs.has(l));
 }
 
 /** Get channel name for a category ID. */
@@ -105,7 +109,7 @@ export function getChannelLanguage(categoryId: string): string | null {
 
 /** Strip trailing language tag like "(Telugu)" from series name for cleaner display. */
 function stripLanguageTag(name: string): string {
-  return name.replace(/\s*\([^)]*\)\s*$/, '').trim();
+  return name.replace(/\s*\([^)]*\)\s*$/, "").trim();
 }
 
 // ── Hooks ──
@@ -113,8 +117,8 @@ function stripLanguageTag(name: string): string {
 /** Fetch raw series categories from API. */
 export function useSeriesCategories() {
   return useQuery({
-    queryKey: ['series', 'categories'],
-    queryFn: () => api<XtreamCategory[]>('/series/categories'),
+    queryKey: ["series", "categories"],
+    queryFn: () => api<XtreamCategory[]>("/series/categories"),
     staleTime: STALE_TIMES.categories,
   });
 }
@@ -122,7 +126,7 @@ export function useSeriesCategories() {
 /** Fetch a single category's series list. */
 export function useSeriesList(categoryId: string) {
   return useQuery({
-    queryKey: ['series', 'list', categoryId],
+    queryKey: ["series", "list", categoryId],
     queryFn: () => api<XtreamSeriesItem[]>(`/series/list/${categoryId}`),
     enabled: !!categoryId,
     staleTime: STALE_TIMES.streams,
@@ -132,7 +136,7 @@ export function useSeriesList(categoryId: string) {
 /** Fetch series info/detail for a given series ID. */
 export function useSeriesInfo(seriesId: string) {
   return useQuery({
-    queryKey: ['series', 'info', seriesId],
+    queryKey: ["series", "info", seriesId],
     queryFn: () => api<XtreamSeriesInfo>(`/series/info/${seriesId}`),
     enabled: !!seriesId,
     staleTime: STALE_TIMES.streams,
@@ -146,13 +150,13 @@ export function useSeriesInfo(seriesId: string) {
  */
 export function useSeriesByLanguage(language: string) {
   const channelIds =
-    language.toLowerCase() === 'all'
+    language.toLowerCase() === "all"
       ? Object.keys(SERIES_CHANNEL_LANGUAGE)
       : getChannelIdsForLanguage(language);
 
   const queries = useQueries({
     queries: channelIds.map((catId) => ({
-      queryKey: ['series', 'list', catId],
+      queryKey: ["series", "list", catId],
       queryFn: () => api<XtreamSeriesItem[]>(`/series/list/${catId}`),
       staleTime: STALE_TIMES.streams,
     })),
@@ -163,30 +167,34 @@ export function useSeriesByLanguage(language: string) {
 
   const allSeries = useMemo<SeriesWithChannel[]>(() => {
     const result: SeriesWithChannel[] = [];
-    const seen = new Set<number>();
+    const seen = new Set<string>();
     const seenNames = new Set<string>();
-    const isAll = language.toLowerCase() === 'all';
+    const isAll = language.toLowerCase() === "all";
 
     queries.forEach((q, idx) => {
       if (!q.data) return;
       const catId = channelIds[idx]!;
       const catLang = SERIES_CHANNEL_LANGUAGE[catId];
-      const isMulti = catLang === 'Multi';
+      const isMulti = catLang === "Multi";
 
       for (const item of q.data) {
-        // Deduplicate by series_id (some series appear in multiple categories)
-        if (seen.has(item.series_id)) continue;
+        // Deduplicate by id (some series appear in multiple categories)
+        if (seen.has(item.id)) continue;
 
         // For Multi/OTT categories, only include series matching the requested language
         if (isMulti && !isAll) {
-          if (!item.name.toLowerCase().includes(language.toLowerCase())) continue;
+          if (!item.name.toLowerCase().includes(language.toLowerCase()))
+            continue;
         }
 
         // Name-based dedup: same series listed on multiple OTT platforms with different IDs
-        const normalizedName = item.name.replace(/\s*\([^)]*\)\s*$/g, '').trim().toLowerCase();
+        const normalizedName = item.name
+          .replace(/\s*\([^)]*\)\s*$/g, "")
+          .trim()
+          .toLowerCase();
         if (seenNames.has(normalizedName)) continue;
 
-        seen.add(item.series_id);
+        seen.add(item.id);
         seenNames.add(normalizedName);
         result.push({
           ...item,

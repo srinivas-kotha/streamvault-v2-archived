@@ -36,13 +36,13 @@ function sortSeries(
       return sorted.sort((a, b) => b.name.localeCompare(a.name));
     case "recent":
       return sorted.sort((a, b) => {
-        const aTime = parseInt(a.last_modified || "0", 10);
-        const bTime = parseInt(b.last_modified || "0", 10);
+        const aTime = parseInt(a.added || "0", 10);
+        const bTime = parseInt(b.added || "0", 10);
         return bTime - aTime;
       });
     case "rating":
       return sorted.sort(
-        (a, b) => (b.rating_5based || 0) - (a.rating_5based || 0),
+        (a, b) => parseFloat(b.rating || "0") - parseFloat(a.rating || "0"),
       );
     default:
       return sorted;
@@ -235,13 +235,13 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
 
   const totalCount = allSeries.length;
 
-  // Recently added rail: top 20 by last_modified
+  // Recently added rail: top 20 by added
   const recentSeries = useMemo(() => {
     if (!allSeries.length) return [];
     return [...allSeries]
       .sort((a, b) => {
-        const aTime = parseInt(a.last_modified || "0", 10);
-        const bTime = parseInt(b.last_modified || "0", 10);
+        const aTime = parseInt(a.added || "0", 10);
+        const bTime = parseInt(b.added || "0", 10);
         return bTime - aTime;
       })
       .slice(0, 20);
@@ -360,17 +360,17 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
             <ContentRail title="Recently Added">
               {recentSeries.map((item) => (
                 <FocusableCard
-                  key={item.series_id}
-                  focusKey={`series-recent-${item.series_id}`}
-                  image={item.cover}
+                  key={item.id}
+                  focusKey={`series-recent-${item.id}`}
+                  image={item.icon || ""}
                   title={item.name}
                   subtitle={item.genre || undefined}
-                  isNew={isNewContent(item.last_modified)}
+                  isNew={isNewContent(item.added ?? undefined)}
                   aspectRatio="poster"
                   onClick={() =>
                     navigate({
                       to: "/series/$seriesId",
-                      params: { seriesId: String(item.series_id) },
+                      params: { seriesId: item.id },
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } as any)
                   }
@@ -382,17 +382,17 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
             <ContentRail key={rail.channelId} title={rail.channelName}>
               {rail.items.map((item) => (
                 <FocusableCard
-                  key={item.series_id}
-                  focusKey={`series-${item.series_id}`}
-                  image={item.cover}
+                  key={item.id}
+                  focusKey={`series-${item.id}`}
+                  image={item.icon || ""}
                   title={item.name}
                   subtitle={item.genre || undefined}
-                  isNew={isNewContent(item.last_modified)}
+                  isNew={isNewContent(item.added ?? undefined)}
                   aspectRatio="poster"
                   onClick={() =>
                     navigate({
                       to: "/series/$seriesId",
-                      params: { seriesId: String(item.series_id) },
+                      params: { seriesId: item.id },
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } as any)
                   }
@@ -433,26 +433,22 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
 
           <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
             {processedSeries.map((series) => (
-              <div key={series.series_id} className="relative">
+              <div key={series.id} className="relative">
                 <ContentCard
-                  image={series.cover}
+                  image={series.icon || ""}
                   title={series.name}
-                  subtitle={
-                    series.releaseDate
-                      ? series.releaseDate.slice(0, 4)
-                      : undefined
-                  }
+                  subtitle={series.year ? series.year.slice(0, 4) : undefined}
                   badge={
-                    series.rating_5based > 0 ? (
+                    series.rating && parseFloat(series.rating) > 0 ? (
                       <Badge variant="warning">
-                        {series.rating_5based.toFixed(1)} ★
+                        {parseFloat(series.rating).toFixed(1)} ★
                       </Badge>
                     ) : undefined
                   }
                   onClick={() =>
                     navigate({
                       to: "/series/$seriesId",
-                      params: { seriesId: String(series.series_id) },
+                      params: { seriesId: series.id },
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } as any)
                   }

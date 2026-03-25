@@ -1,41 +1,45 @@
-import { StarRating } from '@shared/components/StarRating';
-import { Badge } from '@shared/components/Badge';
-import { parseGenres } from '@shared/utils/parseGenres';
+import { StarRating } from "@shared/components/StarRating";
+import { Badge } from "@shared/components/Badge";
+import { parseGenres } from "@shared/utils/parseGenres";
 
 interface SeriesDetailHeroProps {
   info: {
     name: string;
-    cover?: string;
+    icon?: string | null;
     plot?: string;
     rating?: string;
-    releaseDate?: string;
+    year?: string;
     genre?: string;
-    backdrop_path?: string[];
+    backdropUrl?: string;
   };
   seasonsCount: number;
   channelName: string | null;
 }
 
-export function SeriesDetailHero({ info, seasonsCount, channelName }: SeriesDetailHeroProps) {
+export function SeriesDetailHero({
+  info,
+  seasonsCount,
+  channelName,
+}: SeriesDetailHeroProps) {
   return (
     <div className="relative overflow-hidden mb-6">
       <div className="aspect-[21/9] relative bg-surface max-h-[400px]">
-        {info.backdrop_path?.[0] ? (
+        {info.backdropUrl ? (
           <img
-            src={info.backdrop_path[0]}
+            src={info.backdropUrl}
             alt={info.name}
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
+              (e.target as HTMLImageElement).style.display = "none";
             }}
           />
-        ) : info.cover ? (
+        ) : info.icon ? (
           <img
-            src={info.cover}
+            src={info.icon}
             alt={info.name}
             className="w-full h-full object-cover blur-sm scale-110"
             onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
+              (e.target as HTMLImageElement).style.display = "none";
             }}
           />
         ) : null}
@@ -50,20 +54,18 @@ export function SeriesDetailHero({ info, seasonsCount, channelName }: SeriesDeta
           {info.rating && (
             <StarRating rating={parseFloat(info.rating)} max={10} size="md" />
           )}
-          {info.releaseDate && (
+          {info.year && (
             <span className="text-text-secondary text-sm">
-              {info.releaseDate.slice(0, 4)}
+              {info.year.slice(0, 4)}
             </span>
           )}
           <span className="text-text-secondary text-sm">
-            {seasonsCount} Season{seasonsCount !== 1 ? 's' : ''}
+            {seasonsCount} Season{seasonsCount !== 1 ? "s" : ""}
           </span>
-          {channelName && (
-            <Badge variant="default">{channelName}</Badge>
-          )}
+          {channelName && <Badge variant="default">{channelName}</Badge>}
         </div>
         <div className="flex gap-2 flex-wrap">
-          {parseGenres(info.genre ?? '').map((g) => (
+          {parseGenres(info.genre ?? "").map((g) => (
             <Badge key={g} variant="teal">
               {g}
             </Badge>

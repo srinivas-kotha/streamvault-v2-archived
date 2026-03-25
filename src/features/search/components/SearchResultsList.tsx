@@ -1,13 +1,18 @@
-import { ContentCard } from '@shared/components/ContentCard';
-import { useSpatialContainer, FocusContext } from '@shared/hooks/useSpatialNav';
-import type { XtreamLiveStream, XtreamVODStream, XtreamSeriesItem } from '@shared/types/api';
+import { ContentCard } from "@shared/components/ContentCard";
+import { useSpatialContainer, FocusContext } from "@shared/hooks/useSpatialNav";
+import type {
+  XtreamLiveStream,
+  XtreamVODStream,
+  XtreamSeriesItem,
+} from "@shared/types/api";
 
-type TabType = 'all' | 'live' | 'vod' | 'series';
+type TabType = "all" | "live" | "vod" | "series";
 
-const CARD_GRID = 'grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3';
+const CARD_GRID =
+  "grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3";
 
 function SearchResultsContainer({ children }: { children: React.ReactNode }) {
-  const { ref, focusKey } = useSpatialContainer({ focusKey: 'search-results' });
+  const { ref, focusKey } = useSpatialContainer({ focusKey: "search-results" });
   return (
     <FocusContext.Provider value={focusKey}>
       <div ref={ref}>{children}</div>
@@ -22,24 +27,28 @@ export function SearchResultsList({
   onVodClick,
   onSeriesClick,
 }: {
-  filteredData: { live: XtreamLiveStream[]; vod: XtreamVODStream[]; series: XtreamSeriesItem[] };
+  filteredData: {
+    live: XtreamLiveStream[];
+    vod: XtreamVODStream[];
+    series: XtreamSeriesItem[];
+  };
   activeTab: TabType;
   onLiveClick: (stream: XtreamLiveStream) => void;
-  onVodClick: (vodId: number) => void;
-  onSeriesClick: (seriesId: number) => void;
+  onVodClick: (vodId: string) => void;
+  onSeriesClick: (seriesId: string) => void;
 }) {
-  const showLive = activeTab === 'all' || activeTab === 'live';
-  const showVod = activeTab === 'all' || activeTab === 'vod';
-  const showSeries = activeTab === 'all' || activeTab === 'series';
+  const showLive = activeTab === "all" || activeTab === "live";
+  const showVod = activeTab === "all" || activeTab === "vod";
+  const showSeries = activeTab === "all" || activeTab === "series";
 
   return (
     <SearchResultsContainer>
       <div className="space-y-8">
         {showLive && filteredData.live.length > 0 && (
           <section>
-            {activeTab === 'all' && (
+            {activeTab === "all" && (
               <h2 className="font-display text-lg font-bold text-text-primary mb-3">
-                Live TV{' '}
+                Live TV{" "}
                 <span className="ml-2 text-sm font-normal text-text-secondary">
                   ({filteredData.live.length})
                 </span>
@@ -48,8 +57,8 @@ export function SearchResultsList({
             <div className={CARD_GRID}>
               {filteredData.live.map((stream) => (
                 <ContentCard
-                  key={`live-${stream.stream_id}`}
-                  image={stream.stream_icon}
+                  key={`live-${stream.id}`}
+                  image={stream.icon || ""}
                   title={stream.name}
                   aspectRatio="square"
                   badge={
@@ -65,9 +74,9 @@ export function SearchResultsList({
         )}
         {showVod && filteredData.vod.length > 0 && (
           <section>
-            {activeTab === 'all' && (
+            {activeTab === "all" && (
               <h2 className="font-display text-lg font-bold text-text-primary mb-3">
-                Movies{' '}
+                Movies{" "}
                 <span className="ml-2 text-sm font-normal text-text-secondary">
                   ({filteredData.vod.length})
                 </span>
@@ -76,12 +85,12 @@ export function SearchResultsList({
             <div className={CARD_GRID}>
               {filteredData.vod.map((movie) => (
                 <ContentCard
-                  key={`vod-${movie.stream_id}`}
-                  image={movie.stream_icon}
+                  key={`vod-${movie.id}`}
+                  image={movie.icon || ""}
                   title={movie.name}
                   subtitle={movie.rating ? `${movie.rating}/10` : undefined}
                   aspectRatio="poster"
-                  onClick={() => onVodClick(movie.stream_id)}
+                  onClick={() => onVodClick(movie.id)}
                 />
               ))}
             </div>
@@ -89,9 +98,9 @@ export function SearchResultsList({
         )}
         {showSeries && filteredData.series.length > 0 && (
           <section>
-            {activeTab === 'all' && (
+            {activeTab === "all" && (
               <h2 className="font-display text-lg font-bold text-text-primary mb-3">
-                Series{' '}
+                Series{" "}
                 <span className="ml-2 text-sm font-normal text-text-secondary">
                   ({filteredData.series.length})
                 </span>
@@ -100,12 +109,12 @@ export function SearchResultsList({
             <div className={CARD_GRID}>
               {filteredData.series.map((show) => (
                 <ContentCard
-                  key={`series-${show.series_id}`}
-                  image={show.cover}
+                  key={`series-${show.id}`}
+                  image={show.icon || ""}
                   title={show.name}
                   subtitle={show.genre || undefined}
                   aspectRatio="poster"
-                  onClick={() => onSeriesClick(show.series_id)}
+                  onClick={() => onSeriesClick(show.id)}
                 />
               ))}
             </div>

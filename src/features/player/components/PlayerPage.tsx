@@ -69,11 +69,7 @@ export function PlayerPage({
   const progressTracking = useProgressTracking({
     contentId: streamId,
     contentType:
-      streamType === "live"
-        ? "channel"
-        : streamType === "vod"
-          ? "vod"
-          : "series",
+      streamType === "live" ? "live" : streamType === "vod" ? "vod" : "series",
     contentName: streamName,
     isLive,
   });

@@ -10,9 +10,9 @@ interface ProgramInfoPopupProps {
   program: XtreamEPGItem;
   channel: XtreamLiveStream;
   isOpen: boolean;
-  onWatch: (streamId: number) => void;
+  onWatch: (streamId: string) => void;
   onCatchup: (params: {
-    streamId: number;
+    streamId: string;
     startTimestamp: number;
     stopTimestamp: number;
   }) => void;
@@ -36,13 +36,13 @@ export function ProgramInfoPopup({
   onClose,
 }: ProgramInfoPopupProps) {
   const now = Date.now() / 1000;
-  const startTs = Number(program.start_timestamp);
-  const stopTs = Number(program.stop_timestamp);
+  const startTs = new Date(program.start).getTime() / 1000;
+  const stopTs = new Date(program.end).getTime() / 1000;
 
   const isPast = stopTs < now;
   const isNow = startTs <= now && stopTs >= now;
   const isFuture = startTs > now;
-  const canCatchup = isPast && channel.tv_archive > 0;
+  const canCatchup = isPast && false; // tv_archive removed in Phase 2
   const showWatch = isNow || isFuture;
 
   useEffect(() => {
@@ -94,7 +94,7 @@ export function ProgramInfoPopup({
         <div className="flex gap-3">
           {showWatch && (
             <button
-              onClick={() => onWatch(channel.stream_id)}
+              onClick={() => onWatch(channel.id)}
               className="flex-1 px-4 py-2 bg-teal text-obsidian rounded-lg text-sm font-semibold transition-[background-color,box-shadow] hover-capable:hover:bg-teal-dim"
             >
               Watch
@@ -104,7 +104,7 @@ export function ProgramInfoPopup({
             <button
               onClick={() =>
                 onCatchup({
-                  streamId: channel.stream_id,
+                  streamId: channel.id,
                   startTimestamp: startTs,
                   stopTimestamp: stopTs,
                 })

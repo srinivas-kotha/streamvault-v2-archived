@@ -1,33 +1,48 @@
-import { useState, useMemo } from 'react';
-import { useParams, useNavigate, Link } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@lib/api';
-import { STALE_TIMES } from '@lib/queryConfig';
-import { useVODCategories } from '@features/vod/api';
-import { useSeriesCategories } from '@features/series/api';
-import { useLiveCategories } from '@features/live/api';
-import { SortFilterBar } from '@features/vod/components/SortFilterBar';
-import { ContentCard } from '@shared/components/ContentCard';
-import { SkeletonGrid } from '@shared/components/Skeleton';
-import { EmptyState } from '@shared/components/EmptyState';
-import { Badge } from '@shared/components/Badge';
-import { PageTransition } from '@shared/components/PageTransition';
-import { sortContent, SORT_OPTIONS, type SortOption } from '@shared/utils/sortContent';
-import { filterContent, DEFAULT_FILTERS, type FilterState } from '@shared/utils/filterContent';
-import { collectAllGenres, parseGenres } from '@shared/utils/parseGenres';
-import { useDebounce } from '@shared/hooks/useDebounce';
-import { usePlayerStore } from '@lib/store';
-import type { XtreamVODStream, XtreamSeriesItem, XtreamLiveStream } from '@shared/types/api';
+import { useState, useMemo } from "react";
+import { useParams, useNavigate, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@lib/api";
+import { STALE_TIMES } from "@lib/queryConfig";
+import { useVODCategories } from "@features/vod/api";
+import { useSeriesCategories } from "@features/series/api";
+import { useLiveCategories } from "@features/live/api";
+import { SortFilterBar } from "@features/vod/components/SortFilterBar";
+import { ContentCard } from "@shared/components/ContentCard";
+import { SkeletonGrid } from "@shared/components/Skeleton";
+import { EmptyState } from "@shared/components/EmptyState";
+import { Badge } from "@shared/components/Badge";
+import { PageTransition } from "@shared/components/PageTransition";
+import {
+  sortContent,
+  SORT_OPTIONS,
+  type SortOption,
+} from "@shared/utils/sortContent";
+import {
+  filterContent,
+  DEFAULT_FILTERS,
+  type FilterState,
+} from "@shared/utils/filterContent";
+import { collectAllGenres } from "@shared/utils/parseGenres";
+import { useDebounce } from "@shared/hooks/useDebounce";
+import { usePlayerStore } from "@lib/store";
+import type {
+  XtreamVODStream,
+  XtreamSeriesItem,
+  XtreamLiveStream,
+} from "@shared/types/api";
 
-type ContentType = 'vod' | 'series' | 'live' | null;
+type ContentType = "vod" | "series" | "live" | null;
 
 export function CategoryGridPage() {
-  const { lang, categoryId } = useParams({ strict: false }) as { lang?: string; categoryId?: string };
+  const { lang, categoryId } = useParams({ strict: false }) as {
+    lang?: string;
+    categoryId?: string;
+  };
   const navigate = useNavigate();
   const playStream = usePlayerStore((s) => s.playStream);
-  const language = lang ? lang.charAt(0).toUpperCase() + lang.slice(1) : '';
+  const language = lang ? lang.charAt(0).toUpperCase() + lang.slice(1) : "";
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortOption>(SORT_OPTIONS[0]!);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const debouncedSearch = useDebounce(searchQuery);
@@ -38,40 +53,44 @@ export function CategoryGridPage() {
   const { data: liveCategories } = useLiveCategories();
 
   // Determine which content type this category belongs to
-  const { contentType, categoryName } = useMemo<{ contentType: ContentType; categoryName: string }>(() => {
-    if (!categoryId) return { contentType: null, categoryName: '' };
+  const { contentType, categoryName } = useMemo<{
+    contentType: ContentType;
+    categoryName: string;
+  }>(() => {
+    if (!categoryId) return { contentType: null, categoryName: "" };
 
-    const vodMatch = vodCategories?.find((c) => c.category_id === categoryId);
-    if (vodMatch) return { contentType: 'vod', categoryName: vodMatch.category_name };
+    const vodMatch = vodCategories?.find((c) => c.id === categoryId);
+    if (vodMatch) return { contentType: "vod", categoryName: vodMatch.name };
 
-    const seriesMatch = seriesCategories?.find((c) => c.category_id === categoryId);
-    if (seriesMatch) return { contentType: 'series', categoryName: seriesMatch.category_name };
+    const seriesMatch = seriesCategories?.find((c) => c.id === categoryId);
+    if (seriesMatch)
+      return { contentType: "series", categoryName: seriesMatch.name };
 
-    const liveMatch = liveCategories?.find((c) => c.category_id === categoryId);
-    if (liveMatch) return { contentType: 'live', categoryName: liveMatch.category_name };
+    const liveMatch = liveCategories?.find((c) => c.id === categoryId);
+    if (liveMatch) return { contentType: "live", categoryName: liveMatch.name };
 
-    return { contentType: null, categoryName: '' };
+    return { contentType: null, categoryName: "" };
   }, [categoryId, vodCategories, seriesCategories, liveCategories]);
 
   // Fetch streams based on content type
   const { data: vodStreams, isLoading: vodLoading } = useQuery({
-    queryKey: ['vod', 'streams', categoryId],
+    queryKey: ["vod", "streams", categoryId],
     queryFn: () => api<XtreamVODStream[]>(`/vod/streams/${categoryId}`),
-    enabled: contentType === 'vod' && !!categoryId,
+    enabled: contentType === "vod" && !!categoryId,
     staleTime: STALE_TIMES.streams,
   });
 
   const { data: seriesList, isLoading: seriesLoading } = useQuery({
-    queryKey: ['series', 'list', categoryId],
+    queryKey: ["series", "list", categoryId],
     queryFn: () => api<XtreamSeriesItem[]>(`/series/list/${categoryId}`),
-    enabled: contentType === 'series' && !!categoryId,
+    enabled: contentType === "series" && !!categoryId,
     staleTime: STALE_TIMES.streams,
   });
 
   const { data: liveStreams, isLoading: liveLoading } = useQuery({
-    queryKey: ['live', 'streams', categoryId],
+    queryKey: ["live", "streams", categoryId],
     queryFn: () => api<XtreamLiveStream[]>(`/live/streams/${categoryId}`),
-    enabled: contentType === 'live' && !!categoryId,
+    enabled: contentType === "live" && !!categoryId,
     staleTime: STALE_TIMES.liveStreams,
   });
 
@@ -79,44 +98,62 @@ export function CategoryGridPage() {
 
   // Collect genres (vod/series only)
   const genres = useMemo(() => {
-    if (contentType === 'vod' && vodStreams) {
-      return collectAllGenres(vodStreams as unknown as Array<{ genre?: string }>);
+    if (contentType === "vod" && vodStreams) {
+      return collectAllGenres(
+        vodStreams as unknown as Array<{ genre?: string }>,
+      );
     }
-    if (contentType === 'series' && seriesList) {
-      return collectAllGenres(seriesList as unknown as Array<{ genre?: string }>);
+    if (contentType === "series" && seriesList) {
+      return collectAllGenres(
+        seriesList as unknown as Array<{ genre?: string }>,
+      );
     }
     return [];
   }, [contentType, vodStreams, seriesList]);
 
   // Process VOD streams
   const processedVod = useMemo(() => {
-    if (contentType !== 'vod' || !vodStreams) return [];
+    if (contentType !== "vod" || !vodStreams) return [];
     let result = [...vodStreams];
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       result = result.filter((s) => s.name.toLowerCase().includes(q));
     }
-    result = filterContent(result as unknown as Record<string, unknown>[], filters) as unknown as typeof result;
-    result = sortContent(result as unknown as Record<string, unknown>[], sort.field, sort.direction) as unknown as typeof result;
+    result = filterContent(
+      result as unknown as Record<string, unknown>[],
+      filters,
+    ) as unknown as typeof result;
+    result = sortContent(
+      result as unknown as Record<string, unknown>[],
+      sort.field,
+      sort.direction,
+    ) as unknown as typeof result;
     return result;
   }, [contentType, vodStreams, debouncedSearch, filters, sort]);
 
   // Process series
   const processedSeries = useMemo(() => {
-    if (contentType !== 'series' || !seriesList) return [];
+    if (contentType !== "series" || !seriesList) return [];
     let result = [...seriesList];
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       result = result.filter((s) => s.name.toLowerCase().includes(q));
     }
-    result = filterContent(result as unknown as Record<string, unknown>[], filters) as unknown as typeof result;
-    result = sortContent(result as unknown as Record<string, unknown>[], sort.field, sort.direction) as unknown as typeof result;
+    result = filterContent(
+      result as unknown as Record<string, unknown>[],
+      filters,
+    ) as unknown as typeof result;
+    result = sortContent(
+      result as unknown as Record<string, unknown>[],
+      sort.field,
+      sort.direction,
+    ) as unknown as typeof result;
     return result;
   }, [contentType, seriesList, debouncedSearch, filters, sort]);
 
   // Process live streams (search only, no sort/filter)
   const processedLive = useMemo(() => {
-    if (contentType !== 'live' || !liveStreams) return [];
+    if (contentType !== "live" || !liveStreams) return [];
     let result = [...liveStreams];
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
@@ -125,7 +162,8 @@ export function CategoryGridPage() {
     return result;
   }, [contentType, liveStreams, debouncedSearch]);
 
-  const totalItems = processedVod.length + processedSeries.length + processedLive.length;
+  const totalItems =
+    processedVod.length + processedSeries.length + processedLive.length;
 
   if (!lang || !categoryId) {
     return (
@@ -142,16 +180,13 @@ export function CategoryGridPage() {
       <div className="py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-text-muted mb-4">
-          <Link
-            to="/"
-            className="hover:text-text-primary transition-colors"
-          >
+          <Link to="/" className="hover:text-text-primary transition-colors">
             Home
           </Link>
           <span>/</span>
           <Link
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            to={'/language/$lang' as any}
+            to={"/language/$lang" as any}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             params={{ lang } as any}
             className="hover:text-text-primary transition-colors capitalize"
@@ -159,7 +194,9 @@ export function CategoryGridPage() {
             {language}
           </Link>
           <span>/</span>
-          <span className="text-text-primary">{categoryName || `Category ${categoryId}`}</span>
+          <span className="text-text-primary">
+            {categoryName || `Category ${categoryId}`}
+          </span>
         </nav>
 
         <h1 className="font-display text-2xl font-bold text-text-primary mb-4">
@@ -170,7 +207,7 @@ export function CategoryGridPage() {
         <div className="flex items-center gap-4 mb-4">
           <input
             type="text"
-            placeholder={`Search ${contentType === 'live' ? 'channels' : contentType === 'series' ? 'series' : 'movies'}...`}
+            placeholder={`Search ${contentType === "live" ? "channels" : contentType === "series" ? "series" : "movies"}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full max-w-xs px-4 py-2 bg-surface-raised border border-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal-dim transition-[border-color,box-shadow]"
@@ -178,15 +215,15 @@ export function CategoryGridPage() {
         </div>
 
         {/* Sort/Filter bar (only for vod/series, not live) */}
-        {contentType !== 'live' && (
+        {contentType !== "live" && (
           <div className="relative z-10">
-          <SortFilterBar
-            sort={sort}
-            onSortChange={setSort}
-            filters={filters}
-            onFiltersChange={setFilters}
-            genres={genres}
-          />
+            <SortFilterBar
+              sort={sort}
+              onSortChange={setSort}
+              filters={filters}
+              onFiltersChange={setFilters}
+              genres={genres}
+            />
           </div>
         )}
 
@@ -206,43 +243,57 @@ export function CategoryGridPage() {
             {/* VOD items */}
             {processedVod.map((movie) => (
               <ContentCard
-                key={movie.stream_id}
-                image={movie.stream_icon}
+                key={movie.id}
+                image={movie.icon || ""}
                 title={movie.name}
-                subtitle={parseGenres(movie.container_extension).length > 0 ? movie.container_extension.toUpperCase() : undefined}
+                subtitle={undefined}
                 badge={
-                  movie.rating_5based > 0 ? (
-                    <Badge variant="warning">{movie.rating_5based.toFixed(1)} ★</Badge>
+                  movie.rating && parseFloat(movie.rating) > 0 ? (
+                    <Badge variant="warning">
+                      {parseFloat(movie.rating).toFixed(1)} ★
+                    </Badge>
                   ) : undefined
                 }
-                onClick={() => navigate({ to: '/vod/$vodId', params: { vodId: String(movie.stream_id) } })}
+                onClick={() =>
+                  navigate({
+                    to: "/vod/$vodId",
+                    params: { vodId: movie.id },
+                  })
+                }
               />
             ))}
 
             {/* Series items */}
             {processedSeries.map((series) => (
               <ContentCard
-                key={series.series_id}
-                image={series.cover}
+                key={series.id}
+                image={series.icon || ""}
                 title={series.name}
-                subtitle={series.releaseDate ? series.releaseDate.slice(0, 4) : undefined}
+                subtitle={series.year ? series.year.slice(0, 4) : undefined}
                 badge={
-                  series.rating_5based > 0 ? (
-                    <Badge variant="warning">{series.rating_5based.toFixed(1)} ★</Badge>
+                  series.rating && parseFloat(series.rating) > 0 ? (
+                    <Badge variant="warning">
+                      {parseFloat(series.rating).toFixed(1)} ★
+                    </Badge>
                   ) : undefined
                 }
-                onClick={() => navigate({ to: '/series/$seriesId', params: { seriesId: String(series.series_id) } })}
+                onClick={() =>
+                  navigate({
+                    to: "/series/$seriesId",
+                    params: { seriesId: series.id },
+                  })
+                }
               />
             ))}
 
             {/* Live items */}
             {processedLive.map((channel) => (
               <ContentCard
-                key={channel.stream_id}
-                image={channel.stream_icon}
+                key={channel.id}
+                image={channel.icon || ""}
                 title={channel.name}
                 aspectRatio="square"
-                onClick={() => playStream(String(channel.stream_id), 'live', channel.name)}
+                onClick={() => playStream(channel.id, "live", channel.name)}
               />
             ))}
           </div>

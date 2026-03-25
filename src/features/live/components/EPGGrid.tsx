@@ -85,10 +85,10 @@ function EPGChannelRow({
   pixelsPerMinute: number;
   onClick: () => void;
 }) {
-  const { data: epg } = useEPG(channel.stream_id);
+  const { data: epg } = useEPG(channel.id);
 
   const { ref, focusKey: rowFocusKey } = useSpatialContainer({
-    focusKey: `epg-row-${channel.stream_id}`,
+    focusKey: `epg-row-${channel.id}`,
     focusable: false,
     isFocusBoundary: true,
     focusBoundaryDirections: ["left", "right"],
@@ -96,10 +96,10 @@ function EPGChannelRow({
 
   // Filter EPG items that overlap with our time range
   const visiblePrograms = (epg || []).filter((item) => {
-    const start = Number(item.start_timestamp);
-    const end = Number(item.stop_timestamp);
-    const rangeStart = startTime.getTime() / 1000;
-    const rangeEnd = endTime.getTime() / 1000;
+    const start = new Date(item.start).getTime();
+    const end = new Date(item.end).getTime();
+    const rangeStart = startTime.getTime();
+    const rangeEnd = endTime.getTime();
     return start < rangeEnd && end > rangeStart;
   });
 
@@ -108,14 +108,14 @@ function EPGChannelRow({
       <div ref={ref} className="relative" style={{ height: ROW_HEIGHT }}>
         {visiblePrograms.length > 0 ? (
           visiblePrograms.map((program, idx) => {
-            const programFocusKey = `epg-program-${channel.stream_id}-${idx}`;
+            const programFocusKey = `epg-program-${channel.id}-${idx}`;
             return (
               <FocusableProgramBlock
                 key={program.id}
                 focusKey={programFocusKey}
                 title={program.title}
-                startTimestamp={Number(program.start_timestamp)}
-                endTimestamp={Number(program.stop_timestamp)}
+                startTimestamp={new Date(program.start).getTime() / 1000}
+                endTimestamp={new Date(program.end).getTime() / 1000}
                 timelineStart={startTime}
                 pixelsPerMinute={pixelsPerMinute}
                 onClick={onClick}
@@ -174,8 +174,8 @@ export function EPGGrid({ channels }: EPGGridProps) {
   }, [startTime]);
 
   function handleChannelClick(channel: XtreamLiveStream) {
-    playStream(String(channel.stream_id), "live", channel.name);
-    navigate({ to: "/live", search: { play: String(channel.stream_id) } });
+    playStream(channel.id, "live", channel.name);
+    navigate({ to: "/live", search: { play: channel.id } });
   }
 
   return (
@@ -197,14 +197,14 @@ export function EPGGrid({ channels }: EPGGridProps) {
           <div className="overflow-y-auto max-h-[calc(100vh-16rem)]">
             {channels.map((channel) => (
               <div
-                key={channel.stream_id}
+                key={channel.id}
                 onClick={() => handleChannelClick(channel)}
                 className="flex items-center gap-2 px-3 border-b border-white/5 cursor-pointer hover:bg-surface-raised/50 transition-colors"
                 style={{ height: ROW_HEIGHT }}
               >
-                {channel.stream_icon ? (
+                {channel.icon ? (
                   <img
-                    src={upgradeProtocol(channel.stream_icon)}
+                    src={upgradeProtocol(channel.icon)}
                     alt=""
                     className="w-6 h-6 rounded object-contain flex-shrink-0"
                     onError={(e) => {
@@ -243,7 +243,7 @@ export function EPGGrid({ channels }: EPGGridProps) {
             <div className="relative">
               {channels.map((channel) => (
                 <div
-                  key={channel.stream_id}
+                  key={channel.id}
                   className="border-b border-white/5"
                   style={{ height: ROW_HEIGHT }}
                 >

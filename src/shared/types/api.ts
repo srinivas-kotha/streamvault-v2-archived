@@ -1,151 +1,90 @@
 // Content types
-export type ContentType = 'channel' | 'vod' | 'series';
+export type ContentType = "live" | "vod" | "series";
 
-// Xtream API types
-export interface XtreamCategory {
-  category_id: string;
-  category_name: string;
-  parent_id: number;
-}
+// ── Normalized API types ─────────────────────────────────────────────────────
 
-export interface XtreamLiveStream {
-  num: number;
-  name: string;
-  stream_type: string;
-  stream_id: number;
-  stream_icon: string;
-  epg_channel_id: string;
-  added: string;
-  is_adult: string;
-  category_id: string;
-  category_ids: number[];
-  custom_sid: string;
-  tv_archive: number;
-  direct_source: string;
-  tv_archive_duration: number;
-}
-
-export interface XtreamVODStream {
-  num: number;
-  name: string;
-  stream_type: string;
-  stream_id: number;
-  stream_icon: string;
-  rating: string;
-  rating_5based: number;
-  added: string;
-  is_adult: string;
-  category_id: string;
-  category_ids: number[];
-  container_extension: string;
-  custom_sid: string;
-  direct_source: string;
-}
-
-export interface XtreamVODInfo {
-  info: {
-    movie_image: string;
-    tmdb_id: string;
-    name: string;
-    o_name: string;
-    plot: string;
-    cast: string;
-    director: string;
-    genre: string;
-    releaseDate: string;
-    duration: string;
-    duration_secs: number;
-    rating: string;
-  };
-  movie_data: {
-    stream_id: number;
-    name: string;
-    added: string;
-    category_id: string;
-    container_extension: string;
-    custom_sid: string;
-    direct_source: string;
-  };
-}
-
-export interface XtreamSeriesItem {
-  num: number;
-  name: string;
-  series_id: number;
-  cover: string;
-  plot: string;
-  cast: string;
-  director: string;
-  genre: string;
-  releaseDate: string;
-  last_modified: string;
-  rating: string;
-  rating_5based: number;
-  backdrop_path: string[];
-  category_id: string;
-  category_ids: number[];
-}
-
-export interface XtreamSeriesInfo {
-  seasons: Array<{
-    air_date: string;
-    episode_count: number;
-    id: number;
-    name: string;
-    overview: string;
-    season_number: number;
-    cover: string;
-  }>;
-  info: {
-    name: string;
-    cover: string;
-    plot: string;
-    cast: string;
-    director: string;
-    genre: string;
-    releaseDate: string;
-    rating: string;
-    backdrop_path: string[];
-  };
-  episodes: Record<
-    string,
-    Array<{
-      id: string;
-      episode_num: number;
-      title: string;
-      container_extension: string;
-      added: string; // unix timestamp
-      info: {
-        duration_secs: number;
-        duration: string;
-        plot: string;
-        movie_image: string;
-      };
-      season: number;
-      direct_source: string;
-    }>
-  >;
-}
-
-export interface XtreamEPGItem {
+export interface Category {
   id: string;
-  epg_id: string;
+  name: string;
+  parentId: string | null;
+  type: ContentType;
+  count?: number;
+}
+
+export interface CatalogItem {
+  id: string;
+  name: string;
+  type: ContentType;
+  categoryId: string;
+  icon: string | null;
+  added: string | null;
+  isAdult: boolean;
+  rating?: string;
+  genre?: string;
+  year?: string;
+}
+
+export interface SeasonInfo {
+  seasonNumber: number;
+  name: string;
+  episodeCount: number;
+  icon?: string;
+}
+
+export interface EpisodeInfo {
+  id: string;
+  episodeNumber: number;
   title: string;
-  lang: string;
+  containerExtension?: string;
+  duration?: number;
+  plot?: string;
+  rating?: string;
+  icon?: string;
+  added?: string;
+}
+
+export interface CatalogItemDetail extends CatalogItem {
+  plot?: string;
+  cast?: string;
+  director?: string;
+  duration?: string;
+  durationSecs?: number;
+  containerExtension?: string;
+  backdropUrl?: string;
+  tmdbId?: string;
+  seasons?: SeasonInfo[];
+  episodes?: Record<string, EpisodeInfo[]>;
+}
+
+export interface EPGEntry {
+  id: string;
+  channelId: string;
+  title: string;
+  description: string;
   start: string;
   end: string;
-  description: string;
-  channel_id: string;
-  start_timestamp: string;
-  stop_timestamp: string;
+  category?: string;
+  icon?: string;
 }
 
-// App types
 export interface SearchResults {
-  live: XtreamLiveStream[];
-  vod: XtreamVODStream[];
-  series: XtreamSeriesItem[];
+  live: CatalogItem[];
+  vod: CatalogItem[];
+  series: CatalogItem[];
 }
+
+// ── Backward-compatible aliases ──────────────────────────────────────────────
+// Components may import these old names — keep them pointing at the new types.
+
+export type XtreamLiveStream = CatalogItem;
+export type XtreamVODStream = CatalogItem;
+export type XtreamSeriesItem = CatalogItem;
+export type XtreamVODInfo = CatalogItemDetail;
+export type XtreamSeriesInfo = CatalogItemDetail;
+export type XtreamEPGItem = EPGEntry;
+export type XtreamCategory = Category;
+
+// ── App / DB types (unchanged) ───────────────────────────────────────────────
 
 export interface DbFavorite {
   id: number;

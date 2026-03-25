@@ -1,18 +1,18 @@
-import type { XtreamCategory } from '@shared/types/api';
-import type { LanguageGroup, SubCategory } from './types';
-import { LANGUAGE_PRIORITY } from './channelMappings';
+import type { XtreamCategory } from "@shared/types/api";
+import type { LanguageGroup, SubCategory } from "./types";
+import { LANGUAGE_PRIORITY } from "./channelMappings";
 import {
   extractYear,
   extractQuality,
   isCamRelease,
   buildDisplayName,
   stripLanguagePrefix,
-} from './helpers';
+} from "./helpers";
 import {
   detectLanguageFromName,
   detectLanguageFromSeriesName,
   detectLanguageFromLiveName,
-} from './languageDetector';
+} from "./languageDetector";
 
 // ---------------------------------------------------------------------------
 // Public API: parseCategory
@@ -25,17 +25,17 @@ import {
  */
 export function parseCategory(
   categoryName: string,
-  contentTypeHint?: 'movies' | 'series' | 'live',
+  contentTypeHint?: "movies" | "series" | "live",
 ): { language: string; subCategory: string } | null {
   const trimmed = categoryName.trim();
   if (!trimmed) return null;
 
   let language: string | null = null;
 
-  if (contentTypeHint === 'series') {
+  if (contentTypeHint === "series") {
     const result = detectLanguageFromSeriesName(trimmed);
     language = result.language;
-  } else if (contentTypeHint === 'live') {
+  } else if (contentTypeHint === "live") {
     language = detectLanguageFromLiveName(trimmed);
   } else {
     language = detectLanguageFromName(trimmed);
@@ -57,36 +57,36 @@ export function parseCategory(
  */
 export function groupCategoriesByLanguage(
   categories: XtreamCategory[],
-  contentTypeHint?: 'movies' | 'series' | 'live',
+  contentTypeHint?: "movies" | "series" | "live",
 ): LanguageGroup[] {
   const groups = new Map<string, LanguageGroup>();
 
   for (const cat of categories) {
-    let language = 'Other';
+    let language = "Other";
     let channelName: string | null = null;
     let year: number | undefined;
     let quality: string | undefined;
     let isCam: boolean | undefined;
 
-    if (contentTypeHint === 'series') {
-      const result = detectLanguageFromSeriesName(cat.category_name);
+    if (contentTypeHint === "series") {
+      const result = detectLanguageFromSeriesName(cat.name);
       if (result.language) {
         language = result.language;
         channelName = result.channelName;
       }
-    } else if (contentTypeHint === 'live') {
-      const detected = detectLanguageFromLiveName(cat.category_name);
+    } else if (contentTypeHint === "live") {
+      const detected = detectLanguageFromLiveName(cat.name);
       if (detected) language = detected;
     } else {
-      const detected = detectLanguageFromName(cat.category_name);
+      const detected = detectLanguageFromName(cat.name);
       if (detected) language = detected;
     }
 
     // Extract metadata for VOD categories
-    if (contentTypeHint === 'movies' || !contentTypeHint) {
-      year = extractYear(cat.category_name);
-      quality = extractQuality(cat.category_name);
-      isCam = isCamRelease(cat.category_name) || undefined;
+    if (contentTypeHint === "movies" || !contentTypeHint) {
+      year = extractYear(cat.name);
+      quality = extractQuality(cat.name);
+      isCam = isCamRelease(cat.name) || undefined;
     }
 
     const languageKey = language.toLowerCase();
@@ -104,7 +104,7 @@ export function groupCategoriesByLanguage(
 
     const group = groups.get(languageKey)!;
     const displayName = buildDisplayName(
-      cat.category_name,
+      cat.name,
       language,
       year,
       quality,
@@ -113,9 +113,9 @@ export function groupCategoriesByLanguage(
     );
 
     const subCat: SubCategory = {
-      id: cat.category_id,
+      id: cat.id,
       name: displayName,
-      originalName: cat.category_name,
+      originalName: cat.name,
       year,
       quality,
       isCam,
@@ -160,17 +160,17 @@ export function getDetectedLanguages(
   const languages = new Set<string>();
 
   for (const cat of vodCategories) {
-    const lang = detectLanguageFromName(cat.category_name);
+    const lang = detectLanguageFromName(cat.name);
     if (lang) languages.add(lang);
   }
 
   for (const cat of seriesCategories) {
-    const result = detectLanguageFromSeriesName(cat.category_name);
+    const result = detectLanguageFromSeriesName(cat.name);
     if (result.language) languages.add(result.language);
   }
 
   for (const cat of liveCategories) {
-    const lang = detectLanguageFromLiveName(cat.category_name);
+    const lang = detectLanguageFromLiveName(cat.name);
     if (lang) languages.add(lang);
   }
 
@@ -193,9 +193,9 @@ export function getCategoriesForLanguage(
   vodCategories: XtreamCategory[],
   seriesCategories: XtreamCategory[],
 ): { movies: SubCategory[]; series: SubCategory[]; live: SubCategory[] } {
-  const liveGroups = groupCategoriesByLanguage(liveCategories, 'live');
-  const vodGroups = groupCategoriesByLanguage(vodCategories, 'movies');
-  const seriesGroups = groupCategoriesByLanguage(seriesCategories, 'series');
+  const liveGroups = groupCategoriesByLanguage(liveCategories, "live");
+  const vodGroups = groupCategoriesByLanguage(vodCategories, "movies");
+  const seriesGroups = groupCategoriesByLanguage(seriesCategories, "series");
 
   const langKey = language.toLowerCase();
 
@@ -218,7 +218,7 @@ export function getMovieCategoriesForLanguage(
   language: string,
   vodCategories: XtreamCategory[],
 ): SubCategory[] {
-  const groups = groupCategoriesByLanguage(vodCategories, 'movies');
+  const groups = groupCategoriesByLanguage(vodCategories, "movies");
   const langKey = language.toLowerCase();
   return groups.find((g) => g.languageKey === langKey)?.movies ?? [];
 }
@@ -231,7 +231,7 @@ export function getSeriesCategoriesForLanguage(
   language: string,
   seriesCategories: XtreamCategory[],
 ): SubCategory[] {
-  const groups = groupCategoriesByLanguage(seriesCategories, 'series');
+  const groups = groupCategoriesByLanguage(seriesCategories, "series");
   const langKey = language.toLowerCase();
   return groups.find((g) => g.languageKey === langKey)?.series ?? [];
 }
@@ -243,7 +243,7 @@ export function getLiveCategoriesForLanguage(
   language: string,
   liveCategories: XtreamCategory[],
 ): SubCategory[] {
-  const groups = groupCategoriesByLanguage(liveCategories, 'live');
+  const groups = groupCategoriesByLanguage(liveCategories, "live");
   const langKey = language.toLowerCase();
   return groups.find((g) => g.languageKey === langKey)?.live ?? [];
 }

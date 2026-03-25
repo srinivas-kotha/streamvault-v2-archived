@@ -82,20 +82,13 @@ vi.mock("@features/live/api", () => ({
 // ── mock data ─────────────────────────────────────────────────────────────────
 
 const mockChannel = {
-  num: 1,
+  id: "201",
   name: "Star Maa",
-  stream_type: "live",
-  stream_id: 201,
-  stream_icon: "https://img.example.com/starmaa.png",
-  epg_channel_id: "star-maa",
+  type: "live" as const,
+  categoryId: "10",
+  icon: "https://img.example.com/starmaa.png",
   added: "1700000000",
-  is_adult: "0",
-  category_id: "10",
-  category_ids: [10],
-  custom_sid: "",
-  tv_archive: 0,
-  direct_source: "",
-  tv_archive_duration: 0,
+  isAdult: false,
 };
 
 // ── helpers ───────────────────────────────────────────────────────────────────

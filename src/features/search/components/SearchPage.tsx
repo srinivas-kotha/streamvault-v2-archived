@@ -253,9 +253,9 @@ export function SearchPage() {
       ),
     );
     return {
-      live: data.live.filter((s) => liveCatIds.has(s.category_id)),
-      vod: data.vod.filter((m) => vodCatIds.has(m.category_id)),
-      series: data.series.filter((s) => seriesCatIds.has(s.category_id)),
+      live: data.live.filter((s) => liveCatIds.has(s.categoryId)),
+      vod: data.vod.filter((m) => vodCatIds.has(m.categoryId)),
+      series: data.series.filter((s) => seriesCatIds.has(s.categoryId)),
     };
   }, [data, activeLang, liveCategories, vodCategories, seriesCategories]);
 
@@ -281,24 +281,24 @@ export function SearchPage() {
 
   const handleLiveClick = useCallback(
     (stream: import("@shared/types/api").XtreamLiveStream) => {
-      playStream(String(stream.stream_id), "live", stream.name);
-      navigate({ to: "/live", search: { play: String(stream.stream_id) } });
+      playStream(stream.id, "live", stream.name);
+      navigate({ to: "/live", search: { play: stream.id } });
     },
     [playStream, navigate],
   );
 
   const handleVodClick = useCallback(
-    (vodId: number) => {
-      navigate({ to: "/vod/$vodId", params: { vodId: String(vodId) } });
+    (vodId: string) => {
+      navigate({ to: "/vod/$vodId", params: { vodId } });
     },
     [navigate],
   );
 
   const handleSeriesClick = useCallback(
-    (seriesId: number) => {
+    (seriesId: string) => {
       navigate({
         to: "/series/$seriesId",
-        params: { seriesId: String(seriesId) },
+        params: { seriesId },
       });
     },
     [navigate],

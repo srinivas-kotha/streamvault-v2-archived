@@ -1,9 +1,9 @@
-import { memo } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { PosterCard } from '@/design-system/cards/PosterCard';
-import { EmptyState } from '@shared/components/EmptyState';
-import { VirtualGrid } from '@shared/components/VirtualGrid';
-import type { XtreamVODStream } from '@shared/types/api';
+import { memo } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { PosterCard } from "@/design-system/cards/PosterCard";
+import { EmptyState } from "@shared/components/EmptyState";
+import { VirtualGrid } from "@shared/components/VirtualGrid";
+import type { XtreamVODStream } from "@shared/types/api";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -18,7 +18,10 @@ export interface MovieGridProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export const MovieGrid = memo(function MovieGrid({ movies, onFavoriteToggle }: MovieGridProps) {
+export const MovieGrid = memo(function MovieGrid({
+  movies,
+  onFavoriteToggle,
+}: MovieGridProps) {
   const navigate = useNavigate();
 
   if (movies.length === 0) {
@@ -39,17 +42,25 @@ export const MovieGrid = memo(function MovieGrid({ movies, onFavoriteToggle }: M
         return (
           <PosterCard
             title={movie.name}
-            imageUrl={movie.stream_icon}
-            rating={movie.rating_5based > 0 ? movie.rating_5based.toFixed(1) : undefined}
+            imageUrl={movie.icon || ""}
+            rating={
+              movie.rating
+                ? parseFloat(movie.rating) > 0
+                  ? parseFloat(movie.rating).toFixed(1)
+                  : undefined
+                : undefined
+            }
             year={year}
             onClick={() =>
               navigate({
-                to: '/vod/$vodId',
-                params: { vodId: String(movie.stream_id) },
+                to: "/vod/$vodId",
+                params: { vodId: movie.id },
               })
             }
-            onFavoriteToggle={onFavoriteToggle ? () => onFavoriteToggle(movie) : undefined}
-            focusKey={`movie-grid-${movie.stream_id}`}
+            onFavoriteToggle={
+              onFavoriteToggle ? () => onFavoriteToggle(movie) : undefined
+            }
+            focusKey={`movie-grid-${movie.id}`}
           />
         );
       }}

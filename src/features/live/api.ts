@@ -32,21 +32,21 @@ export function useLiveStreams(categoryId: string) {
   });
 }
 
-export function useEPG(streamId: number) {
+export function useEPG(streamId: string) {
   return useQuery({
     queryKey: ["live", "epg", streamId],
     queryFn: () => api<XtreamEPGItem[]>(`/live/epg/${streamId}`),
-    enabled: streamId > 0,
+    enabled: !!streamId,
     staleTime: STALE_TIMES.epg,
     refetchInterval: 300000, // 5 minutes
   });
 }
 
-export function useBulkEPG(streamIds: number[]) {
+export function useBulkEPG(streamIds: string[]) {
   return useQuery({
     queryKey: ["live", "epg", "bulk", streamIds],
     queryFn: () =>
-      api<Record<number, XtreamEPGItem[]>>("/live/epg/bulk", {
+      api<Record<string, XtreamEPGItem[]>>("/live/epg/bulk", {
         method: "POST",
         body: JSON.stringify({ stream_ids: streamIds }),
       }),
