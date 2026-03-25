@@ -1,29 +1,34 @@
-import { useCallback, memo } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { useSpatialFocusable } from '@shared/hooks/useSpatialNav';
-import { useEPG } from '../api';
-import type { XtreamLiveStream } from '@shared/types/api';
-import { Badge } from '@shared/components/Badge';
-import { usePlayerStore } from '@lib/store';
-import { upgradeProtocol } from '@shared/components/LazyImage';
+import { useCallback, memo } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useSpatialFocusable } from "@shared/hooks/useSpatialNav";
+import { useEPG } from "../api";
+import type { XtreamLiveStream } from "@shared/types/api";
+import { Badge } from "@shared/components/Badge";
+import { usePlayerStore } from "@lib/store";
+import { upgradeProtocol } from "@shared/components/LazyImage";
+import { LiveIndicator } from "./LiveIndicator";
 
 interface ChannelCardProps {
   channel: XtreamLiveStream;
 }
 
-export const ChannelCard = memo(function ChannelCard({ channel }: ChannelCardProps) {
+export const ChannelCard = memo(function ChannelCard({
+  channel,
+}: ChannelCardProps) {
   const navigate = useNavigate();
   const playStream = usePlayerStore((s) => s.playStream);
   const { data: epg } = useEPG(channel.stream_id);
 
   const nowPlaying = epg?.find((item) => {
     const now = Date.now() / 1000;
-    return Number(item.start_timestamp) <= now && Number(item.stop_timestamp) >= now;
+    return (
+      Number(item.start_timestamp) <= now && Number(item.stop_timestamp) >= now
+    );
   });
 
   const handlePlay = useCallback(() => {
-    playStream(String(channel.stream_id), 'live', channel.name);
-    navigate({ to: '/live', search: { play: String(channel.stream_id) } });
+    playStream(String(channel.stream_id), "live", channel.name);
+    navigate({ to: "/live", search: { play: String(channel.stream_id) } });
   }, [channel, playStream, navigate]);
 
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
@@ -38,8 +43,8 @@ export const ChannelCard = memo(function ChannelCard({ channel }: ChannelCardPro
       onClick={handlePlay}
       className={`group cursor-pointer rounded-lg overflow-hidden bg-surface-raised border transition-[transform,border-color,box-shadow] duration-200 ${
         showFocusRing
-          ? 'border-teal scale-[1.05] z-10 ring-2 ring-teal/60 ring-offset-2 ring-offset-obsidian shadow-[0_0_24px_rgba(45,212,191,0.3)]'
-          : 'border-border-subtle hover:border-teal/30 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,212,191,0.15)]'
+          ? "border-teal scale-[1.05] z-10 ring-2 ring-teal/60 ring-offset-2 ring-offset-obsidian shadow-[0_0_24px_rgba(45,212,191,0.3)]"
+          : "border-border-subtle hover:border-teal/30 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,212,191,0.15)]"
       }`}
     >
       {/* Icon */}
@@ -51,7 +56,7 @@ export const ChannelCard = memo(function ChannelCard({ channel }: ChannelCardPro
             loading="lazy"
             className="w-full h-full object-contain p-3"
             onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
+              (e.target as HTMLImageElement).style.display = "none";
             }}
           />
         ) : null}
@@ -61,9 +66,9 @@ export const ChannelCard = memo(function ChannelCard({ channel }: ChannelCardPro
           </span>
         </div>
 
-        {/* Live badge */}
+        {/* Live indicator */}
         <div className="absolute top-2 left-2">
-          <Badge variant="error">LIVE</Badge>
+          <LiveIndicator size="sm" />
         </div>
 
         {/* Archive badge */}
@@ -76,9 +81,13 @@ export const ChannelCard = memo(function ChannelCard({ channel }: ChannelCardPro
 
       {/* Info */}
       <div className="p-2.5">
-        <h3 className="text-xs font-medium text-text-primary truncate">{channel.name}</h3>
+        <h3 className="text-xs font-medium text-text-primary truncate">
+          {channel.name}
+        </h3>
         {nowPlaying && (
-          <p className="text-[10px] text-teal truncate mt-0.5">{nowPlaying.title}</p>
+          <p className="text-[10px] text-teal truncate mt-0.5">
+            {nowPlaying.title}
+          </p>
         )}
       </div>
     </div>
