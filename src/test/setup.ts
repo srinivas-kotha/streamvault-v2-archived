@@ -2,8 +2,10 @@
  * Vitest setup file — polyfills missing browser APIs in jsdom.
  */
 
+import "@testing-library/jest-dom";
+
 // jsdom does not implement PointerEvent — polyfill it as a subclass of MouseEvent
-if (typeof globalThis.PointerEvent === 'undefined') {
+if (typeof globalThis.PointerEvent === "undefined") {
   // @ts-expect-error -- intentional polyfill for test environment
   globalThis.PointerEvent = class PointerEvent extends MouseEvent {
     readonly pointerId: number;
@@ -27,7 +29,7 @@ if (typeof globalThis.PointerEvent === 'undefined') {
       this.tiltX = params.tiltX ?? 0;
       this.tiltY = params.tiltY ?? 0;
       this.twist = params.twist ?? 0;
-      this.pointerType = params.pointerType ?? '';
+      this.pointerType = params.pointerType ?? "";
       this.isPrimary = params.isPrimary ?? false;
     }
   };

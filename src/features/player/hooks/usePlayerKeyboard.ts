@@ -1,251 +1,236 @@
-import { useEffect, useRef } from 'react';
-import type { VideoPlayerHandle } from '../components/VideoPlayer';
-import { isTVMode } from '@shared/utils/isTVMode';
+/**
+ * Sprint 4 — Issue #115
+ * usePlayerKeyboard v2: store-based keyboard handler.
+ * Integrates with playerStore state machine (no playerRef needed for core actions).
+ * Back button handled BEFORE video checks (AC-08).
+ */
+
+import { useEffect, useRef } from "react";
+import { usePlayerStore } from "@lib/stores/playerStore";
 
 interface SeekHoldState {
-  key: 'ArrowLeft' | 'ArrowRight';
+  key: "ArrowLeft" | "ArrowRight";
   startTime: number;
-  accumulatedSeek: number;
 }
 
-/** Returns the seek step (in seconds) based on how long the key has been held */
-function getSeekStep(holdDurationMs: number): { step: number; speed: number } {
-  if (holdDurationMs >= 4000) return { step: 120, speed: 8 };
-  if (holdDurationMs >= 2000) return { step: 60, speed: 4 };
-  if (holdDurationMs >= 500) return { step: 30, speed: 2 };
-  return { step: 10, speed: 1 };
+function getSeekStep(holdDurationMs: number): number {
+  if (holdDurationMs >= 4000) return 120;
+  if (holdDurationMs >= 2000) return 60;
+  if (holdDurationMs >= 500) return 30;
+  return 10;
 }
 
-interface UsePlayerKeyboardOptions {
-  playerRef: React.RefObject<VideoPlayerHandle | null>;
-  isLive: boolean;
-  onNext?: () => void;
-  onPrev?: () => void;
-  onMuteToggle: () => void;
-  onVolumeUp: () => void;
-  onVolumeDown: () => void;
-  onClose?: () => void;
-  onOSD?: (action: { type: string; value?: number; speed?: number; timestamp: number }) => void;
+export interface UsePlayerKeyboardOptions {
+  /** Override TV mode detection (for testing) */
+  isTVMode?: boolean;
+  /** Channel up callback (live TV, debounced 300ms) */
+  onChannelUp?: () => void;
+  /** Channel down callback (live TV, debounced 300ms) */
+  onChannelDown?: () => void;
 }
 
-export function usePlayerKeyboard({
-  playerRef,
-  isLive,
-  onNext,
-  onPrev,
-  onMuteToggle,
-  onVolumeUp,
-  onVolumeDown,
-  onClose,
-  onOSD,
-}: UsePlayerKeyboardOptions) {
+export function usePlayerKeyboard(options: UsePlayerKeyboardOptions = {}) {
+  const { isTVMode = false, onChannelUp, onChannelDown } = options;
+
   const holdStateRef = useRef<SeekHoldState | null>(null);
-  const seekDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const holdClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  /** Debounced seek — prevents rapid D-pad presses from causing stutter on Fire TV */
-  const debouncedSeek = (time: number) => {
-    if (seekDebounceRef.current) clearTimeout(seekDebounceRef.current);
-    seekDebounceRef.current = setTimeout(() => {
-      playerRef.current?.seek(time);
-    }, 80);
-  };
+  const holdClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const channelDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
 
-      // Back/close handling BEFORE video check — back button must work even if video is null
+      // ── Back/close — ALWAYS FIRST, BEFORE any video check (AC-08) ─────────
       const isBackKey =
         e.keyCode === 4 || // Fire TV back
         e.keyCode === 10009 || // Samsung Tizen back
-        e.keyCode === 461 || // LG WebOS back
-        e.key === 'Backspace' ||
-        e.key === 'Escape' ||
-        e.key === 'GoBack';
+        e.keyCode === 461 || // LG webOS back
+        e.key === "Backspace" ||
+        e.key === "Escape" ||
+        e.key === "GoBack";
 
       if (isBackKey) {
         e.preventDefault();
         e.stopPropagation();
+        // In non-TV mode, exit fullscreen first if open
         if (!isTVMode && document.fullscreenElement) {
           document.exitFullscreen();
-        } else if (onClose) {
-          onClose();
+        } else {
+          usePlayerStore.getState().stopPlayback();
         }
         return;
       }
 
-      const video = playerRef.current?.getVideo();
-      if (!video) return;
+      const state = usePlayerStore.getState();
 
-      // Handle Enter (Play/Pause) directly if navigating generic UI
-      if (e.key === 'Enter') {
+      // Only handle keys when player is active
+      if (state.status === "idle" || !state.currentStreamId) return;
+
+      const isLive = state.streamType === "live";
+
+      // ── Enter / Play-Pause ────────────────────────────────────────────────
+      if (e.key === "Enter") {
         const active = document.activeElement;
         const isGenericFocus =
-          !active ||
-          active === document.body ||
-          active === video ||
-          active.tagName === 'VIDEO';
+          !active || active === document.body || active.tagName === "VIDEO";
         if (isGenericFocus) {
           e.preventDefault();
           e.stopPropagation();
-          const wasPaused = video.paused;
-          if (wasPaused) playerRef.current?.play();
-          else playerRef.current?.pause();
-          onOSD?.({ type: wasPaused ? 'play' : 'pause', timestamp: Date.now() });
+          const current = state.status;
+          if (current === "playing") {
+            usePlayerStore.getState().setStatus("paused");
+          } else if (current === "paused") {
+            usePlayerStore.getState().setStatus("playing");
+          }
           return;
         }
       }
 
-      // Number keys 0-9: seek to percentage of duration
-      if (!isLive && video.duration > 0 && e.key >= '0' && e.key <= '9' && !e.repeat) {
-        e.preventDefault();
-        e.stopPropagation();
-        const pct = parseInt(e.key, 10) / 10; // 0 = 0%, 5 = 50%, 9 = 90%
-        const targetTime = pct * video.duration;
-        playerRef.current?.seek(targetTime);
-        onOSD?.({ type: 'seek-percent', value: pct * 100, timestamp: Date.now() });
-        return;
-      }
-
-      // Arrow keys: seek ±10s (LEFT/RIGHT) and volume ±0.1 (UP/DOWN)
-      const isArrowKey = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key);
+      // ── Arrow keys ────────────────────────────────────────────────────────
+      const isArrowKey = [
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+      ].includes(e.key);
       if (isArrowKey) {
-        // In TV mode, ALWAYS intercept arrows for seek/volume — even if a control button has LRUD focus.
-        // On desktop, only intercept when no specific control is focused (let LRUD handle button navigation).
         if (!isTVMode) {
           const active = document.activeElement;
           const isGenericFocus =
-            !active ||
-            active === document.body ||
-            active === video ||
-            active.tagName === 'VIDEO';
+            !active || active === document.body || active.tagName === "VIDEO";
           if (!isGenericFocus) return;
         }
 
         e.stopPropagation();
         e.preventDefault();
 
-        // Handle horizontal arrows with hold-to-seek acceleration
-        if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !isLive) {
-          const direction = e.key === 'ArrowRight' ? 1 : -1;
+        // Live TV: Arrow Up/Down = channel switch (debounced 300ms)
+        if (isLive && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+          if (channelDebounceRef.current)
+            clearTimeout(channelDebounceRef.current);
+          const cb = e.key === "ArrowUp" ? onChannelUp : onChannelDown;
+          if (cb) {
+            channelDebounceRef.current = setTimeout(cb, 300);
+          }
+          return;
+        }
 
-          // Cancel any pending hold-clear (TV remotes fire rapid keydown/keyup pairs)
+        // VOD: Arrow Left/Right = seek with hold acceleration
+        if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !isLive) {
+          const direction = e.key === "ArrowRight" ? 1 : -1;
+
+          // Cancel hold-clear (TV remotes fire rapid keydown/keyup pairs)
           if (holdClearTimeoutRef.current) {
             clearTimeout(holdClearTimeoutRef.current);
             holdClearTimeoutRef.current = null;
           }
 
-          // Detect continued hold: e.repeat (keyboard) OR existing holdState for same key
-          // within 300ms window (TV remote rapid keydown/keyup cycles)
-          const isHeld = e.repeat || (holdStateRef.current?.key === e.key);
+          const isHeld = e.repeat || holdStateRef.current?.key === e.key;
+          const currentState = usePlayerStore.getState();
 
           if (!isHeld) {
-            // First press — seek ±10s and start tracking hold
-            holdStateRef.current = {
-              key: e.key,
-              startTime: Date.now(),
-              accumulatedSeek: 10 * direction,
-            };
-            const newTime = video.currentTime + 10 * direction;
-            debouncedSeek(Math.max(0, Math.min(video.duration, newTime)));
-            onOSD?.({
-              type: direction > 0 ? 'seek-forward' : 'seek-back',
-              timestamp: Date.now(),
-            });
+            holdStateRef.current = { key: e.key, startTime: Date.now() };
+            const newTime = Math.max(
+              0,
+              Math.min(
+                currentState.duration,
+                currentState.currentTime + 10 * direction,
+              ),
+            );
+            usePlayerStore.setState({ currentTime: newTime });
           } else {
-            // Repeat event OR continued TV remote hold — accelerated seek
             const hold = holdStateRef.current;
             if (hold && hold.key === e.key) {
               const holdDuration = Date.now() - hold.startTime;
-              const { step, speed } = getSeekStep(holdDuration);
-              const seekAmount = step * direction;
-              hold.accumulatedSeek += seekAmount;
-
-              const newTime = video.currentTime + seekAmount;
-              debouncedSeek(Math.max(0, Math.min(video.duration, newTime)));
-
-              if (speed > 1) {
-                onOSD?.({
-                  type: direction > 0 ? 'fast-forward' : 'fast-rewind',
-                  speed,
-                  value: Math.abs(hold.accumulatedSeek),
-                  timestamp: Date.now(),
-                });
-              } else {
-                onOSD?.({
-                  type: direction > 0 ? 'seek-forward' : 'seek-back',
-                  timestamp: Date.now(),
-                });
-              }
+              const step = getSeekStep(holdDuration);
+              const newTime = Math.max(
+                0,
+                Math.min(
+                  currentState.duration,
+                  currentState.currentTime + step * direction,
+                ),
+              );
+              usePlayerStore.setState({ currentTime: newTime });
             }
           }
           return;
         }
 
-        switch (e.key) {
-          case 'ArrowUp':
-            onVolumeUp();
-            onOSD?.({ type: 'volume', timestamp: Date.now() });
-            break;
-          case 'ArrowDown':
-            onVolumeDown();
-            onOSD?.({ type: 'volume', timestamp: Date.now() });
-            break;
+        // Non-live Arrow Up/Down = volume
+        if (e.key === "ArrowUp") {
+          const current = usePlayerStore.getState();
+          usePlayerStore
+            .getState()
+            .setVolume(Math.min(1, current.volume + 0.1));
+        } else if (e.key === "ArrowDown") {
+          const current = usePlayerStore.getState();
+          usePlayerStore
+            .getState()
+            .setVolume(Math.max(0, current.volume - 0.1));
         }
         return;
       }
 
+      // ── Other keys ────────────────────────────────────────────────────────
+
       switch (e.key) {
-        case ' ':
-        case 'k': {
+        case " ":
+        case "k": {
           e.preventDefault();
-          const wasPaused = video.paused;
-          if (wasPaused) playerRef.current?.play();
-          else playerRef.current?.pause();
-          onOSD?.({ type: wasPaused ? 'play' : 'pause', timestamp: Date.now() });
+          const current = usePlayerStore.getState().status;
+          if (current === "playing") {
+            usePlayerStore.getState().setStatus("paused");
+          } else if (current === "paused") {
+            usePlayerStore.getState().setStatus("playing");
+          }
           break;
         }
-        case 'f':
-          e.preventDefault();
-          playerRef.current?.toggleFullscreen();
+        case "f":
+          if (!isTVMode) {
+            e.preventDefault();
+            // Toggle fullscreen on container
+            if (document.fullscreenElement) {
+              document.exitFullscreen()?.catch(() => {});
+            } else {
+              document.documentElement.requestFullscreen()?.catch(() => {});
+            }
+          }
           break;
-        case 'm': {
+        case "m": {
           e.preventDefault();
-          const wasMuted = video.muted;
-          onMuteToggle();
-          onOSD?.({ type: wasMuted ? 'unmute' : 'mute', timestamp: Date.now() });
+          const current = usePlayerStore.getState();
+          current.setMuted(!current.isMuted);
           break;
         }
-        case 'n':
-          if (onNext) { e.preventDefault(); onNext(); }
-          break;
-        case 'p':
-          if (onPrev) { e.preventDefault(); onPrev(); }
-          break;
       }
     }
 
     function handleKeyUp(e: KeyboardEvent) {
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        // TV remotes fire rapid keydown/keyup pairs instead of e.repeat.
-        // Delay clearing hold state so the next keydown within 300ms
-        // is treated as a continued hold (enables acceleration OSD).
-        if (holdClearTimeoutRef.current) clearTimeout(holdClearTimeoutRef.current);
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        // TV remotes: delay clearing hold state by 300ms
+        if (holdClearTimeoutRef.current)
+          clearTimeout(holdClearTimeoutRef.current);
         holdClearTimeoutRef.current = setTimeout(() => {
           holdStateRef.current = null;
         }, 300);
       }
     }
 
-    // We use capture phase so we can stopPropagation before LRUD gets it
-    window.addEventListener('keydown', handleKeyDown, { capture: true });
-    window.addEventListener('keyup', handleKeyUp, { capture: true });
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
     return () => {
-      window.removeEventListener('keydown', handleKeyDown, { capture: true });
-      window.removeEventListener('keyup', handleKeyUp, { capture: true });
-      if (seekDebounceRef.current) clearTimeout(seekDebounceRef.current);
-      if (holdClearTimeoutRef.current) clearTimeout(holdClearTimeoutRef.current);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      if (holdClearTimeoutRef.current)
+        clearTimeout(holdClearTimeoutRef.current);
+      if (channelDebounceRef.current) clearTimeout(channelDebounceRef.current);
     };
-  }, [playerRef, isLive, onNext, onPrev, onMuteToggle, onVolumeUp, onVolumeDown, onClose, onOSD]);
+  }, [isTVMode, onChannelUp, onChannelDown]);
 }
