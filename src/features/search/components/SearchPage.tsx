@@ -108,7 +108,6 @@ function FocusableSearchInput({
         <input
           ref={inputRef}
           type="text"
-          role="searchbox"
           aria-label="Search live TV, movies, series"
           placeholder="Search live TV, movies, series..."
           value={query}

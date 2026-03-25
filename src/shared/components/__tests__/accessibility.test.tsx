@@ -141,8 +141,8 @@ describe("TVControls toolbar ARIA", () => {
     expect(src).toContain('aria-label="Player controls"');
   });
 
-  it('progress bar has role="slider"', () => {
-    expect(src).toContain('role="slider"');
+  it('progress bar has role="progressbar"', () => {
+    expect(src).toContain('role="progressbar"');
   });
 });
 
@@ -150,8 +150,8 @@ describe("TVControls toolbar ARIA", () => {
 describe("MobileControls progress bar ARIA", () => {
   const src = readSrc("features/player/components/controls/MobileControls.tsx");
 
-  it('progress bar has role="slider"', () => {
-    expect(src).toContain('role="slider"');
+  it('progress bar has role="progressbar"', () => {
+    expect(src).toContain('role="progressbar"');
   });
 
   it('progress bar has aria-label="Video progress"', () => {
@@ -188,8 +188,8 @@ describe("SearchPage search landmark", () => {
     expect(src).toContain('role="search"');
   });
 
-  it('input has role="searchbox"', () => {
-    expect(src).toContain('role="searchbox"');
+  it('input does not have redundant role="searchbox" (inside role="search" container)', () => {
+    expect(src).not.toContain('role="searchbox"');
   });
 });
 

@@ -6,6 +6,7 @@
  * All interactive elements are D-pad navigable via norigin spatial navigation.
  */
 
+import { useRef } from "react";
 import {
   useSettingsStore,
   type DefaultQuality,
@@ -66,16 +67,18 @@ function SettingsRow({
 
 function FocusableSelect<T extends string>({
   focusKey,
+  label,
   value,
   options,
   onChange,
 }: {
   focusKey: string;
+  label: string;
   value: T;
   options: { value: T; label: string }[];
   onChange: (v: T) => void;
 }) {
-  const selectRef = { current: null as HTMLSelectElement | null };
+  const selectRef = useRef<HTMLSelectElement | null>(null);
   const { ref, focused, focusProps } = useSpatialFocusable({
     focusKey,
     onEnterPress: () => selectRef.current?.focus(),
@@ -84,9 +87,7 @@ function FocusableSelect<T extends string>({
   return (
     <div ref={ref} {...focusProps}>
       <select
-        ref={(el) => {
-          selectRef.current = el;
-        }}
+        ref={selectRef}
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
         className={[
@@ -98,7 +99,7 @@ function FocusableSelect<T extends string>({
             ? "border-accent-teal ring-2 ring-accent-teal/50"
             : "border-white/10 hover-capable:border-white/20",
         ].join(" ")}
-        aria-label={focusKey}
+        aria-label={label}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value} className="bg-bg-secondary">
@@ -162,16 +163,18 @@ function FocusableToggle({
 
 function FocusableTextInput({
   focusKey,
+  label,
   value,
   onChange,
   placeholder,
 }: {
   focusKey: string;
+  label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
 }) {
-  const inputRef = { current: null as HTMLInputElement | null };
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const { ref, focused, focusProps } = useSpatialFocusable({
     focusKey,
     onEnterPress: () => inputRef.current?.focus(),
@@ -180,10 +183,9 @@ function FocusableTextInput({
   return (
     <div ref={ref} {...focusProps}>
       <input
-        ref={(el) => {
-          inputRef.current = el;
-        }}
+        ref={inputRef}
         type="text"
+        aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -281,6 +283,7 @@ export function SettingsPage() {
           >
             <FocusableTextInput
               focusKey="settings-server-url"
+              label="Custom server URL"
               value={serverUrl}
               onChange={setServerUrl}
               placeholder="http://192.168.1.x:3001"
@@ -296,6 +299,7 @@ export function SettingsPage() {
           >
             <FocusableSelect
               focusKey="settings-quality-select"
+              label="Default quality"
               value={defaultQuality}
               options={QUALITY_OPTIONS}
               onChange={setDefaultQuality}
@@ -308,6 +312,7 @@ export function SettingsPage() {
           >
             <FocusableTextInput
               focusKey="settings-subtitle-lang"
+              label="Subtitle language"
               value={defaultSubtitleLang}
               onChange={setDefaultSubtitleLang}
               placeholder="en"

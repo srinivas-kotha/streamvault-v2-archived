@@ -182,7 +182,7 @@ describe("SettingsPage — Player Preferences section", () => {
   it("renders the quality select dropdown", () => {
     renderSettingsPage();
     const select = screen.getByRole("combobox", {
-      name: /settings-quality-select/i,
+      name: /default quality/i,
     });
     expect(select).toBeInTheDocument();
   });
@@ -190,7 +190,7 @@ describe("SettingsPage — Player Preferences section", () => {
   it("shows the current default quality", () => {
     renderSettingsPage();
     const select = screen.getByRole("combobox", {
-      name: /settings-quality-select/i,
+      name: /default quality/i,
     }) as HTMLSelectElement;
     expect(select.value).toBe("auto");
   });
@@ -199,7 +199,7 @@ describe("SettingsPage — Player Preferences section", () => {
     useSettingsStore.setState({ defaultQuality: "high" });
     renderSettingsPage();
     const select = screen.getByRole("combobox", {
-      name: /settings-quality-select/i,
+      name: /default quality/i,
     }) as HTMLSelectElement;
     expect(select.value).toBe("high");
   });
@@ -207,7 +207,7 @@ describe("SettingsPage — Player Preferences section", () => {
   it("updates defaultQuality when select changes", () => {
     renderSettingsPage();
     const select = screen.getByRole("combobox", {
-      name: /settings-quality-select/i,
+      name: /default quality/i,
     });
     fireEvent.change(select, { target: { value: "medium" } });
     expect(useSettingsStore.getState().defaultQuality).toBe("medium");
@@ -216,7 +216,7 @@ describe("SettingsPage — Player Preferences section", () => {
   it("renders all quality options", () => {
     renderSettingsPage();
     const select = screen.getByRole("combobox", {
-      name: /settings-quality-select/i,
+      name: /default quality/i,
     });
     expect(select).toContainElement(
       screen.getByRole("option", { name: "Auto" }),

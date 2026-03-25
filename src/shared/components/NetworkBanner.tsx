@@ -44,7 +44,7 @@ export function NetworkBanner() {
         aria-atomic="true"
         data-testid="network-banner-offline"
         className={cn(
-          "fixed top-0 inset-x-0 z-[var(--z-toast)]",
+          "fixed top-0 inset-x-0 z-[60]",
           "flex items-center justify-center gap-2",
           "px-4 py-2",
           "bg-warning/15 border-b border-warning/30 text-warning",

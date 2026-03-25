@@ -111,7 +111,7 @@ export function TVControls() {
               <span>{formatDuration(Math.floor(duration))}</span>
             </div>
             <div
-              role="slider"
+              role="progressbar"
               aria-label="Video progress"
               aria-valuemin={0}
               aria-valuemax={100}
