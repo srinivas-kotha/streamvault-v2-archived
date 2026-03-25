@@ -56,7 +56,7 @@ export function TopNav() {
       <FocusContext.Provider value={topNavFocusKey}>
         <header
           ref={topNavRef}
-          className="fixed top-0 left-0 right-0 z-50 bg-obsidian/95 backdrop-blur-sm"
+          className="fixed top-0 left-0 right-0 z-50 bg-obsidian/95"
         >
           <nav
             aria-label="Main navigation"
@@ -86,7 +86,7 @@ export function TopNav() {
         ref={topNavRef}
         className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color] duration-300 ${
           scrolled
-            ? "bg-obsidian/90 backdrop-blur-xl border-b border-border-subtle shadow-lg"
+            ? `${isTVMode ? "bg-obsidian/95" : "bg-obsidian/90 backdrop-blur-xl"} border-b border-border-subtle shadow-lg`
             : "bg-gradient-to-b from-obsidian/80 to-transparent"
         }`}
       >

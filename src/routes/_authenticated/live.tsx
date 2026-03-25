@@ -1,13 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { LivePage } from '@features/live/components/LivePage';
+import { createFileRoute } from "@tanstack/react-router";
 
 interface LiveSearch {
   play?: string;
 }
 
-export const Route = createFileRoute('/_authenticated/live')({
-  component: LivePage,
+export const Route = createFileRoute("/_authenticated/live")({
   validateSearch: (search: Record<string, unknown>): LiveSearch => ({
-    play: typeof search.play === 'string' ? search.play : undefined,
+    play: typeof search.play === "string" ? search.play : undefined,
   }),
 });

@@ -1,6 +1,3 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { SeriesPage } from '@features/series/components/SeriesPage';
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/_authenticated/series/')({
-  component: SeriesPage,
-});
+export const Route = createFileRoute("/_authenticated/series/")({});

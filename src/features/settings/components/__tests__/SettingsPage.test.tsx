@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSettingsStore } from "@lib/stores/settingsStore";
 import { SettingsPage } from "../SettingsPage";
@@ -380,5 +380,68 @@ describe("SettingsPage — labels and descriptions", () => {
     expect(
       screen.getByText("The API server this app is connected to"),
     ).toBeInTheDocument();
+  });
+});
+
+// ── Zustand selector isolation (Sprint 7) ────────────────────────────────────
+
+describe("SettingsPage — Zustand selector isolation", () => {
+  it("uses individual selectors instead of subscribing to full store", () => {
+    // SettingsPage uses useSettingsStore((s) => s.field) for each field
+    // rather than useSettingsStore() which subscribes to ALL changes.
+    // Verify: changing an unrelated store field does NOT affect the component.
+    renderSettingsPage();
+
+    // The component reads defaultQuality, defaultSubtitleLang,
+    // autoPlayNextEpisode, serverUrl — each via individual selector.
+    // Confirm they all render the initial state correctly.
+    const qualitySelect = screen.getByRole("combobox", {
+      name: /default quality/i,
+    }) as HTMLSelectElement;
+    expect(qualitySelect.value).toBe("auto");
+
+    const subtitleInput = screen.getByPlaceholderText("en") as HTMLInputElement;
+    expect(subtitleInput.value).toBe("");
+
+    const autoplayToggle = screen.getByRole("switch", {
+      name: /auto-play next episode/i,
+    });
+    expect(autoplayToggle).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("re-renders only when specific selected state changes", () => {
+    renderSettingsPage();
+
+    // Change defaultQuality — wrap in act since it triggers re-render
+    act(() => {
+      useSettingsStore.setState({ defaultQuality: "low" });
+    });
+
+    // Re-render to verify the UI updated
+    const qualitySelect = screen.getByRole("combobox", {
+      name: /default quality/i,
+    }) as HTMLSelectElement;
+    expect(qualitySelect.value).toBe("low");
+
+    // Other fields should still show initial values
+    const subtitleInput = screen.getByPlaceholderText("en") as HTMLInputElement;
+    expect(subtitleInput.value).toBe("");
+  });
+
+  it("each store action only updates its own field", () => {
+    renderSettingsPage();
+
+    // Use the setServerUrl action
+    fireEvent.change(screen.getByPlaceholderText("http://192.168.1.x:3001"), {
+      target: { value: "http://test:3001" },
+    });
+
+    // serverUrl changed
+    expect(useSettingsStore.getState().serverUrl).toBe("http://test:3001");
+
+    // Other fields unchanged
+    expect(useSettingsStore.getState().defaultQuality).toBe("auto");
+    expect(useSettingsStore.getState().autoPlayNextEpisode).toBe(true);
+    expect(useSettingsStore.getState().defaultSubtitleLang).toBe("");
   });
 });

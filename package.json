@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "lighthouse": "lhci autorun"
   },
   "dependencies": {
     "@noriginmedia/norigin-spatial-navigation": "^2.3.0",
@@ -27,6 +28,7 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
     "@tailwindcss/vite": "^4.0.0",
     "@tanstack/router-devtools": "^1.92.0",
     "@tanstack/router-plugin": "^1.92.0",

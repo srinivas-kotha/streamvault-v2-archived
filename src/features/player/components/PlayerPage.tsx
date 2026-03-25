@@ -280,7 +280,9 @@ export function PlayerPage({
         />
         <PlayerOSD action={osdAction} />
         {streamName && (
-          <div className="absolute top-4 left-4 text-white/80 text-sm font-medium bg-obsidian/50 px-3 py-1 rounded-lg backdrop-blur-sm">
+          <div
+            className={`absolute top-4 left-4 text-white/80 text-sm font-medium px-3 py-1 rounded-lg ${isTVMode ? "bg-obsidian/80" : "bg-obsidian/50 backdrop-blur-sm"}`}
+          >
             {streamName}
           </div>
         )}

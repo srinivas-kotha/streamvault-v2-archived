@@ -1,8 +1,5 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { TopNav } from "@shared/components/TopNav";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useAuthStore } from "@lib/store";
-import { useAuthCheck } from "@features/auth/hooks/useAuth";
-import { useBackNavigation } from "@shared/hooks/useBackNavigation";
 import { autoLogin, checkAuth } from "@features/auth/api";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -25,23 +22,4 @@ export const Route = createFileRoute("/_authenticated")({
       throw redirect({ to: "/login" });
     }
   },
-  component: AuthenticatedLayout,
 });
-
-function AuthenticatedLayout() {
-  useAuthCheck();
-  useBackNavigation();
-
-  return (
-    <div className="min-h-screen bg-obsidian">
-      <TopNav />
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="min-h-screen pt-14 px-6 lg:px-10 overflow-y-auto scrollbar-hide focus:outline-none"
-      >
-        <Outlet />
-      </main>
-    </div>
-  );
-}

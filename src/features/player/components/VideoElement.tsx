@@ -203,6 +203,11 @@ export const VideoElement = forwardRef<VideoElementHandle, VideoElementProps>(
       const startHlsPlayback = (Hls: typeof HlsType) => {
         if (cancelled) return;
         destroyPlayers();
+        // TODO: Consider wiring useDeviceContext hook for HLS config values.
+        // Currently not done because useDeviceContext provides single hlsBackBuffer/hlsMaxBuffer
+        // values per device, but VideoElement needs different values for live vs VOD
+        // (e.g., TV live backBuffer=15 vs TV VOD backBuffer=20). Refactoring useDeviceContext
+        // to accept isLive would allow consolidation.
         const hls = new Hls({
           enableWorker: !isTVMode, // AC-07: false on TV
           capLevelToPlayerSize: true,

@@ -222,16 +222,18 @@ const QUALITY_OPTIONS: { value: DefaultQuality; label: string }[] = [
 // ── SettingsPage ──────────────────────────────────────────────────────────────
 
 export function SettingsPage() {
-  const {
-    defaultQuality,
-    defaultSubtitleLang,
-    autoPlayNextEpisode,
-    serverUrl,
-    setDefaultQuality,
-    setDefaultSubtitleLang,
-    setAutoPlayNextEpisode,
-    setServerUrl,
-  } = useSettingsStore();
+  const defaultQuality = useSettingsStore((s) => s.defaultQuality);
+  const defaultSubtitleLang = useSettingsStore((s) => s.defaultSubtitleLang);
+  const autoPlayNextEpisode = useSettingsStore((s) => s.autoPlayNextEpisode);
+  const serverUrl = useSettingsStore((s) => s.serverUrl);
+  const setDefaultQuality = useSettingsStore((s) => s.setDefaultQuality);
+  const setDefaultSubtitleLang = useSettingsStore(
+    (s) => s.setDefaultSubtitleLang,
+  );
+  const setAutoPlayNextEpisode = useSettingsStore(
+    (s) => s.setAutoPlayNextEpisode,
+  );
+  const setServerUrl = useSettingsStore((s) => s.setServerUrl);
 
   const logoutMutation = useLogout();
 

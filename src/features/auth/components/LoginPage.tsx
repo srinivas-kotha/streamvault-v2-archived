@@ -8,6 +8,7 @@ import {
 import { usePageFocus } from "@shared/hooks/usePageFocus";
 import { useLogin } from "../hooks/useAuth";
 import { useToastStore } from "@lib/toastStore";
+import { isTVMode } from "@shared/utils/isTVMode";
 
 interface LoginForm {
   username: string;
@@ -62,7 +63,7 @@ function FocusableInput({
         aria-describedby={error ? errorId : undefined}
         className={[
           "w-full px-4 py-3 rounded-[var(--radius-lg)] text-text-primary",
-          "bg-bg-primary/60 backdrop-blur-sm border",
+          `${isTVMode ? "bg-bg-primary/90" : "bg-bg-primary/60 backdrop-blur-sm"} border`,
           "placeholder:text-text-tertiary",
           "focus:outline-none focus:ring-2 focus:ring-accent-teal/50 focus:border-accent-teal",
           "transition-[border-color,box-shadow]",
@@ -210,7 +211,7 @@ export function LoginPage() {
       <div className="relative z-10 w-full max-w-md mx-4">
         {/* Card with ambient glow */}
         <div
-          className="bg-bg-secondary/80 backdrop-blur-xl border border-white/10 rounded-[var(--radius-xl)] p-8"
+          className={`${isTVMode ? "bg-bg-secondary/95" : "bg-bg-secondary/80 backdrop-blur-xl"} border border-white/10 rounded-[var(--radius-xl)] p-8`}
           style={{
             boxShadow: `0 0 60px color-mix(in srgb, var(--color-accent-teal) 12%, transparent), 0 24px 64px rgba(0,0,0,0.5)`,
           }}

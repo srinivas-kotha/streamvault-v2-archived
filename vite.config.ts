@@ -44,13 +44,25 @@ export default defineConfig({
     target: ["es2019", "chrome69"],
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom"],
-          "vendor-tanstack": [
-            "@tanstack/react-query",
-            "@tanstack/react-router",
-            "@tanstack/react-virtual",
-          ],
+        // Performance budget: <400KB gzipped for initial page load.
+        // vendor-hls and vendor-mpegts are deferred (dynamic import in VideoElement/VideoPlayer)
+        // and excluded from the initial load budget (~213KB initial vs ~439KB total).
+        manualChunks(id) {
+          if (
+            id.includes("node_modules/react-dom") ||
+            id.includes("node_modules/react/")
+          ) {
+            return "vendor-react";
+          }
+          if (id.includes("node_modules/@tanstack")) {
+            return "vendor-tanstack";
+          }
+          if (id.includes("node_modules/hls.js")) {
+            return "vendor-hls";
+          }
+          if (id.includes("node_modules/mpegts")) {
+            return "vendor-mpegts";
+          }
         },
       },
     },
