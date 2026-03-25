@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+
+// Load .env for E2E credentials
+dotenv.config();
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -7,11 +11,14 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
+  timeout: 60_000,
 
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: "https://streamvault.srinivaskotha.uk",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    video: "retain-on-failure",
+    ignoreHTTPSErrors: true,
   },
 
   projects: [
@@ -27,7 +34,6 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1920, height: 1080 },
-        // Simulate standalone display mode for TV/PWA detection
         contextOptions: {
           colorScheme: "dark",
         },
@@ -41,11 +47,4 @@ export default defineConfig({
       },
     },
   ],
-
-  webServer: {
-    command: "npm run dev",
-    port: 5173,
-    reuseExistingServer: true,
-    timeout: 30_000,
-  },
 });
