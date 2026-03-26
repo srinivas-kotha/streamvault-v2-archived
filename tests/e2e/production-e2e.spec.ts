@@ -729,7 +729,7 @@ test.describe("Responsive Layout", () => {
   test("navigation is accessible", async ({ page }) => {
     // Allow extra time for React hydration before looking for nav
     await page.waitForTimeout(2_000);
-    const nav = page.locator('nav[aria-label="Main navigation"]');
+    const nav = page.locator('nav[aria-label="Main navigation"]').first();
     await nav.waitFor({ timeout: 15_000 });
     await expect(nav).toBeVisible();
   });
@@ -789,7 +789,7 @@ test.describe("Accessibility Basics", () => {
     await safeNavigate(page, "/language/telugu");
 
     await page.waitForTimeout(2_000);
-    const nav = page.locator('nav[aria-label="Main navigation"]');
+    const nav = page.locator('nav[aria-label="Main navigation"]').first();
     await nav.waitFor({ timeout: 15_000 });
     await expect(nav).toBeVisible();
   });

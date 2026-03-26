@@ -17,9 +17,10 @@ export function MobileLayout({ children }: MobileLayoutProps) {
         {children}
       </main>
 
-      {/* Bottom tab navigation placeholder */}
+      {/* Bottom tab navigation — uses distinct label to avoid duplicate
+          "Main navigation" landmark conflict with TopNav rendered inside children */}
       <nav
-        aria-label="Main navigation"
+        aria-label="Tab navigation"
         className="fixed bottom-0 inset-x-0 h-14 bg-surface border-t border-border-subtle flex items-center justify-around z-40"
       >
         <span className="text-text-muted text-xs">Home</span>

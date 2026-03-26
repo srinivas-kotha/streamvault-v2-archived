@@ -12,13 +12,14 @@ interface DesktopLayoutProps {
 export function DesktopLayout({ children }: DesktopLayoutProps) {
   return (
     <div className="min-h-screen bg-obsidian">
-      {/* Top navbar placeholder */}
-      <nav
-        aria-label="Main navigation"
+      {/* Top navbar placeholder — uses "breadcrumb" role to avoid duplicate
+          "Main navigation" landmark conflict with TopNav rendered inside children */}
+      <div
+        role="banner"
         className="h-14 bg-surface border-b border-border-subtle flex items-center px-6"
       >
         <span className="text-text-muted text-sm">StreamVault</span>
-      </nav>
+      </div>
 
       <div className="flex">
         {/* Sidebar placeholder */}

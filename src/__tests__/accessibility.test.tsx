@@ -444,16 +444,18 @@ describe("Accessibility: DesktopLayout", () => {
     expect(results).toHaveNoViolations();
   });
 
-  it("has aria-label on navigation (fix #145)", async () => {
+  it("has banner role on top bar (avoids duplicate nav landmark)", async () => {
     const { DesktopLayout } = await import("@/layouts/DesktopLayout");
     const { container } = renderWithProviders(
       <DesktopLayout>
         <p>Content</p>
       </DesktopLayout>,
     );
+    const banner = container.querySelector('[role="banner"]');
+    expect(banner).toBeTruthy();
+    // DesktopLayout should NOT have its own <nav> — TopNav provides it
     const nav = container.querySelector("nav");
-    expect(nav).toBeTruthy();
-    expect(nav?.getAttribute("aria-label")).toBe("Main navigation");
+    expect(nav).toBeNull();
   });
 
   it("has exactly one main landmark", async () => {
@@ -498,7 +500,7 @@ describe("Accessibility: PlayerControls", () => {
 // ── 11. MobileLayout (Navigation) ─────────────────────────────────────────────
 
 describe("Accessibility: MobileLayout", () => {
-  it("has aria-label on navigation (fix #145)", async () => {
+  it("has aria-label on bottom tab navigation (fix #145)", async () => {
     const { MobileLayout } = await import("@/layouts/MobileLayout");
     const { container } = renderWithProviders(
       <MobileLayout>
@@ -507,7 +509,8 @@ describe("Accessibility: MobileLayout", () => {
     );
     const nav = container.querySelector("nav");
     expect(nav).toBeTruthy();
-    expect(nav?.getAttribute("aria-label")).toBe("Main navigation");
+    // MobileLayout uses "Tab navigation" to avoid duplicate with TopNav's "Main navigation"
+    expect(nav?.getAttribute("aria-label")).toBe("Tab navigation");
   });
 
   it("has exactly one main landmark", async () => {
