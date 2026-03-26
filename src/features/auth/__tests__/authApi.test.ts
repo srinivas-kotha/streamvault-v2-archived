@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockApi = vi.fn();
 vi.mock("@lib/api", () => ({
   api: (...args: unknown[]) => mockApi(...args),
+  markTokenRefreshed: vi.fn(),
 }));
 
 // ── fetch mock for autoLogin (uses raw fetch, not api()) ─────────────────────
