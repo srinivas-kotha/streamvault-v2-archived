@@ -19,6 +19,31 @@ function getCsrfToken(): string | null {
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
 
+// ── Proactive refresh tracking ────────────────────────────────────────────────
+
+/**
+ * Timestamp (ms since epoch) of the last successful token issue or refresh.
+ * Used by useTokenRefresh to schedule proactive refresh before expiry.
+ * 0 means "unknown" — no refresh has been recorded this session.
+ */
+let lastRefreshedAt = 0;
+
+/**
+ * Record that the access token was just issued or refreshed.
+ * Call this after a successful login or proactive refresh.
+ */
+export function markTokenRefreshed(): void {
+  lastRefreshedAt = Date.now();
+}
+
+/**
+ * Returns the timestamp (ms since epoch) of the last known token issue/refresh.
+ * 0 if no refresh has been recorded this session.
+ */
+export function getLastRefreshedAt(): number {
+  return lastRefreshedAt;
+}
+
 async function refreshToken(): Promise<boolean> {
   if (isRefreshing && refreshPromise) return refreshPromise;
   isRefreshing = true;
@@ -32,6 +57,9 @@ async function refreshToken(): Promise<boolean> {
           ...(getCsrfToken() ? { "x-csrf-token": getCsrfToken()! } : {}),
         },
       });
+      if (res.ok) {
+        markTokenRefreshed();
+      }
       return res.ok;
     } catch {
       return false;
@@ -42,6 +70,8 @@ async function refreshToken(): Promise<boolean> {
   })();
   return refreshPromise;
 }
+
+export { refreshToken };
 
 // ── Retry helpers ─────────────────────────────────────────────────────────────
 

@@ -2,6 +2,7 @@ import { createLazyFileRoute, Outlet } from "@tanstack/react-router";
 import { TopNav } from "@shared/components/TopNav";
 import { useAuthCheck } from "@features/auth/hooks/useAuth";
 import { useBackNavigation } from "@shared/hooks/useBackNavigation";
+import { useTokenRefresh } from "@features/auth/hooks/useTokenRefresh";
 
 export const Route = createLazyFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -10,6 +11,7 @@ export const Route = createLazyFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   useAuthCheck();
   useBackNavigation();
+  useTokenRefresh();
 
   return (
     <div className="min-h-screen bg-obsidian">
