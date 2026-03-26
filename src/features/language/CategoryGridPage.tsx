@@ -296,7 +296,12 @@ export function CategoryGridPage() {
                 image={channel.icon || ""}
                 title={channel.name}
                 aspectRatio="square"
-                onClick={() => playStream(channel.id, "live", channel.name)}
+                onClick={() =>
+                  playStream(channel.id, {
+                    streamType: "live",
+                    streamName: channel.name,
+                  })
+                }
               />
             ))}
           </div>

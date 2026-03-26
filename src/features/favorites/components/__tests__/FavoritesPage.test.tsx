@@ -254,12 +254,15 @@ describe("FavoritesPage — type filter tabs", () => {
 });
 
 describe("FavoritesPage — remove favorite", () => {
-  it("clicking remove button calls removeFavorite.mutate with the content id", () => {
+  it("clicking remove button calls removeFavorite.mutate with content id and type", () => {
     renderFavoritesPage();
     const removeButtons = screen.getAllByTestId("remove-favorite-btn");
-    // Click remove on the first card (Star Maa, content_id=201)
+    // Click remove on the first card (Star Maa, content_id=201, content_type=live)
     fireEvent.click(removeButtons[0]!);
-    expect(mockRemoveMutate).toHaveBeenCalledWith("201");
+    expect(mockRemoveMutate).toHaveBeenCalledWith({
+      contentId: "201",
+      content_type: "live",
+    });
   });
 
   it("remove button does not navigate away when clicked", () => {

@@ -14,11 +14,10 @@ export function FavoritesPreview() {
 
   const handleClick = (item: (typeof preview)[0]) => {
     if (item.content_type === "live") {
-      playStream(
-        String(item.content_id),
-        "live",
-        item.content_name ?? "Unknown",
-      );
+      playStream(String(item.content_id), {
+        streamType: "live",
+        streamName: item.content_name ?? "Unknown",
+      });
       navigate({ to: "/player" as string });
     } else if (item.content_type === "vod") {
       navigate({

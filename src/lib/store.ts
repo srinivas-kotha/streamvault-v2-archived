@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -8,16 +8,16 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: localStorage.getItem('sv_auth') === '1',
-  username: localStorage.getItem('sv_user'),
+  isAuthenticated: localStorage.getItem("sv_auth") === "1",
+  username: localStorage.getItem("sv_user"),
   setAuth: (username) => {
-    localStorage.setItem('sv_auth', '1');
-    localStorage.setItem('sv_user', username);
+    localStorage.setItem("sv_auth", "1");
+    localStorage.setItem("sv_user", username);
     set({ isAuthenticated: true, username });
   },
   clearAuth: () => {
-    localStorage.removeItem('sv_auth');
-    localStorage.removeItem('sv_user');
+    localStorage.removeItem("sv_auth");
+    localStorage.removeItem("sv_user");
     set({ isAuthenticated: false, username: null });
   },
 }));
@@ -26,23 +26,37 @@ interface UIState {
   sidebarOpen: boolean;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
-  inputMode: 'mouse' | 'keyboard';
-  setInputMode: (mode: 'mouse' | 'keyboard') => void;
+  inputMode: "mouse" | "keyboard";
+  setInputMode: (mode: "mouse" | "keyboard") => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
   sidebarOpen: true,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
-  inputMode: 'mouse' as const,
+  inputMode: "mouse" as const,
   setInputMode: (mode) => set({ inputMode: mode }),
 }));
 
-export type StreamType = 'live' | 'vod' | 'series';
+export type StreamType = "live" | "vod" | "series";
 
 export interface EpisodeEntry {
   id: string;
   name: string;
+}
+
+export interface SeriesContext {
+  seriesId: string;
+  seasonNumber: number;
+  episodeIndex: number;
+  episodes: EpisodeEntry[];
+}
+
+export interface StreamInfo {
+  streamType: StreamType;
+  streamName: string;
+  startTime?: number;
+  seriesContext?: SeriesContext | null;
 }
 
 interface PlayerState {
@@ -59,8 +73,7 @@ interface PlayerState {
   /** Ordered episode list for next/prev navigation */
   episodeList: EpisodeEntry[];
   // Actions
-  playStream: (id: string, type: StreamType, name: string, startTime?: number) => void;
-  playSeries: (id: string, type: StreamType, name: string, seriesId: string, season: number, epIndex: number, startTime?: number, episodes?: EpisodeEntry[]) => void;
+  playStream: (id: string, info: StreamInfo) => void;
   playNextEpisode: () => void;
   playPrevEpisode: () => void;
   stop: () => void;
@@ -80,33 +93,27 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   seasonNumber: null,
   episodeIndex: null,
   episodeList: [],
-  playStream: (id, type, name, startTime = 0) => {
+  playStream: (id, info) => {
+    const sc = info.seriesContext;
     set({
       currentStreamId: id,
-      currentStreamType: type,
-      currentStreamName: name,
-      startTime,
-      seriesId: null,
-      seasonNumber: null,
-      episodeIndex: null,
-      episodeList: [],
-    });
-  },
-  playSeries: (id, type, name, seriesId, season, epIndex, startTime = 0, episodes = []) => {
-    set({
-      currentStreamId: id,
-      currentStreamType: type,
-      currentStreamName: name,
-      startTime,
-      seriesId,
-      seasonNumber: season,
-      episodeIndex: epIndex,
-      episodeList: episodes,
+      currentStreamType: info.streamType,
+      currentStreamName: info.streamName,
+      startTime: info.startTime ?? 0,
+      seriesId: sc?.seriesId ?? null,
+      seasonNumber: sc?.seasonNumber ?? null,
+      episodeIndex: sc?.episodeIndex ?? null,
+      episodeList: sc?.episodes ?? [],
     });
   },
   playNextEpisode: () => {
     const { episodeList, episodeIndex } = get();
-    if (episodeIndex === null || !episodeList.length || episodeIndex >= episodeList.length - 1) return;
+    if (
+      episodeIndex === null ||
+      !episodeList.length ||
+      episodeIndex >= episodeList.length - 1
+    )
+      return;
     const nextIdx = episodeIndex + 1;
     const next = episodeList[nextIdx];
     if (!next) return;
@@ -119,7 +126,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   },
   playPrevEpisode: () => {
     const { episodeList, episodeIndex } = get();
-    if (episodeIndex === null || !episodeList.length || episodeIndex <= 0) return;
+    if (episodeIndex === null || !episodeList.length || episodeIndex <= 0)
+      return;
     const prevIdx = episodeIndex - 1;
     const prev = episodeList[prevIdx];
     if (!prev) return;
@@ -147,4 +155,5 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 }));
 
 /** Derived selector: true when a stream is loaded in the player */
-export const useIsPlayerActive = () => usePlayerStore((s) => !!s.currentStreamId);
+export const useIsPlayerActive = () =>
+  usePlayerStore((s) => !!s.currentStreamId);

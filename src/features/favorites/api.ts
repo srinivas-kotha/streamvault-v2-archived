@@ -1,15 +1,15 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@lib/api';
-import { STALE_TIMES } from '@lib/queryConfig';
-import { useToastStore } from '@lib/toastStore';
-import type { DbFavorite, FavoriteRequest } from '@shared/types/api';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@lib/api";
+import { STALE_TIMES } from "@lib/queryConfig";
+import { useToastStore } from "@lib/toastStore";
+import type { DbFavorite, FavoriteRequest } from "@shared/types/api";
 
-const FAVORITES_KEY = ['favorites'] as const;
+const FAVORITES_KEY = ["favorites"] as const;
 
 export function useFavorites() {
   return useQuery({
     queryKey: FAVORITES_KEY,
-    queryFn: () => api<DbFavorite[]>('/favorites'),
+    queryFn: () => api<DbFavorite[]>("/favorites"),
     staleTime: STALE_TIMES.favorites,
   });
 }
@@ -24,12 +24,21 @@ export function useAddFavorite() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ contentId, ...body }: FavoriteRequest & { contentId: string }) =>
+    mutationFn: ({
+      contentId,
+      ...body
+    }: FavoriteRequest & { contentId: string }) =>
       api<DbFavorite>(`/favorites/${contentId}`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(body),
       }),
-    onMutate: async ({ contentId, content_type, content_name, content_icon, category_name }) => {
+    onMutate: async ({
+      contentId,
+      content_type,
+      content_name,
+      content_icon,
+      category_name,
+    }) => {
       await queryClient.cancelQueries({ queryKey: FAVORITES_KEY });
       const previous = queryClient.getQueryData<DbFavorite[]>(FAVORITES_KEY);
 
@@ -54,10 +63,10 @@ export function useAddFavorite() {
       if (context?.previous) {
         queryClient.setQueryData(FAVORITES_KEY, context.previous);
       }
-      useToastStore.getState().addToast('Failed to add favorite', 'error');
+      useToastStore.getState().addToast("Failed to add favorite", "error");
     },
     onSuccess: () => {
-      useToastStore.getState().addToast('Added to favorites', 'success');
+      useToastStore.getState().addToast("Added to favorites", "success");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: FAVORITES_KEY });
@@ -69,9 +78,18 @@ export function useRemoveFavorite() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (contentId: string) =>
-      api(`/favorites/${contentId}`, { method: 'DELETE' }),
-    onMutate: async (contentId) => {
+    mutationFn: ({
+      contentId,
+      content_type,
+    }: {
+      contentId: string;
+      content_type: string;
+    }) =>
+      api(`/favorites/${contentId}`, {
+        method: "DELETE",
+        body: JSON.stringify({ content_type }),
+      }),
+    onMutate: async ({ contentId }) => {
       await queryClient.cancelQueries({ queryKey: FAVORITES_KEY });
       const previous = queryClient.getQueryData<DbFavorite[]>(FAVORITES_KEY);
 
@@ -85,10 +103,10 @@ export function useRemoveFavorite() {
       if (context?.previous) {
         queryClient.setQueryData(FAVORITES_KEY, context.previous);
       }
-      useToastStore.getState().addToast('Failed to update favorites', 'error');
+      useToastStore.getState().addToast("Failed to update favorites", "error");
     },
     onSuccess: () => {
-      useToastStore.getState().addToast('Removed from favorites', 'success');
+      useToastStore.getState().addToast("Removed from favorites", "success");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: FAVORITES_KEY });

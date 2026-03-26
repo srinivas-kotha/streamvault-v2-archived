@@ -173,21 +173,24 @@ describe("useRemoveFavorite", () => {
     mockApi.mockResolvedValue(undefined);
   });
 
-  it("calls DELETE /favorites/<contentId>", async () => {
+  it("calls DELETE /favorites/<contentId> with content_type in body", async () => {
     const { useRemoveFavorite } = await import("../api");
     const { result } = renderHook(() => useRemoveFavorite(), {
       wrapper: createWrapper(),
     });
 
     await act(async () => {
-      result.current.mutate("99");
+      result.current.mutate({ contentId: "99", content_type: "vod" });
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(mockApi).toHaveBeenCalledWith(
       "/favorites/99",
-      expect.objectContaining({ method: "DELETE" }),
+      expect.objectContaining({
+        method: "DELETE",
+        body: JSON.stringify({ content_type: "vod" }),
+      }),
     );
   });
 });

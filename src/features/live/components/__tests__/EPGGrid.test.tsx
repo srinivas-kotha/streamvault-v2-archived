@@ -188,7 +188,10 @@ describe("EPGGrid — spatial navigation: D-pad movement", () => {
     const blocks = screen.getAllByTestId("epg-program-block");
     // Click to select channel (simulates Enter press reaching onClick)
     fireEvent.click(blocks[0]);
-    expect(mockPlayStream).toHaveBeenCalledWith("201", "live", "Star Maa");
+    expect(mockPlayStream).toHaveBeenCalledWith("201", {
+      streamType: "live",
+      streamName: "Star Maa",
+    });
     expect(mockNavigate).toHaveBeenCalledWith({
       to: "/live",
       search: { play: "201" },
@@ -256,6 +259,9 @@ describe("EPGGrid — channel name column click", () => {
     // The channel name column has an onClick handler
     const channelNames = screen.getAllByText("Star Maa");
     fireEvent.click(channelNames[0]);
-    expect(mockPlayStream).toHaveBeenCalledWith("201", "live", "Star Maa");
+    expect(mockPlayStream).toHaveBeenCalledWith("201", {
+      streamType: "live",
+      streamName: "Star Maa",
+    });
   });
 });

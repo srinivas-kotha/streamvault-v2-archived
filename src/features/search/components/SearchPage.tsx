@@ -281,7 +281,7 @@ export function SearchPage() {
 
   const handleLiveClick = useCallback(
     (stream: import("@shared/types/api").XtreamLiveStream) => {
-      playStream(stream.id, "live", stream.name);
+      playStream(stream.id, { streamType: "live", streamName: stream.name });
       navigate({ to: "/live", search: { play: stream.id } });
     },
     [playStream, navigate],

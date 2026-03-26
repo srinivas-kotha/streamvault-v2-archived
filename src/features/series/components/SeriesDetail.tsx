@@ -51,7 +51,7 @@ function SeriesFavoriteButton({
 
   function handleToggle() {
     if (isFavorite) {
-      removeFavorite(seriesId);
+      removeFavorite({ contentId: seriesId, content_type: "series" });
     } else {
       addFavorite({
         contentId: seriesId,
@@ -111,7 +111,7 @@ export function SeriesDetail() {
   const goBack = () => router.history.back();
   const { data, isLoading } = useSeriesInfo(seriesId);
   const { data: watchHistory } = useWatchHistory();
-  const playSeries = usePlayerStore((s) => s.playSeries);
+  const playStream = usePlayerStore((s) => s.playStream);
 
   const [activeSeason, setActiveSeason] = useState<number | null>(null);
   const [episodeSort, setEpisodeSort] = useState<EpisodeSortKey>("episode");
@@ -218,18 +218,19 @@ export function SeriesDetail() {
         id: String(e.id),
         name: `${data?.name || "Series"} - S${activeSeason}E${e.episodeNumber} - ${e.title}`,
       }));
-      playSeries(
-        String(ep.id),
-        "series",
-        name,
-        seriesId,
-        activeSeason ?? 1,
-        epIndex,
+      playStream(String(ep.id), {
+        streamType: "series",
+        streamName: name,
         startTime,
-        episodeList,
-      );
+        seriesContext: {
+          seriesId,
+          seasonNumber: activeSeason ?? 1,
+          episodeIndex: epIndex,
+          episodes: episodeList,
+        },
+      });
     },
-    [data?.name, activeSeason, allEpisodes, seriesId, playSeries],
+    [data?.name, activeSeason, allEpisodes, seriesId, playStream],
   );
 
   const handleLoadMore = useCallback(
@@ -394,16 +395,17 @@ export function SeriesDetail() {
                       id: String(e.id),
                       name: `${data.name} - S${activeSeason}E${e.episodeNumber} - ${e.title}`,
                     }));
-                    playSeries(
-                      String(contentId),
-                      "series",
-                      contentName,
-                      seriesId,
-                      activeSeason ?? 1,
-                      epIdx,
-                      progressSeconds,
-                      epList,
-                    );
+                    playStream(String(contentId), {
+                      streamType: "series",
+                      streamName: contentName,
+                      startTime: progressSeconds,
+                      seriesContext: {
+                        seriesId,
+                        seasonNumber: activeSeason ?? 1,
+                        episodeIndex: epIdx,
+                        episodes: epList,
+                      },
+                    });
                   }}
                 />
               )}

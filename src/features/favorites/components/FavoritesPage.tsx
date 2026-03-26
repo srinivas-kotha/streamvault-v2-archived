@@ -101,8 +101,8 @@ export function FavoritesPage() {
     }
   }
 
-  function handleRemove(contentId: number) {
-    removeFavorite.mutate(String(contentId));
+  function handleRemove(contentId: number, content_type: ContentType) {
+    removeFavorite.mutate({ contentId: String(contentId), content_type });
   }
 
   function getAspectRatio(type: ContentType) {
@@ -167,7 +167,9 @@ export function FavoritesPage() {
                   }
                   subtitle={fav.category_name || undefined}
                   isFavorite={true}
-                  onFavoriteToggle={() => handleRemove(fav.content_id)}
+                  onFavoriteToggle={() =>
+                    handleRemove(fav.content_id, fav.content_type)
+                  }
                   onClick={() => handleClick(fav)}
                   aspectRatio={getAspectRatio(fav.content_type)}
                 />
