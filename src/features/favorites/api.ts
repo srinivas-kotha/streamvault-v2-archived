@@ -6,10 +6,21 @@ import type { DbFavorite, FavoriteRequest } from "@shared/types/api";
 
 const FAVORITES_KEY = ["favorites"] as const;
 
+/** Normalize backend "channel" → frontend "live" */
+function normalizeContentType(raw: string): DbFavorite["content_type"] {
+  return raw === "channel" ? "live" : (raw as DbFavorite["content_type"]);
+}
+
 export function useFavorites() {
   return useQuery({
     queryKey: FAVORITES_KEY,
-    queryFn: () => api<DbFavorite[]>("/favorites"),
+    queryFn: async () => {
+      const data = await api<DbFavorite[]>("/favorites");
+      return data.map((f) => ({
+        ...f,
+        content_type: normalizeContentType(f.content_type),
+      }));
+    },
     staleTime: STALE_TIMES.favorites,
   });
 }
