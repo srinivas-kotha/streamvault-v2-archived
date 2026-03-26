@@ -193,7 +193,7 @@ export function LiveTabContent({ language, lang }: LiveTabContentProps) {
   }, [rails, activeCategory, debouncedSearch]);
 
   const handlePlay = (channel: XtreamLiveStream) => {
-    playStream(channel.id, "live", channel.name);
+    playStream(channel.id, { streamType: "live", streamName: channel.name });
   };
 
   return (

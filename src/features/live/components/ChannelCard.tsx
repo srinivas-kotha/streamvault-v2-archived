@@ -33,7 +33,7 @@ export const ChannelCard = memo(function ChannelCard({
   });
 
   const handlePlay = useCallback(() => {
-    playStream(channel.id, "live", channel.name);
+    playStream(channel.id, { streamType: "live", streamName: channel.name });
     navigate({ to: "/live", search: { play: channel.id } });
   }, [channel, playStream, navigate]);
 

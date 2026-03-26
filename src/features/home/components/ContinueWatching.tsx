@@ -31,20 +31,18 @@ export function ContinueWatching() {
 
     if (item.content_type === "live") {
       // Live channels: navigate to live page (no resume)
-      playStream(
-        String(item.content_id),
-        "live",
-        item.content_name ?? "Unknown",
-      );
+      playStream(String(item.content_id), {
+        streamType: "live",
+        streamName: item.content_name ?? "Unknown",
+      });
       navigate({ to: "/live", search: { play: String(item.content_id) } });
     } else {
       // VOD & Series: play directly with resume position — no Xtream API call needed
-      playStream(
-        String(item.content_id),
+      playStream(String(item.content_id), {
         streamType,
-        item.content_name ?? "Unknown",
-        item.progress_seconds,
-      );
+        streamName: item.content_name ?? "Unknown",
+        startTime: item.progress_seconds,
+      });
     }
   };
 

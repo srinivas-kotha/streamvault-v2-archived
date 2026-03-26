@@ -191,11 +191,10 @@ export function HistoryPage() {
 
   function handleItemClick(item: (typeof filteredHistory)[0]) {
     if (item.content_type === "live") {
-      playStream(
-        String(item.content_id),
-        "live",
-        item.content_name || "Channel",
-      );
+      playStream(String(item.content_id), {
+        streamType: "live",
+        streamName: item.content_name || "Channel",
+      });
       navigate({ to: "/live", search: { play: String(item.content_id) } });
     } else if (item.content_type === "vod") {
       navigate({

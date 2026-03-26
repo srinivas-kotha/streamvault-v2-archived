@@ -88,7 +88,7 @@ function FavoriteButton({
 
   function handleToggle() {
     if (isFavorite) {
-      removeFavorite(vodId);
+      removeFavorite({ contentId: vodId, content_type: "vod" });
     } else {
       addFavorite({
         contentId: vodId,
@@ -185,7 +185,12 @@ export function MovieDetail() {
   } = useSpatialFocusable({
     focusKey: `vod-play-${vodId}`,
     onEnterPress: () => {
-      if (data?.name) playStream(vodId, "vod", data.name, savedProgress);
+      if (data?.name)
+        playStream(vodId, {
+          streamType: "vod",
+          streamName: data.name,
+          startTime: savedProgress,
+        });
     },
   });
 
@@ -312,7 +317,11 @@ export function MovieDetail() {
                   {...playFocusProps}
                   size="lg"
                   onClick={() =>
-                    playStream(vodId, "vod", data.name, savedProgress)
+                    playStream(vodId, {
+                      streamType: "vod",
+                      streamName: data.name,
+                      startTime: savedProgress,
+                    })
                   }
                   className={
                     playFocusRing
@@ -333,7 +342,13 @@ export function MovieDetail() {
                 {savedProgress > 0 && (
                   <StartOverButton
                     vodId={vodId}
-                    onStartOver={() => playStream(vodId, "vod", data.name, 0)}
+                    onStartOver={() =>
+                      playStream(vodId, {
+                        streamType: "vod",
+                        streamName: data.name,
+                        startTime: 0,
+                      })
+                    }
                   />
                 )}
                 <FavoriteButton

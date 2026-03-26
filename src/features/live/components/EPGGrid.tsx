@@ -174,7 +174,7 @@ export function EPGGrid({ channels }: EPGGridProps) {
   }, [startTime]);
 
   function handleChannelClick(channel: XtreamLiveStream) {
-    playStream(channel.id, "live", channel.name);
+    playStream(channel.id, { streamType: "live", streamName: channel.name });
     navigate({ to: "/live", search: { play: channel.id } });
   }
 
