@@ -7,7 +7,11 @@ import { ContentCard } from "@shared/components/ContentCard";
 import { SkeletonGrid } from "@shared/components/Skeleton";
 import { EmptyState } from "@shared/components/EmptyState";
 import { useDebounce } from "@shared/hooks/useDebounce";
-import { useSpatialFocusable } from "@shared/hooks/useSpatialNav";
+import {
+  useSpatialFocusable,
+  useSpatialContainer,
+  FocusContext,
+} from "@shared/hooks/useSpatialNav";
 import { isNewContent } from "@shared/utils/isNewContent";
 import type { XtreamVODStream } from "@shared/types/api";
 
@@ -223,6 +227,10 @@ interface MoviesTabContentProps {
 
 export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
   const navigate = useNavigate();
+  const { ref: contentRef, focusKey: contentFocusKey } = useSpatialContainer({
+    focusKey: "movies-content-area",
+    focusable: true,
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -362,67 +370,69 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
       {/* Content */}
       {!hasActiveFilters ? (
         /* Rails mode (no filters active) */
-        <div className="space-y-8">
-          {railsLoading && (
-            <ContentRail title="Loading..." isLoading={true}>
-              <div />
-            </ContentRail>
-          )}
-          {/* Latest Movies rail */}
-          {latestMovies.length > 0 && !railsLoading && (
-            <ContentRail title="Latest Movies">
-              {latestMovies.map((item) => (
-                <FocusableCard
-                  key={item.id}
-                  focusKey={`vod-latest-${item.id}`}
-                  image={item.icon || ""}
-                  title={item.name}
-                  subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
-                  isNew={isNewContent(item.added ?? undefined)}
-                  aspectRatio="poster"
-                  onClick={() =>
-                    navigate({
-                      to: "/vod/$vodId",
-                      params: { vodId: item.id },
-                    })
-                  }
-                />
-              ))}
-            </ContentRail>
-          )}
-          {movieRails.map((rail) => (
-            <ContentRail
-              key={rail.category.id}
-              title={rail.category.name || rail.category.originalName}
-              seeAllTo={`/language/${lang}/category/${rail.category.id}`}
-            >
-              {rail.items.map((item) => (
-                <FocusableCard
-                  key={item.id}
-                  focusKey={`vod-${item.id}`}
-                  image={item.icon || ""}
-                  title={item.name}
-                  subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
-                  isNew={isNewContent(item.added ?? undefined)}
-                  aspectRatio="poster"
-                  onClick={() =>
-                    navigate({
-                      to: "/vod/$vodId",
-                      params: { vodId: item.id },
-                    })
-                  }
-                />
-              ))}
-            </ContentRail>
-          ))}
-          {!railsLoading && movieRails.length === 0 && (
-            <div className="py-12 text-center">
-              <p className="text-text-muted text-lg">
-                No {language} movies found
-              </p>
-            </div>
-          )}
-        </div>
+        <FocusContext.Provider value={contentFocusKey}>
+          <div ref={contentRef} className="space-y-8">
+            {railsLoading && (
+              <ContentRail title="Loading..." isLoading={true}>
+                <div />
+              </ContentRail>
+            )}
+            {/* Latest Movies rail */}
+            {latestMovies.length > 0 && !railsLoading && (
+              <ContentRail title="Latest Movies">
+                {latestMovies.map((item) => (
+                  <FocusableCard
+                    key={item.id}
+                    focusKey={`vod-latest-${item.id}`}
+                    image={item.icon || ""}
+                    title={item.name}
+                    subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
+                    isNew={isNewContent(item.added ?? undefined)}
+                    aspectRatio="poster"
+                    onClick={() =>
+                      navigate({
+                        to: "/vod/$vodId",
+                        params: { vodId: item.id },
+                      })
+                    }
+                  />
+                ))}
+              </ContentRail>
+            )}
+            {movieRails.map((rail) => (
+              <ContentRail
+                key={rail.category.id}
+                title={rail.category.name || rail.category.originalName}
+                seeAllTo={`/language/${lang}/category/${rail.category.id}`}
+              >
+                {rail.items.map((item) => (
+                  <FocusableCard
+                    key={item.id}
+                    focusKey={`vod-${item.id}`}
+                    image={item.icon || ""}
+                    title={item.name}
+                    subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
+                    isNew={isNewContent(item.added ?? undefined)}
+                    aspectRatio="poster"
+                    onClick={() =>
+                      navigate({
+                        to: "/vod/$vodId",
+                        params: { vodId: item.id },
+                      })
+                    }
+                  />
+                ))}
+              </ContentRail>
+            ))}
+            {!railsLoading && movieRails.length === 0 && (
+              <div className="py-12 text-center">
+                <p className="text-text-muted text-lg">
+                  No {language} movies found
+                </p>
+              </div>
+            )}
+          </div>
+        </FocusContext.Provider>
       ) : (
         /* Grid mode (filters active) */
         <div>

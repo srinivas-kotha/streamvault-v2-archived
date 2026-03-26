@@ -11,7 +11,11 @@ import { SkeletonGrid } from "@shared/components/Skeleton";
 import { EmptyState } from "@shared/components/EmptyState";
 import { Badge } from "@shared/components/Badge";
 import { useDebounce } from "@shared/hooks/useDebounce";
-import { useSpatialFocusable } from "@shared/hooks/useSpatialNav";
+import {
+  useSpatialFocusable,
+  useSpatialContainer,
+  FocusContext,
+} from "@shared/hooks/useSpatialNav";
 import { isNewContent } from "@shared/utils/isNewContent";
 import { isTVMode } from "@shared/utils/isTVMode";
 
@@ -225,6 +229,10 @@ interface SeriesTabContentProps {
 export function SeriesTabContent({ language }: SeriesTabContentProps) {
   const navigate = useNavigate();
   const { allSeries, channels, isLoading } = useSeriesByLanguage(language);
+  const { ref: contentRef, focusKey: contentFocusKey } = useSpatialContainer({
+    focusKey: "series-content-area",
+    focusable: true,
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
@@ -354,60 +362,62 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
         )
       ) : !hasActiveFilters ? (
         /* Rails mode */
-        <div className="space-y-8">
-          {/* Recently Added rail */}
-          {recentSeries.length > 0 && (
-            <ContentRail title="Recently Added">
-              {recentSeries.map((item) => (
-                <FocusableCard
-                  key={item.id}
-                  focusKey={`series-recent-${item.id}`}
-                  image={item.icon || ""}
-                  title={item.name}
-                  subtitle={item.genre || undefined}
-                  isNew={isNewContent(item.added ?? undefined)}
-                  aspectRatio="poster"
-                  onClick={() =>
-                    navigate({
-                      to: "/series/$seriesId",
-                      params: { seriesId: item.id },
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    } as any)
-                  }
-                />
-              ))}
-            </ContentRail>
-          )}
-          {seriesRails.map((rail) => (
-            <ContentRail key={rail.channelId} title={rail.channelName}>
-              {rail.items.map((item) => (
-                <FocusableCard
-                  key={item.id}
-                  focusKey={`series-${item.id}`}
-                  image={item.icon || ""}
-                  title={item.name}
-                  subtitle={item.genre || undefined}
-                  isNew={isNewContent(item.added ?? undefined)}
-                  aspectRatio="poster"
-                  onClick={() =>
-                    navigate({
-                      to: "/series/$seriesId",
-                      params: { seriesId: item.id },
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    } as any)
-                  }
-                />
-              ))}
-            </ContentRail>
-          ))}
-          {seriesRails.length === 0 && (
-            <EmptyState
-              title="No series available"
-              message={`No ${language} series found.`}
-              icon="content"
-            />
-          )}
-        </div>
+        <FocusContext.Provider value={contentFocusKey}>
+          <div ref={contentRef} className="space-y-8">
+            {/* Recently Added rail */}
+            {recentSeries.length > 0 && (
+              <ContentRail title="Recently Added">
+                {recentSeries.map((item) => (
+                  <FocusableCard
+                    key={item.id}
+                    focusKey={`series-recent-${item.id}`}
+                    image={item.icon || ""}
+                    title={item.name}
+                    subtitle={item.genre || undefined}
+                    isNew={isNewContent(item.added ?? undefined)}
+                    aspectRatio="poster"
+                    onClick={() =>
+                      navigate({
+                        to: "/series/$seriesId",
+                        params: { seriesId: item.id },
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      } as any)
+                    }
+                  />
+                ))}
+              </ContentRail>
+            )}
+            {seriesRails.map((rail) => (
+              <ContentRail key={rail.channelId} title={rail.channelName}>
+                {rail.items.map((item) => (
+                  <FocusableCard
+                    key={item.id}
+                    focusKey={`series-${item.id}`}
+                    image={item.icon || ""}
+                    title={item.name}
+                    subtitle={item.genre || undefined}
+                    isNew={isNewContent(item.added ?? undefined)}
+                    aspectRatio="poster"
+                    onClick={() =>
+                      navigate({
+                        to: "/series/$seriesId",
+                        params: { seriesId: item.id },
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      } as any)
+                    }
+                  />
+                ))}
+              </ContentRail>
+            ))}
+            {seriesRails.length === 0 && (
+              <EmptyState
+                title="No series available"
+                message={`No ${language} series found.`}
+                icon="content"
+              />
+            )}
+          </div>
+        </FocusContext.Provider>
       ) : processedSeries.length === 0 ? (
         /* Grid mode: empty */
         <div>
