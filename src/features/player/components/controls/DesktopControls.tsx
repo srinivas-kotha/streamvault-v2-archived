@@ -4,12 +4,13 @@
  * fullscreen for mouse/keyboard users. Auto-hides after 3s of inactivity.
  */
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { usePlayerStore } from "@lib/stores/playerStore";
 import { formatDuration } from "@shared/utils/formatDuration";
 import { ProgressBar } from "./ProgressBar";
 import { QualitySelector } from "./QualitySelector";
 import { SubtitleSelector } from "./SubtitleSelector";
+import { SpeedSelector } from "./SpeedSelector";
 
 interface DesktopControlsProps {
   playerRef?: React.RefObject<{
@@ -17,9 +18,15 @@ interface DesktopControlsProps {
     toggleFullscreen: () => void;
     togglePiP: () => Promise<void>;
   } | null>;
+  visible?: boolean;
+  onActivity?: () => void;
 }
 
-export function DesktopControls({ playerRef }: DesktopControlsProps) {
+export function DesktopControls({
+  playerRef,
+  visible = true,
+  onActivity,
+}: DesktopControlsProps) {
   const status = usePlayerStore((s) => s.status);
   const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
@@ -30,27 +37,8 @@ export function DesktopControls({ playerRef }: DesktopControlsProps) {
   const setStatus = usePlayerStore((s) => s.setStatus);
   const streamType = usePlayerStore((s) => s.streamType);
 
-  const [visible, setVisible] = useState(true);
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const isLive = streamType === "live";
   const isPlaying = status === "playing";
-
-  const resetHideTimer = useCallback(() => {
-    setVisible(true);
-    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    hideTimerRef.current = setTimeout(() => {
-      setVisible(false);
-    }, 3000);
-  }, []);
-
-  // Start auto-hide on mount
-  useEffect(() => {
-    resetHideTimer();
-    return () => {
-      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    };
-  }, [resetHideTimer]);
 
   const handlePlayPause = useCallback(() => {
     if (isPlaying) {
@@ -68,7 +56,7 @@ export function DesktopControls({ playerRef }: DesktopControlsProps) {
     <div
       data-testid="desktop-controls-overlay"
       data-visible={visible ? "true" : "false"}
-      onMouseMove={resetHideTimer}
+      onMouseMove={onActivity}
       className={`absolute inset-0 flex flex-col justify-end transition-opacity duration-300 bg-gradient-to-t from-black/80 via-transparent to-black/30 ${visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
     >
       {/* Progress bar */}
@@ -183,6 +171,9 @@ export function DesktopControls({ playerRef }: DesktopControlsProps) {
 
         {/* Subtitle selector */}
         <SubtitleSelector />
+
+        {/* Speed selector */}
+        <SpeedSelector />
 
         {/* Fullscreen */}
         <button
