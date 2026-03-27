@@ -15,12 +15,15 @@ interface ProgressBarProps {
   isFocused?: boolean;
   /** Show time labels */
   showTime?: boolean;
+  /** Imperative seek callback (moves the video playhead) */
+  onSeek?: (time: number) => void;
 }
 
 export function ProgressBar({
   isDesktop = false,
   isFocused = false,
   showTime = true,
+  onSeek,
 }: ProgressBarProps) {
   const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
@@ -41,9 +44,11 @@ export function ProgressBar({
         0,
         Math.min(1, (e.clientX - rect.left) / rect.width),
       );
-      setCurrentTime(pct * duration);
+      const seekTime = pct * duration;
+      setCurrentTime(seekTime);
+      onSeek?.(seekTime);
     },
-    [isDesktop, duration, setCurrentTime],
+    [isDesktop, duration, setCurrentTime, onSeek],
   );
 
   const handleKeyDown = useCallback(
@@ -51,13 +56,17 @@ export function ProgressBar({
       if (!isFocused) return;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
-        setCurrentTime(Math.max(0, currentTime - 10));
+        const seekTime = Math.max(0, currentTime - 10);
+        setCurrentTime(seekTime);
+        onSeek?.(seekTime);
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        setCurrentTime(Math.min(duration, currentTime + 10));
+        const seekTime = Math.min(duration, currentTime + 10);
+        setCurrentTime(seekTime);
+        onSeek?.(seekTime);
       }
     },
-    [isFocused, currentTime, duration, setCurrentTime],
+    [isFocused, currentTime, duration, setCurrentTime, onSeek],
   );
 
   return (

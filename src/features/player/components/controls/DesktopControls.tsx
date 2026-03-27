@@ -62,7 +62,11 @@ export function DesktopControls({
       {/* Progress bar */}
       {!isLive && duration > 0 && (
         <div className="px-4 mb-1">
-          <ProgressBar isDesktop showTime={false} />
+          <ProgressBar
+            isDesktop
+            showTime={false}
+            onSeek={(t) => playerRef?.current?.seek(t)}
+          />
         </div>
       )}
 
@@ -75,7 +79,7 @@ export function DesktopControls({
         {/* Play/Pause */}
         <button
           onClick={handlePlayPause}
-          className="p-2 text-white hover:text-teal transition-colors"
+          className="p-2 text-white hover:text-teal transition-colors focus-visible:ring-2 focus-visible:ring-teal focus-visible:outline-none rounded"
           aria-label={isPlaying ? "Pause" : "Play"}
           data-testid="desktop-play-pause"
         >
@@ -93,7 +97,7 @@ export function DesktopControls({
         {/* Mute */}
         <button
           onClick={handleMuteToggle}
-          className="p-1.5 text-white/70 hover:text-white transition-colors"
+          className="p-1.5 text-white/70 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-teal focus-visible:outline-none rounded"
           aria-label={isMuted ? "Unmute" : "Mute"}
         >
           {isMuted || volume === 0 ? (
@@ -140,7 +144,7 @@ export function DesktopControls({
           step={5}
           value={Math.round((isMuted ? 0 : volume) * 100)}
           onChange={(e) => setVolume(Number(e.target.value) / 100)}
-          className="w-20 h-1 accent-teal"
+          className="w-20 h-1 accent-teal focus-visible:ring-2 focus-visible:ring-teal focus-visible:outline-none rounded"
           aria-label="Volume"
           aria-valuemin={0}
           aria-valuemax={100}
@@ -186,7 +190,7 @@ export function DesktopControls({
               document.documentElement.requestFullscreen().catch(() => {});
             }
           }}
-          className="p-1.5 text-white/70 hover:text-white transition-colors"
+          className="p-1.5 text-white/70 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-teal focus-visible:outline-none rounded"
           aria-label="Fullscreen"
           data-testid="desktop-fullscreen"
         >
@@ -208,7 +212,7 @@ export function DesktopControls({
         {/* PiP */}
         <button
           onClick={() => playerRef?.current?.togglePiP()}
-          className="p-1.5 text-white/70 hover:text-white transition-colors"
+          className="p-1.5 text-white/70 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-teal focus-visible:outline-none rounded"
           aria-label="Picture-in-Picture"
         >
           <svg

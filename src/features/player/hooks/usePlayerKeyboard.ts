@@ -107,9 +107,16 @@ export function usePlayerKeyboard(options: UsePlayerKeyboardOptions = {}) {
       if (isArrowKey) {
         if (!isTVMode) {
           const active = document.activeElement;
-          const isGenericFocus =
-            !active || active === document.body || active.tagName === "VIDEO";
-          if (!isGenericFocus) return;
+          // Block all arrows if a range/input element is focused (e.g., volume slider)
+          if (active instanceof HTMLInputElement) return;
+
+          // Up/Down only handled when no specific control is focused
+          if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+            const isGenericFocus =
+              !active || active === document.body || active.tagName === "VIDEO";
+            if (!isGenericFocus) return;
+          }
+          // Left/Right (seek) always handled when toolbar buttons are focused
         }
 
         e.stopPropagation();
