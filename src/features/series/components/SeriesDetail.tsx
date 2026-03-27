@@ -248,14 +248,8 @@ export function SeriesDetail() {
     isFocusBoundary: true,
     focusBoundaryDirections: ["left", "right"],
   });
-  const { ref: controlsRef, focusKey: controlsFocusKey } = useSpatialContainer({
-    focusKey: `series-controls-${seriesId}`,
-    focusable: false,
-  });
-  const { ref: episodesRef, focusKey: episodesFocusKey } = useSpatialContainer({
-    focusKey: `series-episodes-${seriesId}`,
-    focusable: false,
-  });
+  // Controls and episodes share the content focus context (no separate
+  // FocusContext.Provider) so D-pad can navigate vertically across sections.
   const {
     ref: backRef,
     showFocusRing: backFocusRing,
@@ -431,58 +425,44 @@ export function SeriesDetail() {
             )}
           </div>
 
-          <FocusContext.Provider value={controlsFocusKey}>
-            <div ref={controlsRef}>
-              <div className="mb-4 overflow-x-auto scrollbar-hide pb-2">
-                <SeasonNav
-                  seasons={computedSeasons}
-                  activeSeason={activeSeason ?? 0}
-                  seriesId={seriesId}
-                  onSeasonChange={(n) => {
-                    setActiveSeason(n);
-                    setEpisodeSearch("");
-                  }}
-                />
-              </div>
-              <EpisodeControls
-                seriesId={seriesId}
-                episodeSearch={episodeSearch}
-                onSearchChange={setEpisodeSearch}
-                episodeSort={episodeSort}
-                onSortChange={setEpisodeSort}
-                episodeCount={filteredEpisodes.length}
-              />
-            </div>
-          </FocusContext.Provider>
-
-          <FocusContext.Provider value={episodesFocusKey}>
-            <div
-              ref={(el: HTMLDivElement | null) => {
-                (
-                  episodesRef as React.MutableRefObject<HTMLDivElement | null>
-                ).current = el;
-                episodeListRef.current = el;
+          <div className="mb-4 overflow-x-auto scrollbar-hide pb-2">
+            <SeasonNav
+              seasons={computedSeasons}
+              activeSeason={activeSeason ?? 0}
+              seriesId={seriesId}
+              onSeasonChange={(n) => {
+                setActiveSeason(n);
+                setEpisodeSearch("");
               }}
-              className="space-y-2"
-            >
-              {visibleEpisodes.length === 0 && episodeSearch ? (
-                <div className="py-12 text-center">
-                  <p className="text-text-muted text-sm">
-                    No episodes matching "{episodeSearch}"
-                  </p>
-                </div>
-              ) : (
-                visibleEpisodes.map((ep) => (
-                  <FocusableEpisodeItem
-                    key={ep.id}
-                    ep={ep}
-                    isPlaying={false}
-                    playEpisode={playEpisode}
-                  />
-                ))
-              )}
-            </div>
-          </FocusContext.Provider>
+            />
+          </div>
+          <EpisodeControls
+            seriesId={seriesId}
+            episodeSearch={episodeSearch}
+            onSearchChange={setEpisodeSearch}
+            episodeSort={episodeSort}
+            onSortChange={setEpisodeSort}
+            episodeCount={filteredEpisodes.length}
+          />
+
+          <div ref={episodeListRef} className="space-y-2">
+            {visibleEpisodes.length === 0 && episodeSearch ? (
+              <div className="py-12 text-center">
+                <p className="text-text-muted text-sm">
+                  No episodes matching "{episodeSearch}"
+                </p>
+              </div>
+            ) : (
+              visibleEpisodes.map((ep) => (
+                <FocusableEpisodeItem
+                  key={ep.id}
+                  ep={ep}
+                  isPlaying={false}
+                  playEpisode={playEpisode}
+                />
+              ))
+            )}
+          </div>
 
           {hasMore && (
             <LoadMoreButton
