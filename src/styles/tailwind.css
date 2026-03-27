@@ -191,6 +191,26 @@
   }
 }
 
+/* Player overlay fade-in-out (seek indicator, speed indicator) */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
 /* Page transition animation (replaces framer-motion) */
 @keyframes page-in {
   from {

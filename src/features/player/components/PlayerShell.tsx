@@ -17,6 +17,8 @@ import { TVControls } from "./controls/TVControls";
 import { MobileControls } from "./controls/MobileControls";
 import { VideoElement } from "./VideoElement";
 import type { VideoElementHandle } from "./VideoElement";
+import { SeekIndicator } from "./SeekIndicator";
+import { SpeedIndicator } from "./SpeedIndicator";
 import { useStreamUrl } from "../api";
 
 export function PlayerShell() {
@@ -43,6 +45,10 @@ export function PlayerShell() {
   const [controlsVisible, setControlsVisible] = useState(true);
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInternalStatusChangeRef = useRef(false);
+  const [seekDirection, setSeekDirection] = useState<
+    "forward" | "backward" | null
+  >(null);
+  const [seekCount, setSeekCount] = useState(0);
 
   // Fetch stream URL (only when active)
   const { data: streamData } = useStreamUrl(
@@ -146,6 +152,10 @@ export function PlayerShell() {
 
   // Keyboard seek handler — bridges to video element
   const handleSeek = useCallback((time: number) => {
+    const currentState = usePlayerStore.getState();
+    const direction = time > currentState.currentTime ? "forward" : "backward";
+    setSeekDirection(direction);
+    setSeekCount((c) => c + 1);
     playerRef.current?.seek(time);
   }, []);
 
@@ -200,6 +210,12 @@ export function PlayerShell() {
 
       {/* Buffering / loading overlay */}
       {(status === "buffering" || status === "loading") && <BufferingOverlay />}
+
+      {/* Seek direction indicator */}
+      <SeekIndicator direction={seekDirection} seekCount={seekCount} />
+
+      {/* Speed change indicator */}
+      <SpeedIndicator speed={playbackRate} />
 
       {/* Error recovery */}
       {status === "error" && <ErrorRecovery />}
