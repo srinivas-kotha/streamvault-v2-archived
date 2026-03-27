@@ -250,13 +250,11 @@ export function SeriesDetail() {
   });
   const { ref: controlsRef, focusKey: controlsFocusKey } = useSpatialContainer({
     focusKey: `series-controls-${seriesId}`,
-    isFocusBoundary: true,
-    focusBoundaryDirections: ["left", "right"],
+    focusable: false,
   });
   const { ref: episodesRef, focusKey: episodesFocusKey } = useSpatialContainer({
     focusKey: `series-episodes-${seriesId}`,
-    isFocusBoundary: true,
-    focusBoundaryDirections: ["left", "right"],
+    focusable: false,
   });
   const {
     ref: backRef,
