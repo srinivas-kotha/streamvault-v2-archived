@@ -5,22 +5,29 @@
  * Hidden by default — tap to reveal.
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { usePlayerStore } from "@lib/stores/playerStore";
 import { formatDuration } from "@shared/utils/formatDuration";
 import { QualitySelector } from "./QualitySelector";
 import { SubtitleSelector } from "./SubtitleSelector";
+import { SpeedSelector } from "./SpeedSelector";
 
 interface MobileControlsProps {
   playerRef?: React.RefObject<{
     seek: (t: number) => void;
   } | null>;
+  visible?: boolean;
+  onToggle?: () => void;
 }
 
 const SWIPE_THRESHOLD = 50; // px minimum to register as a swipe
 const SEEK_AMOUNT = 10; // seconds
 
-export function MobileControls({ playerRef }: MobileControlsProps) {
+export function MobileControls({
+  playerRef,
+  visible = false,
+  onToggle,
+}: MobileControlsProps) {
   const status = usePlayerStore((s) => s.status);
   const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
@@ -28,16 +35,11 @@ export function MobileControls({ playerRef }: MobileControlsProps) {
   const setStatus = usePlayerStore((s) => s.setStatus);
   const setCurrentTime = usePlayerStore((s) => s.setCurrentTime);
 
-  const [visible, setVisible] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
 
   const isLive = streamType === "live";
   const isPlaying = status === "playing";
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-
-  const handleOverlayClick = useCallback(() => {
-    setVisible((v) => !v);
-  }, []);
 
   const handlePlayPause = useCallback(
     (e: React.MouseEvent) => {
@@ -105,7 +107,7 @@ export function MobileControls({ playerRef }: MobileControlsProps) {
     <div
       data-testid="mobile-controls-overlay"
       data-visible={visible ? "true" : "false"}
-      onClick={handleOverlayClick}
+      onClick={onToggle}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       className="absolute inset-0 flex flex-col justify-between"
@@ -191,6 +193,7 @@ export function MobileControls({ playerRef }: MobileControlsProps) {
             >
               <QualitySelector />
               <SubtitleSelector />
+              <SpeedSelector />
             </div>
 
             {!isLive && duration > 0 && (

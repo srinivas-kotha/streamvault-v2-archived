@@ -44,6 +44,7 @@ export interface VideoElementHandle {
   getVideo: () => HTMLVideoElement | null;
   toggleFullscreen: () => void;
   togglePiP: () => Promise<void>;
+  setPlaybackRate: (rate: number) => void;
 }
 
 interface VideoElementProps {
@@ -156,6 +157,9 @@ export const VideoElement = forwardRef<VideoElementHandle, VideoElementProps>(
           await document.exitPictureInPicture();
         else if (document.pictureInPictureEnabled)
           await video.requestPictureInPicture();
+      },
+      setPlaybackRate: (rate: number) => {
+        if (videoRef.current) videoRef.current.playbackRate = rate;
       },
     }));
 

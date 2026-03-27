@@ -9,7 +9,12 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { usePlayerStore } from "@lib/stores/playerStore";
 import { formatDuration } from "@shared/utils/formatDuration";
 
-export function TVControls() {
+interface TVControlsProps {
+  visible?: boolean;
+  onActivity?: () => void;
+}
+
+export function TVControls({ visible = true, onActivity }: TVControlsProps) {
   const status = usePlayerStore((s) => s.status);
   const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
@@ -17,9 +22,7 @@ export function TVControls() {
   const streamType = usePlayerStore((s) => s.streamType);
   const setStatus = usePlayerStore((s) => s.setStatus);
 
-  const [visible, setVisible] = useState(true);
   const [seekIndicator, setSeekIndicator] = useState<string | null>(null);
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seekIndicatorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -28,28 +31,18 @@ export function TVControls() {
   const isPlaying = status === "playing";
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  const resetHideTimer = useCallback(() => {
-    setVisible(true);
-    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    hideTimerRef.current = setTimeout(() => {
-      setVisible(false);
-    }, 5000);
-  }, []);
-
-  // Start auto-hide on mount
+  // Cleanup seek indicator timer on unmount
   useEffect(() => {
-    resetHideTimer();
     return () => {
-      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
       if (seekIndicatorTimerRef.current)
         clearTimeout(seekIndicatorTimerRef.current);
     };
-  }, [resetHideTimer]);
+  }, []);
 
-  // Listen for key presses to reset timer and show seek indicator
+  // Listen for key presses to notify parent and show seek indicator
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      resetHideTimer();
+      onActivity?.();
 
       if (!isLive && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
         const dir = e.key === "ArrowRight" ? "+10s" : "-10s";
@@ -64,7 +57,7 @@ export function TVControls() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLive, resetHideTimer]);
+  }, [isLive, onActivity]);
 
   const handlePlayPause = useCallback(() => {
     if (isPlaying) {

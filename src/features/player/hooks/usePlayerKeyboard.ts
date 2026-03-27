@@ -221,6 +221,30 @@ export function usePlayerKeyboard(options: UsePlayerKeyboardOptions = {}) {
           current.setMuted(!current.isMuted);
           break;
         }
+        case ">": {
+          e.preventDefault();
+          const { playbackRate: currentRate, setPlaybackRate } =
+            usePlayerStore.getState();
+          const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+          const currentIdx = speeds.indexOf(currentRate);
+          const nextSpeed = speeds[currentIdx + 1];
+          if (currentIdx < speeds.length - 1 && nextSpeed !== undefined) {
+            setPlaybackRate(nextSpeed);
+          }
+          break;
+        }
+        case "<": {
+          e.preventDefault();
+          const { playbackRate: currentRate2, setPlaybackRate: setRate2 } =
+            usePlayerStore.getState();
+          const speeds2 = [0.5, 0.75, 1, 1.25, 1.5, 2];
+          const currentIdx2 = speeds2.indexOf(currentRate2);
+          const prevSpeed = speeds2[currentIdx2 - 1];
+          if (currentIdx2 > 0 && prevSpeed !== undefined) {
+            setRate2(prevSpeed);
+          }
+          break;
+        }
       }
     }
 

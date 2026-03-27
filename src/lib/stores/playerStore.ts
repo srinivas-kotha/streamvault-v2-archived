@@ -111,6 +111,9 @@ interface PlayerState {
   volume: number;
   isMuted: boolean;
 
+  // Playback speed
+  playbackRate: number;
+
   // Quality
   qualityLevels: QualityLevel[];
   currentQuality: number;
@@ -137,6 +140,7 @@ interface PlayerState {
   setBufferedEnd: (end: number) => void;
   setVolume: (volume: number) => void;
   setMuted: (muted: boolean) => void;
+  setPlaybackRate: (rate: number) => void;
 
   // Quality / track setters
   setQualityLevels: (levels: QualityLevel[]) => void;
@@ -169,6 +173,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   bufferedEnd: 0,
   volume: 1,
   isMuted: false,
+  playbackRate: 1,
   qualityLevels: [],
   currentQuality: -1,
   subtitleTracks: [],
@@ -190,6 +195,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       duration: 0,
       bufferedEnd: 0,
       error: null,
+      playbackRate: 1,
       qualityLevels: [],
       currentQuality: -1,
       subtitleTracks: [],
@@ -226,6 +232,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       duration: 0,
       bufferedEnd: 0,
       error: null,
+      playbackRate: 1,
       qualityLevels: [],
       currentQuality: -1,
       subtitleTracks: [],
@@ -249,6 +256,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   },
 
   setMuted: (muted) => set({ isMuted: muted }),
+
+  setPlaybackRate: (rate) => set({ playbackRate: rate }),
 
   // ── Quality / track setters ─────────────────────────────────────────────────
   setQualityLevels: (levels) => set({ qualityLevels: levels }),

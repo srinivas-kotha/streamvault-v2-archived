@@ -36,6 +36,7 @@ export function PlayerShell() {
   const seriesContext = usePlayerStore((s) => s.seriesContext);
   const currentQuality = usePlayerStore((s) => s.currentQuality);
   const currentSubtitle = usePlayerStore((s) => s.currentSubtitle);
+  const playbackRate = usePlayerStore((s) => s.playbackRate);
 
   const { deviceClass, isTVMode } = useDeviceContext();
   const playerRef = useRef<VideoElementHandle>(null);
@@ -138,6 +139,11 @@ export function PlayerShell() {
     playerRef.current?.setSubtitleTrack(currentSubtitle);
   }, [currentSubtitle]);
 
+  // Bridge: playerStore.playbackRate → video element
+  useEffect(() => {
+    playerRef.current?.setPlaybackRate(playbackRate);
+  }, [playbackRate]);
+
   // Keyboard seek handler — bridges to video element
   const handleSeek = useCallback((time: number) => {
     playerRef.current?.seek(time);
@@ -162,11 +168,18 @@ export function PlayerShell() {
       className="fixed inset-0 z-50 bg-black"
       onMouseMove={showControls}
       onMouseLeave={() => status === "playing" && setControlsVisible(false)}
-      onClick={() => {
-        if (controlsVisible) {
-          setControlsVisible(false);
-        } else {
-          showControls();
+      onClick={(e) => {
+        // Only toggle play/pause if clicking directly on the video area (not on controls)
+        const target = e.target as HTMLElement;
+        if (target.closest('[role="toolbar"]') || target.closest("button"))
+          return;
+        if (deviceClass === "mobile" || deviceClass === "tablet") return; // MobileControls handles its own toggle
+        // Desktop: click to play/pause (standard video player UX)
+        const state = usePlayerStore.getState();
+        if (state.status === "playing") {
+          setStatus("paused");
+        } else if (state.status === "paused") {
+          setStatus("playing");
         }
       }}
     >
@@ -222,11 +235,27 @@ export function PlayerShell() {
 
       {/* Device-specific controls */}
       {deviceClass === "tv" ? (
-        <TVControls />
+        <TVControls visible={controlsVisible} onActivity={showControls} />
       ) : deviceClass === "desktop" ? (
-        <DesktopControls playerRef={playerRef as any} />
+        <DesktopControls
+          playerRef={playerRef as any}
+          visible={controlsVisible}
+          onActivity={showControls}
+        />
       ) : (
-        <MobileControls playerRef={playerRef as any} />
+        <MobileControls
+          playerRef={playerRef as any}
+          visible={controlsVisible}
+          onToggle={() => {
+            if (controlsVisible) {
+              setControlsVisible(false);
+              if (controlsTimeoutRef.current)
+                clearTimeout(controlsTimeoutRef.current);
+            } else {
+              showControls();
+            }
+          }}
+        />
       )}
     </div>
   );
