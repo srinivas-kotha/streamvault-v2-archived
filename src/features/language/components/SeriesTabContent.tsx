@@ -244,7 +244,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
         const bTime = parseInt(b.added || "0", 10);
         return bTime - aTime;
       })
-      .slice(0, 20);
+      .slice(0, 30);
   }, [allSeries]);
 
   // Rails mode: group series by channel
@@ -261,7 +261,7 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
       .map((ch) => ({
         channelId: ch.id,
         channelName: ch.name,
-        items: (byChannel.get(ch.id) || []).slice(0, 20),
+        items: byChannel.get(ch.id) || [],
       }));
   }, [allSeries, channels]);
 
