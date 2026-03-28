@@ -9,15 +9,12 @@ import { PageTransition } from "@shared/components/PageTransition";
 import { MoviesTabContent } from "./components/MoviesTabContent";
 import { SeriesTabContent } from "./components/SeriesTabContent";
 import { LiveTabContent } from "./components/LiveTabContent";
-import { SportsTabContent } from "./components/SportsTabContent";
-
-type TabKey = "movies" | "series" | "live" | "sports";
+type TabKey = "movies" | "series" | "live";
 
 const tabs: { key: TabKey; label: string }[] = [
   { key: "movies", label: "Movies" },
   { key: "series", label: "Series" },
   { key: "live", label: "Live TV" },
-  { key: "sports", label: "Sports" },
 ];
 
 const LANGUAGE_TABS = [
@@ -183,7 +180,6 @@ export function LanguageHubPage() {
           {activeTab === "live" && (
             <LiveTabContent language={language} lang={lang} />
           )}
-          {activeTab === "sports" && <SportsTabContent />}
         </div>
       </FocusContext.Provider>
     </PageTransition>
