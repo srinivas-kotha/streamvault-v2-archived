@@ -10,6 +10,14 @@ import { useAuthStore } from "@lib/store";
 import { useLogout } from "@features/auth/hooks/useAuth";
 import { isTVMode } from "@shared/utils/isTVMode";
 
+const NAV_ITEMS = [
+  { to: "/language/telugu", label: "Telugu", focusKey: "nav-telugu" },
+  { to: "/language/hindi", label: "Hindi", focusKey: "nav-hindi" },
+  { to: "/language/english", label: "English", focusKey: "nav-english" },
+  { to: "/sports", label: "Sports", focusKey: "nav-sports" },
+  { to: "/search", label: "Search", focusKey: "nav-search" },
+];
+
 function NavLink({
   to,
   label,
@@ -19,10 +27,13 @@ function NavLink({
   label: string;
   focusKey: string;
 }) {
+  const navigate = useNavigate();
   const { ref, showFocusRing, focusProps } = useSpatialFocusable({
     focusKey,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onEnterPress: () => (window.location.href = to),
+    onEnterPress: () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      navigate({ to: to as any });
+    },
   });
 
   return (
@@ -101,6 +112,16 @@ export function TopNav() {
             >
               Stream<span className="text-teal">Vault</span>
             </Link>
+            <div className="flex items-center gap-1 ml-6">
+              {NAV_ITEMS.map((item) => (
+                <NavLink
+                  key={item.focusKey}
+                  to={item.to}
+                  label={item.label}
+                  focusKey={item.focusKey}
+                />
+              ))}
+            </div>
             <ProfileMenu
               username={username}
               profileOpen={profileOpen}
@@ -137,7 +158,14 @@ export function TopNav() {
 
           {/* Nav Links */}
           <div className="flex items-center gap-1 ml-8">
-            <NavLink to="/sports" label="Sports" focusKey="nav-sports" />
+            {NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.focusKey}
+                to={item.to}
+                label={item.label}
+                focusKey={item.focusKey}
+              />
+            ))}
           </div>
 
           {/* Profile */}
