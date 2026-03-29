@@ -10,7 +10,6 @@ import { useDebounce } from "@shared/hooks/useDebounce";
 import {
   useSpatialFocusable,
   useSpatialContainer,
-  FocusContext,
 } from "@shared/hooks/useSpatialNav";
 import { usePageFocus } from "@shared/hooks/usePageFocus";
 import { usePlayerStore } from "@lib/store";
@@ -128,7 +127,7 @@ export function SportsPage() {
   const playStream = usePlayerStore((s) => s.playStream);
   usePageFocus("sports-chip-all");
 
-  const { ref: containerRef, focusKey } = useSpatialContainer({
+  const { ref: containerRef } = useSpatialContainer({
     focusKey: "SPORTS_PAGE",
     focusable: false,
   });
@@ -174,110 +173,108 @@ export function SportsPage() {
 
   return (
     <PageTransition>
-      <FocusContext.Provider value={focusKey}>
-        <div ref={containerRef} className="space-y-6 pb-12">
-          <h1 className="text-2xl font-bold text-text-primary pt-2">Sports</h1>
+      <div ref={containerRef} className="space-y-6 pb-12">
+        <h1 className="text-2xl font-bold text-text-primary pt-2">Sports</h1>
 
-          {isLoading ? (
-            <SkeletonGrid count={12} aspectRatio="landscape" />
-          ) : !hasCategories ? (
-            <EmptyState
-              title="No sports channels"
-              message="No sports categories found. Check back during live events."
-              icon="content"
-            />
-          ) : (
-            <>
-              {/* Category Filter Chips */}
-              {categoryChips.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+        {isLoading ? (
+          <SkeletonGrid count={12} aspectRatio="landscape" />
+        ) : !hasCategories ? (
+          <EmptyState
+            title="No sports channels"
+            message="No sports categories found. Check back during live events."
+            icon="content"
+          />
+        ) : (
+          <>
+            {/* Category Filter Chips */}
+            {categoryChips.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                <FocusableChip
+                  id="sports-chip-all"
+                  label={`All (${totalCount})`}
+                  isActive={activeCategory === null}
+                  onSelect={() => setActiveCategory(null)}
+                />
+                {categoryChips.map((chip) => (
                   <FocusableChip
-                    id="sports-chip-all"
-                    label={`All (${totalCount})`}
-                    isActive={activeCategory === null}
-                    onSelect={() => setActiveCategory(null)}
-                  />
-                  {categoryChips.map((chip) => (
-                    <FocusableChip
-                      key={chip.id}
-                      id={`sports-chip-${chip.id}`}
-                      label={`${chip.name} (${chip.count})`}
-                      isActive={activeCategory === chip.id}
-                      onSelect={() =>
-                        setActiveCategory(
-                          chip.id === activeCategory ? null : chip.id,
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Search Bar */}
-              <FocusableSearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Search sports channels..."
-                focusKey="sports-search"
-              />
-
-              {/* Content */}
-              {hasActiveFilters ? (
-                processedChannels.length === 0 ? (
-                  <EmptyState
-                    title="No matching channels"
-                    message={
-                      debouncedSearch
-                        ? `No channels matching "${debouncedSearch}".`
-                        : "No channels in this category."
+                    key={chip.id}
+                    id={`sports-chip-${chip.id}`}
+                    label={`${chip.name} (${chip.count})`}
+                    isActive={activeCategory === chip.id}
+                    onSelect={() =>
+                      setActiveCategory(
+                        chip.id === activeCategory ? null : chip.id,
+                      )
                     }
-                    icon="content"
                   />
-                ) : (
-                  <div>
-                    <p className="text-text-muted text-xs mb-3">
-                      {processedChannels.length} channel
-                      {processedChannels.length !== 1 ? "s" : ""}
-                    </p>
-                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
-                      {processedChannels.map((channel) => (
-                        <ContentCard
-                          key={channel.id}
-                          image={channel.icon || ""}
-                          title={channel.name}
-                          aspectRatio="landscape"
-                          onClick={() => handlePlay(channel)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )
+                ))}
+              </div>
+            )}
+
+            {/* Search Bar */}
+            <FocusableSearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search sports channels..."
+              focusKey="sports-search"
+            />
+
+            {/* Content */}
+            {hasActiveFilters ? (
+              processedChannels.length === 0 ? (
+                <EmptyState
+                  title="No matching channels"
+                  message={
+                    debouncedSearch
+                      ? `No channels matching "${debouncedSearch}".`
+                      : "No channels in this category."
+                  }
+                  icon="content"
+                />
               ) : (
-                <div className="space-y-8">
-                  {rails.map((rail) => (
-                    <ContentRail
-                      key={rail.category.id}
-                      title={rail.category.name || rail.category.originalName}
-                      flat
-                    >
-                      {rail.items.map((item) => (
-                        <FocusableCard
-                          key={item.id}
-                          focusKey={`sports-${item.id}`}
-                          image={item.icon || ""}
-                          title={item.name}
-                          aspectRatio="landscape"
-                          onClick={() => handlePlay(item)}
-                        />
-                      ))}
-                    </ContentRail>
-                  ))}
+                <div>
+                  <p className="text-text-muted text-xs mb-3">
+                    {processedChannels.length} channel
+                    {processedChannels.length !== 1 ? "s" : ""}
+                  </p>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
+                    {processedChannels.map((channel) => (
+                      <ContentCard
+                        key={channel.id}
+                        image={channel.icon || ""}
+                        title={channel.name}
+                        aspectRatio="landscape"
+                        onClick={() => handlePlay(channel)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              )}
-            </>
-          )}
-        </div>
-      </FocusContext.Provider>
+              )
+            ) : (
+              <div className="space-y-8">
+                {rails.map((rail) => (
+                  <ContentRail
+                    key={rail.category.id}
+                    title={rail.category.name || rail.category.originalName}
+                    flat
+                  >
+                    {rail.items.map((item) => (
+                      <FocusableCard
+                        key={item.id}
+                        focusKey={`sports-${item.id}`}
+                        image={item.icon || ""}
+                        title={item.name}
+                        aspectRatio="landscape"
+                        onClick={() => handlePlay(item)}
+                      />
+                    ))}
+                  </ContentRail>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </PageTransition>
   );
 }

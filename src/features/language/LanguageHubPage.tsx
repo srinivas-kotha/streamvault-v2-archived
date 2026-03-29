@@ -2,7 +2,6 @@ import { useParams, useNavigate, useSearch } from "@tanstack/react-router";
 import {
   useSpatialFocusable,
   useSpatialContainer,
-  FocusContext,
 } from "@shared/hooks/useSpatialNav";
 import { usePageFocus } from "@shared/hooks/usePageFocus";
 import { PageTransition } from "@shared/components/PageTransition";
@@ -60,8 +59,8 @@ export function LanguageHubPage() {
   const { lang } = useParams({ strict: false }) as { lang?: string };
   const language = lang ? lang.charAt(0).toUpperCase() + lang.slice(1) : "";
   const navigate = useNavigate();
-  usePageFocus(`langhub-lang-${lang || "telugu"}`);
-  const { ref: containerRef, focusKey } = useSpatialContainer({
+  usePageFocus("langhub-tab-movies");
+  const { ref: containerRef } = useSpatialContainer({
     focusKey: "LANGUAGE_HUB_PAGE",
     focusable: false,
   });
@@ -87,36 +86,34 @@ export function LanguageHubPage() {
 
   return (
     <PageTransition>
-      <FocusContext.Provider value={focusKey}>
-        <div ref={containerRef} className="space-y-4 pb-12">
-          {/* Content Tabs — language switching is via TopNav */}
-          <div className="relative z-10">
-            <div
-              className="flex items-center gap-1 border-b border-border-subtle"
-              role="tablist"
-            >
-              {tabs.map((t) => (
-                <FocusableTab
-                  id={`langhub-tab-${t.key}`}
-                  key={t.key}
-                  label={t.label}
-                  isActive={activeTab === t.key}
-                  onSelect={() => setActiveTab(t.key)}
-                />
-              ))}
-            </div>
+      <div ref={containerRef} className="space-y-4 pb-12">
+        {/* Content Tabs — language switching is via TopNav */}
+        <div className="relative z-10">
+          <div
+            className="flex items-center gap-1 border-b border-border-subtle"
+            role="tablist"
+          >
+            {tabs.map((t) => (
+              <FocusableTab
+                id={`langhub-tab-${t.key}`}
+                key={t.key}
+                label={t.label}
+                isActive={activeTab === t.key}
+                onSelect={() => setActiveTab(t.key)}
+              />
+            ))}
           </div>
-
-          {/* Tab Content */}
-          {activeTab === "movies" && (
-            <MoviesTabContent language={language} lang={lang} />
-          )}
-          {activeTab === "series" && <SeriesTabContent language={language} />}
-          {activeTab === "live" && (
-            <LiveTabContent language={language} lang={lang} />
-          )}
         </div>
-      </FocusContext.Provider>
+
+        {/* Tab Content */}
+        {activeTab === "movies" && (
+          <MoviesTabContent language={language} lang={lang} />
+        )}
+        {activeTab === "series" && <SeriesTabContent language={language} />}
+        {activeTab === "live" && (
+          <LiveTabContent language={language} lang={lang} />
+        )}
+      </div>
     </PageTransition>
   );
 }
