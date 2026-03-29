@@ -6,53 +6,11 @@ import {
   FocusContext,
   setFocus,
 } from "@shared/hooks/useSpatialNav";
+// Nav links removed from TopNav — Telugu/Hindi/English/Sports/Search
+// are in the Language Hub's language tabs row instead
 import { useAuthStore } from "@lib/store";
 import { useLogout } from "@features/auth/hooks/useAuth";
 import { isTVMode } from "@shared/utils/isTVMode";
-
-const NAV_ITEMS = [
-  { to: "/language/telugu", label: "Telugu", focusKey: "nav-telugu" },
-  { to: "/language/hindi", label: "Hindi", focusKey: "nav-hindi" },
-  { to: "/language/english", label: "English", focusKey: "nav-english" },
-  { to: "/sports", label: "Sports", focusKey: "nav-sports" },
-  { to: "/search", label: "Search", focusKey: "nav-search" },
-];
-
-function NavLink({
-  to,
-  label,
-  focusKey,
-}: {
-  to: string;
-  label: string;
-  focusKey: string;
-}) {
-  const navigate = useNavigate();
-  const { ref, showFocusRing, focusProps } = useSpatialFocusable({
-    focusKey,
-    onEnterPress: () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      navigate({ to: to as any });
-    },
-  });
-
-  return (
-    <Link
-      ref={ref}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      to={to as any}
-      {...focusProps}
-      className={`px-3 py-2 text-sm font-medium rounded-lg transition-[background-color,color] min-h-[40px] flex items-center ${
-        showFocusRing
-          ? "text-text-primary bg-teal/10 ring-2 ring-teal/50"
-          : "text-text-secondary hover:text-text-primary hover:bg-surface-raised/50"
-      }`}
-      activeProps={{ className: "text-teal" }}
-    >
-      {label}
-    </Link>
-  );
-}
 
 export function TopNav() {
   const username = useAuthStore((s) => s.username);
@@ -103,17 +61,7 @@ export function TopNav() {
         Stream<span className="text-teal">Vault</span>
       </Link>
 
-      {/* Nav Links — D-pad navigable, no FocusContext wrapper so items are in SN:ROOT */}
-      <div className="flex items-center gap-1 ml-6 flex-1">
-        {NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.focusKey}
-            to={item.to}
-            label={item.label}
-            focusKey={item.focusKey}
-          />
-        ))}
-      </div>
+      <div className="flex-1" />
 
       <ProfileMenu
         username={username}

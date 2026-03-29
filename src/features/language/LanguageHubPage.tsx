@@ -22,6 +22,8 @@ const LANGUAGE_TABS = [
   { key: "telugu", label: "Telugu" },
   { key: "hindi", label: "Hindi" },
   { key: "english", label: "English" },
+  { key: "sports", label: "Sports" },
+  { key: "search", label: "Search" },
 ];
 
 function FocusableLanguageTab({
@@ -138,17 +140,28 @@ export function LanguageHubPage() {
                   key={lt.key}
                   id={`langhub-lang-${lt.key}`}
                   label={lt.label}
-                  isActive={lang === lt.key}
+                  isActive={
+                    lt.key === "sports"
+                      ? false
+                      : lt.key === "search"
+                        ? false
+                        : lang === lt.key
+                  }
                   onSelect={() => {
-                    navigate({
+                    if (lt.key === "sports" || lt.key === "search") {
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      to: `/language/${lt.key}` as any,
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      search:
-                        activeTab === "movies"
-                          ? undefined
-                          : ({ tab: activeTab } as any),
-                    });
+                      navigate({ to: `/${lt.key}` as any });
+                    } else {
+                      navigate({
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        to: `/language/${lt.key}` as any,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        search:
+                          activeTab === "movies"
+                            ? undefined
+                            : ({ tab: activeTab } as any),
+                      });
+                    }
                   }}
                 />
               ))}
