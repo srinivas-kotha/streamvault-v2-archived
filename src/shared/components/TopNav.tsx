@@ -60,9 +60,11 @@ export function TopNav() {
   const [scrolled, setScrolled] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  // No FocusContext.Provider — nav items register directly in SN:ROOT
-  // so D-pad Up from page content can reach them
-  const topNavRef = useRef<HTMLElement>(null);
+  // Container with focusable:false — items register but container doesn't block nav
+  const { ref: topNavRef, focusKey: topNavFocusKey } = useSpatialContainer({
+    focusKey: "top-nav",
+    focusable: false,
+  });
 
   // Track scroll position for transparency
   useEffect(() => {
@@ -124,36 +126,40 @@ export function TopNav() {
 
   if (isTVMode) {
     return (
-      <header
-        ref={topNavRef}
-        className="fixed top-0 left-0 right-0 z-50 bg-obsidian/95"
-      >
-        <nav
-          aria-label="Main navigation"
-          className="flex items-center h-12 px-4 lg:px-10"
+      <FocusContext.Provider value={topNavFocusKey}>
+        <header
+          ref={topNavRef}
+          className="fixed top-0 left-0 right-0 z-50 bg-obsidian/95"
         >
-          {navContent}
-        </nav>
-      </header>
+          <nav
+            aria-label="Main navigation"
+            className="flex items-center h-12 px-4 lg:px-10"
+          >
+            {navContent}
+          </nav>
+        </header>
+      </FocusContext.Provider>
     );
   }
 
   return (
-    <header
-      ref={topNavRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color] duration-300 ${
-        scrolled
-          ? "bg-obsidian/90 backdrop-blur-xl border-b border-border-subtle shadow-lg"
-          : "bg-gradient-to-b from-obsidian/80 to-transparent"
-      }`}
-    >
-      <nav
-        aria-label="Main navigation"
-        className="flex items-center h-16 px-4 lg:px-10"
+    <FocusContext.Provider value={topNavFocusKey}>
+      <header
+        ref={topNavRef}
+        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color] duration-300 ${
+          scrolled
+            ? "bg-obsidian/90 backdrop-blur-xl border-b border-border-subtle shadow-lg"
+            : "bg-gradient-to-b from-obsidian/80 to-transparent"
+        }`}
       >
-        {navContent}
-      </nav>
-    </header>
+        <nav
+          aria-label="Main navigation"
+          className="flex items-center h-16 px-4 lg:px-10"
+        >
+          {navContent}
+        </nav>
+      </header>
+    </FocusContext.Provider>
   );
 }
 
