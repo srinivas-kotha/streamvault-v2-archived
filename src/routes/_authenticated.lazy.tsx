@@ -8,7 +8,11 @@ import { TopNav } from "@shared/components/TopNav";
 import { useAuthCheck } from "@features/auth/hooks/useAuth";
 import { useBackNavigation } from "@shared/hooks/useBackNavigation";
 import { useTokenRefresh } from "@features/auth/hooks/useTokenRefresh";
-import { useSpatialFocusable } from "@shared/hooks/useSpatialNav";
+import {
+  useSpatialFocusable,
+  useSpatialContainer,
+  FocusContext,
+} from "@shared/hooks/useSpatialNav";
 
 export const Route = createLazyFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -70,6 +74,14 @@ function AuthenticatedLayout() {
   const currentPath =
     typeof window !== "undefined" ? window.location.pathname : "";
 
+  // Container for global nav bar — gives norigin a proper parent so D-pad
+  // can cross between nav and page content (fixes FocusContext isolation).
+  const { ref: globalNavRef, focusKey: globalNavFocusKey } =
+    useSpatialContainer({
+      focusKey: "global-nav",
+      saveLastFocusedChild: true,
+    });
+
   return (
     <div className="min-h-screen bg-obsidian">
       <TopNav />
@@ -78,26 +90,30 @@ function AuthenticatedLayout() {
         tabIndex={-1}
         className="min-h-screen pt-14 px-6 lg:px-10 overflow-y-auto scrollbar-hide focus:outline-none"
       >
-        {/* Global navigation — always visible */}
-        <div className="pt-2 pb-2">
-          <div className="flex items-center gap-2">
-            {GLOBAL_NAV.map((item) => (
-              <GlobalNavLink
-                key={item.key}
-                to={item.to}
-                navKey={item.key}
-                label={item.label}
-                isActive={
-                  item.key === "sports"
-                    ? currentPath === "/sports"
-                    : item.key === "search"
-                      ? currentPath === "/search"
-                      : params.lang === item.key
-                }
-              />
-            ))}
+        {/* Global navigation — always visible.
+            FocusContext.Provider anchors the nav links under the global-nav
+            container so norigin can traverse up/down between nav and page content. */}
+        <FocusContext.Provider value={globalNavFocusKey}>
+          <div ref={globalNavRef} className="pt-2 pb-2">
+            <div className="flex items-center gap-2">
+              {GLOBAL_NAV.map((item) => (
+                <GlobalNavLink
+                  key={item.key}
+                  to={item.to}
+                  navKey={item.key}
+                  label={item.label}
+                  isActive={
+                    item.key === "sports"
+                      ? currentPath === "/sports"
+                      : item.key === "search"
+                        ? currentPath === "/search"
+                        : params.lang === item.key
+                  }
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        </FocusContext.Provider>
         <Outlet />
       </main>
     </div>
