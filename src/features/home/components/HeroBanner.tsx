@@ -1,5 +1,5 @@
-import { cn } from '@/shared/utils/cn';
-import { Badge } from '@/design-system/primitives/Badge';
+import { cn } from "@/shared/utils/cn";
+import { Badge } from "@/design-system/primitives/Badge";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -78,7 +78,7 @@ export function HeroBanner({
         {genres && genres.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {genres.map((genre) => (
-              <Badge key={genre} variant="default" size="sm">
+              <Badge key={genre} variant="secondary" size="sm">
                 {genre}
               </Badge>
             ))}
@@ -108,11 +108,11 @@ export function HeroBanner({
               type="button"
               onClick={onPlay}
               className={cn(
-                'inline-flex items-center gap-2 px-6 py-2.5',
-                'bg-accent-teal text-bg-primary font-semibold rounded-[var(--radius-md)]',
-                'transition-[background-color,transform] duration-200 ease-out',
-                'hover-capable:hover:bg-accent-teal/90 hover-capable:hover:scale-[1.02]',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-teal focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary',
+                "inline-flex items-center gap-2 px-6 py-2.5",
+                "bg-accent-teal text-bg-primary font-semibold rounded-[var(--radius-md)]",
+                "transition-[background-color,transform] duration-200 ease-out",
+                "hover-capable:hover:bg-accent-teal/90 hover-capable:hover:scale-[1.02]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-teal focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary",
               )}
             >
               <svg

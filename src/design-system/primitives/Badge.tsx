@@ -1,33 +1,61 @@
-import { cn } from '@/shared/utils/cn';
+import { cn } from "@/shared/utils/cn";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type BadgeVariant = 'default' | 'new' | 'live' | 'rating';
-export type BadgeSize = 'sm' | 'md';
+/**
+ * Badge variants using new design-system tokens only.
+ * - primary   : teal accent — highlights / new content
+ * - secondary : surface-raised — neutral label
+ * - status    : maps to semantic sub-variants via `statusColor` prop
+ * - new       : alias kept for back-compat with content-rail badges
+ * - live      : live-stream indicator with pulsing dot
+ * - rating    : star + score
+ */
+export type BadgeVariant =
+  | "primary"
+  | "secondary"
+  | "status"
+  | "new"
+  | "live"
+  | "rating";
+export type BadgeSize = "sm" | "md" | "lg";
+export type BadgeStatusColor = "success" | "warning" | "error" | "info";
 
 export interface BadgeProps {
   variant?: BadgeVariant;
   size?: BadgeSize;
+  /** Only applies when variant="status" — maps to semantic color token */
+  statusColor?: BadgeStatusColor;
   className?: string;
   children?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------
-// Style maps
+// Style maps (new design-system tokens only — zero old CSS)
 // ---------------------------------------------------------------------------
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: 'bg-bg-tertiary text-text-secondary',
-  new: 'bg-accent-teal/20 text-accent-teal',
-  live: 'bg-error/20 text-error',
-  rating: 'bg-warning/20 text-warning',
+  primary: "bg-accent-teal/20 text-accent-teal",
+  secondary: "bg-bg-tertiary text-text-secondary border border-border",
+  status: "bg-bg-tertiary text-text-secondary", // overridden per statusColor
+  new: "bg-accent-teal/20 text-accent-teal",
+  live: "bg-error/20 text-error",
+  rating: "bg-warning/20 text-warning",
+};
+
+const statusColorClasses: Record<BadgeStatusColor, string> = {
+  success: "bg-success/15 text-success",
+  warning: "bg-warning/15 text-warning",
+  error: "bg-error/15 text-error",
+  info: "bg-info/15 text-info",
 };
 
 const sizeClasses: Record<BadgeSize, string> = {
-  sm: 'text-xs px-1.5 py-0.5',
-  md: 'text-sm px-2 py-0.5',
+  sm: "text-xs px-1.5 py-0.5",
+  md: "text-sm px-2 py-0.5",
+  lg: "text-base px-3 py-1",
 };
 
 // ---------------------------------------------------------------------------
@@ -40,7 +68,7 @@ function LiveDot() {
     <span
       aria-hidden="true"
       className="inline-block w-1.5 h-1.5 rounded-full bg-error"
-      style={{ animation: 'pulse 2s infinite' }}
+      style={{ animation: "pulse 2s infinite" }}
     />
   );
 }
@@ -64,24 +92,30 @@ function StarIcon() {
 // ---------------------------------------------------------------------------
 
 export function Badge({
-  variant = 'default',
-  size = 'md',
+  variant = "secondary",
+  size = "md",
+  statusColor = "info",
   className,
   children,
 }: BadgeProps) {
+  const colorClass =
+    variant === "status"
+      ? statusColorClasses[statusColor]
+      : variantClasses[variant];
+
   return (
     <span
       role="status"
       className={cn(
-        'inline-flex items-center gap-1 font-medium rounded-full',
-        'transition-[background-color,color] duration-[var(--transition-fast)]',
-        variantClasses[variant],
+        "inline-flex items-center gap-1 font-medium rounded-full",
+        "transition-[background-color,color] duration-[var(--transition-fast)]",
+        colorClass,
         sizeClasses[size],
         className,
       )}
     >
-      {variant === 'live' && <LiveDot />}
-      {variant === 'rating' && <StarIcon />}
+      {variant === "live" && <LiveDot />}
+      {variant === "rating" && <StarIcon />}
       {children}
     </span>
   );
