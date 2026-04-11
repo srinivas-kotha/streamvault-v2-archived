@@ -41,12 +41,27 @@ export default defineConfig({
     exclude: ["**/node_modules/**", "**/dist/**", "tests/e2e/**"],
   },
   build: {
+    // hls.js (523 KB raw / 162 KB gzip) always exceeds the 500 KB warning threshold.
+    // It is loaded lazily (dynamic import in VideoElement) and excluded from the
+    // initial load budget, so the warning is expected — raise the limit to suppress it.
+    chunkSizeWarningLimit: 600,
     target: ["es2019", "chrome69"],
     rollupOptions: {
       output: {
-        // Performance budget: <400KB gzipped for initial page load.
-        // vendor-hls and vendor-mpegts are deferred (dynamic import in VideoElement/VideoPlayer)
-        // and excluded from the initial load budget (~213KB initial vs ~439KB total).
+        // Performance budget: total compressed ≤ 500 KB (excluding media-player chunks).
+        //
+        // Chunk breakdown (gzip):
+        //   vendor-react       ~61 KB  (eagerly loaded)
+        //   vendor-tanstack    ~43 KB  (eagerly loaded)
+        //   vendor-spatial-nav  ~6 KB  (eagerly loaded via SpatialNavProvider)
+        //   vendor-zustand      ~3 KB  (eagerly loaded via stores)
+        //   index (app core)   ~20 KB  (after PlayerShell moved to lazy chunk)
+        //   player-shell        ~? KB  (lazy — deferred after first render)
+        //   vendor-hls        ~162 KB  (lazy — dynamic import in VideoElement)
+        //   vendor-mpegts      ~64 KB  (lazy — dynamic import in VideoElement)
+        //   page routes        ~60 KB  (lazy — loaded on navigation)
+        //
+        // Eagerly-loaded initial budget ≈ 130 KB gzip.
         manualChunks(id) {
           if (
             id.includes("node_modules/react-dom") ||
@@ -56,6 +71,12 @@ export default defineConfig({
           }
           if (id.includes("node_modules/@tanstack")) {
             return "vendor-tanstack";
+          }
+          if (id.includes("node_modules/@noriginmedia")) {
+            return "vendor-spatial-nav";
+          }
+          if (id.includes("node_modules/zustand")) {
+            return "vendor-zustand";
           }
           if (id.includes("node_modules/hls.js")) {
             return "vendor-hls";

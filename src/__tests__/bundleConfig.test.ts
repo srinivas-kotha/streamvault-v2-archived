@@ -1,8 +1,16 @@
 /**
- * Sprint 7 — Vite manualChunks configuration tests
+ * Vite manualChunks configuration tests
  *
  * Verifies that the chunk-splitting function correctly categorizes
  * vendor dependencies into separate chunks for optimal caching.
+ *
+ * Chunks:
+ *   vendor-react       — react + react-dom (eagerly loaded)
+ *   vendor-tanstack    — @tanstack/* (eagerly loaded)
+ *   vendor-spatial-nav — @noriginmedia/norigin-spatial-navigation (eagerly loaded)
+ *   vendor-zustand     — zustand (eagerly loaded)
+ *   vendor-hls         — hls.js (lazy — dynamic import in VideoElement)
+ *   vendor-mpegts      — mpegts.js (lazy — dynamic import in VideoElement)
  */
 
 import { describe, it, expect } from "vitest";
@@ -18,6 +26,12 @@ function manualChunks(id: string): string | undefined {
   }
   if (id.includes("node_modules/@tanstack")) {
     return "vendor-tanstack";
+  }
+  if (id.includes("node_modules/@noriginmedia")) {
+    return "vendor-spatial-nav";
+  }
+  if (id.includes("node_modules/zustand")) {
+    return "vendor-zustand";
   }
   if (id.includes("node_modules/hls.js")) {
     return "vendor-hls";
@@ -77,6 +91,40 @@ describe("Vite manualChunks — bundle splitting", () => {
     ).toBe("vendor-tanstack");
   });
 
+  // ── Spatial nav vendor chunk ──────────────────────────────────────────
+
+  it("returns 'vendor-spatial-nav' for @noriginmedia paths", () => {
+    expect(
+      manualChunks(
+        "/home/user/project/node_modules/@noriginmedia/norigin-spatial-navigation/dist/index.js",
+      ),
+    ).toBe("vendor-spatial-nav");
+  });
+
+  it("returns 'vendor-spatial-nav' for norigin subpaths", () => {
+    expect(
+      manualChunks(
+        "/home/user/project/node_modules/@noriginmedia/norigin-spatial-navigation/src/SpatialNavigation.ts",
+      ),
+    ).toBe("vendor-spatial-nav");
+  });
+
+  // ── Zustand vendor chunk ──────────────────────────────────────────────
+
+  it("returns 'vendor-zustand' for zustand paths", () => {
+    expect(
+      manualChunks("/home/user/project/node_modules/zustand/esm/vanilla.mjs"),
+    ).toBe("vendor-zustand");
+  });
+
+  it("returns 'vendor-zustand' for zustand middleware", () => {
+    expect(
+      manualChunks(
+        "/home/user/project/node_modules/zustand/esm/middleware.mjs",
+      ),
+    ).toBe("vendor-zustand");
+  });
+
   // ── HLS vendor chunk ───────────────────────────────────────────────────
 
   it("returns 'vendor-hls' for hls.js paths", () => {
@@ -109,15 +157,15 @@ describe("Vite manualChunks — bundle splitting", () => {
     ).toBeUndefined();
   });
 
-  it("returns undefined for other node_modules", () => {
-    expect(
-      manualChunks("/home/user/project/node_modules/zustand/esm/vanilla.mjs"),
-    ).toBeUndefined();
-  });
-
   it("returns undefined for tailwind", () => {
     expect(
       manualChunks("/home/user/project/node_modules/tailwindcss/lib/index.js"),
+    ).toBeUndefined();
+  });
+
+  it("returns undefined for clsx", () => {
+    expect(
+      manualChunks("/home/user/project/node_modules/clsx/dist/clsx.mjs"),
     ).toBeUndefined();
   });
 });
