@@ -25,19 +25,32 @@ vi.mock("@shared/components/PageTransition", () => ({
 
 // ── mock shared components ────────────────────────────────────────────────────
 
-vi.mock("@shared/components/ContentCard", () => ({
-  ContentCard: ({ title, onClick, badge }: any) => (
-    <div
-      data-testid="content-card"
-      role="button"
-      aria-label={title}
-      onClick={onClick}
-    >
-      {title}
-      {badge && <span data-testid="content-badge">{badge}</span>}
-    </div>
-  ),
-}));
+vi.mock("@/design-system", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/design-system")>();
+  return {
+    ...actual,
+    PosterCard: ({ title, onClick }: any) => (
+      <div
+        data-testid="content-card"
+        role="button"
+        aria-label={title}
+        onClick={onClick}
+      >
+        {title}
+      </div>
+    ),
+    ChannelCard: ({ channelName, onClick }: any) => (
+      <div
+        data-testid="content-card"
+        role="button"
+        aria-label={channelName}
+        onClick={onClick}
+      >
+        {channelName}
+      </div>
+    ),
+  };
+});
 
 vi.mock("@shared/components/Skeleton", () => ({
   SkeletonGrid: ({ count }: any) => (

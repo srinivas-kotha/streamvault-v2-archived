@@ -43,6 +43,18 @@ vi.mock("@shared/components/FocusableCard", () => ({
   ),
 }));
 
+vi.mock("@/design-system", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/design-system")>();
+  return {
+    ...actual,
+    PosterCard: ({ title, onClick }: any) => (
+      <div data-testid="series-card" onClick={onClick}>
+        {title}
+      </div>
+    ),
+  };
+});
+
 // ── mock isNewContent ─────────────────────────────────────────────────────────
 
 vi.mock("@shared/utils/isNewContent", () => ({

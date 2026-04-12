@@ -5,11 +5,9 @@ import {
   type SeriesWithChannel,
 } from "@features/series/api";
 import { ContentRail } from "@shared/components/ContentRail";
-import { FocusableCard } from "@shared/components/FocusableCard";
-import { ContentCard } from "@shared/components/ContentCard";
+import { FocusableCard, PosterCard } from "@/design-system";
 import { SkeletonGrid } from "@shared/components/Skeleton";
 import { EmptyState } from "@shared/components/EmptyState";
-import { Badge } from "@shared/components/Badge";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { useSpatialFocusable } from "@shared/hooks/useSpatialNav";
 import { isNewContent } from "@shared/utils/isNewContent";
@@ -362,19 +360,27 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
                 <FocusableCard
                   key={item.id}
                   focusKey={`series-recent-${item.id}`}
-                  image={item.icon || ""}
-                  title={item.name}
-                  subtitle={item.genre || undefined}
-                  isNew={isNewContent(item.added ?? undefined)}
-                  aspectRatio="poster"
-                  onClick={() =>
+                  onEnterPress={() =>
                     navigate({
                       to: "/series/$seriesId",
                       params: { seriesId: item.id },
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } as any)
                   }
-                />
+                >
+                  <PosterCard
+                    imageUrl={item.icon || ""}
+                    title={item.name}
+                    isNew={isNewContent(item.added ?? undefined)}
+                    onClick={() =>
+                      navigate({
+                        to: "/series/$seriesId",
+                        params: { seriesId: item.id },
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      } as any)
+                    }
+                  />
+                </FocusableCard>
               ))}
             </ContentRail>
           )}
@@ -384,19 +390,27 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
                 <FocusableCard
                   key={item.id}
                   focusKey={`series-${item.id}`}
-                  image={item.icon || ""}
-                  title={item.name}
-                  subtitle={item.genre || undefined}
-                  isNew={isNewContent(item.added ?? undefined)}
-                  aspectRatio="poster"
-                  onClick={() =>
+                  onEnterPress={() =>
                     navigate({
                       to: "/series/$seriesId",
                       params: { seriesId: item.id },
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } as any)
                   }
-                />
+                >
+                  <PosterCard
+                    imageUrl={item.icon || ""}
+                    title={item.name}
+                    isNew={isNewContent(item.added ?? undefined)}
+                    onClick={() =>
+                      navigate({
+                        to: "/series/$seriesId",
+                        params: { seriesId: item.id },
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      } as any)
+                    }
+                  />
+                </FocusableCard>
               ))}
             </ContentRail>
           ))}
@@ -434,16 +448,18 @@ export function SeriesTabContent({ language }: SeriesTabContentProps) {
           <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
             {processedSeries.map((series) => (
               <div key={series.id} className="relative">
-                <ContentCard
-                  image={series.icon || ""}
+                <PosterCard
+                  imageUrl={series.icon || ""}
                   title={series.name}
-                  subtitle={series.year ? series.year.slice(0, 4) : undefined}
-                  badge={
-                    series.rating && parseFloat(series.rating) > 0 ? (
-                      <Badge variant="warning">
-                        {parseFloat(series.rating).toFixed(1)} ★
-                      </Badge>
-                    ) : undefined
+                  year={
+                    series.year
+                      ? parseInt(series.year.slice(0, 4), 10)
+                      : undefined
+                  }
+                  rating={
+                    series.rating && parseFloat(series.rating) > 0
+                      ? parseFloat(series.rating).toFixed(1)
+                      : undefined
                   }
                   onClick={() =>
                     navigate({

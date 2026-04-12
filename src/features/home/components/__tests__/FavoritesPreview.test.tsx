@@ -19,13 +19,17 @@ vi.mock("@shared/hooks/useSpatialNav", () => ({
 
 // ── mock ContentCard ──────────────────────────────────────────────────────────
 
-vi.mock("@shared/components/ContentCard", () => ({
-  ContentCard: ({ title, onClick }: any) => (
-    <div data-testid="favorite-card" onClick={onClick}>
-      {title}
-    </div>
-  ),
-}));
+vi.mock("@/design-system", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/design-system")>();
+  return {
+    ...actual,
+    PosterCard: ({ title, onClick }: any) => (
+      <div data-testid="favorite-card" onClick={onClick}>
+        {title}
+      </div>
+    ),
+  };
+});
 
 // ── mock router ───────────────────────────────────────────────────────────────
 

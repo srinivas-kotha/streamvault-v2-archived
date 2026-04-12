@@ -1,5 +1,5 @@
-import { useState, memo, useCallback } from 'react';
-import { cn } from '@/shared/utils/cn';
+import { useState, memo, useCallback } from "react";
+import { cn } from "@/shared/utils/cn";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -7,7 +7,7 @@ import { cn } from '@/shared/utils/cn';
 
 export interface ChannelCardProps {
   channelName: string;
-  channelNumber: number;
+  channelNumber?: number;
   logoUrl: string;
   isLive?: boolean;
   currentProgram?: string;
@@ -57,7 +57,7 @@ export const ChannelCard = memo(function ChannelCard({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if ((e.key === 'Enter' || e.key === ' ') && onClick) onClick();
+      if ((e.key === "Enter" || e.key === " ") && onClick) onClick();
     },
     [onClick],
   );
@@ -69,22 +69,22 @@ export const ChannelCard = memo(function ChannelCard({
   return (
     <div
       data-focus-key={focusKey}
-      role={onClick ? 'button' : undefined}
+      role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       aria-label={ariaLabel}
       onClick={onClick}
       onKeyDown={onClick ? handleKeyDown : undefined}
       className={cn(
-        'relative cursor-pointer select-none',
-        'rounded-[var(--radius-lg)] overflow-hidden',
-        'aspect-video',
-        'min-h-[44px] min-w-[44px]',
-        'bg-bg-secondary',
-        'border border-transparent',
-        'hover-capable:border-accent-teal/30',
-        'transition-[transform,box-shadow,border-color] duration-200 ease-out',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-teal focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary',
-        'focus-visible:scale-[1.04] focus-visible:shadow-[var(--shadow-focus-tv)]',
+        "relative cursor-pointer select-none",
+        "rounded-[var(--radius-lg)] overflow-hidden",
+        "aspect-video",
+        "min-h-[44px] min-w-[44px]",
+        "bg-bg-secondary",
+        "border border-transparent",
+        "hover-capable:border-accent-teal/30",
+        "transition-[transform,box-shadow,border-color] duration-200 ease-out",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-teal focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary",
+        "focus-visible:scale-[1.04] focus-visible:shadow-[var(--shadow-focus-tv)]",
         className,
       )}
     >
@@ -125,12 +125,14 @@ export const ChannelCard = memo(function ChannelCard({
         </div>
       )}
 
-      {/* Channel number */}
-      <div className="absolute top-2 left-2 pointer-events-none">
-        <span className="text-xs font-bold text-text-primary bg-bg-primary/60 px-1.5 py-0.5 rounded">
-          {channelNumber}
-        </span>
-      </div>
+      {/* Channel number — only rendered when provided */}
+      {channelNumber !== undefined && (
+        <div className="absolute top-2 left-2 pointer-events-none">
+          <span className="text-xs font-bold text-text-primary bg-bg-primary/60 px-1.5 py-0.5 rounded">
+            {channelNumber}
+          </span>
+        </div>
+      )}
 
       {/* Channel info overlay — bottom */}
       <div className="absolute inset-x-0 bottom-0 px-2.5 pb-2 pointer-events-none">

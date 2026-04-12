@@ -7,10 +7,9 @@ import { useVODCategories } from "@features/vod/api";
 import { useSeriesCategories } from "@features/series/api";
 import { useLiveCategories } from "@features/live/api";
 import { SortFilterBar } from "@features/vod/components/SortFilterBar";
-import { ContentCard } from "@shared/components/ContentCard";
+import { PosterCard, LandscapeCard } from "@/design-system";
 import { SkeletonGrid } from "@shared/components/Skeleton";
 import { EmptyState } from "@shared/components/EmptyState";
-import { Badge } from "@shared/components/Badge";
 import { PageTransition } from "@shared/components/PageTransition";
 import {
   sortContent,
@@ -245,17 +244,14 @@ export function CategoryGridPage() {
           <div className="isolate grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
             {/* VOD items */}
             {processedVod.map((movie) => (
-              <ContentCard
+              <PosterCard
                 key={movie.id}
-                image={movie.icon || ""}
+                imageUrl={movie.icon || ""}
                 title={movie.name}
-                subtitle={undefined}
-                badge={
-                  movie.rating && parseFloat(movie.rating) > 0 ? (
-                    <Badge variant="warning">
-                      {parseFloat(movie.rating).toFixed(1)} ★
-                    </Badge>
-                  ) : undefined
+                rating={
+                  movie.rating && parseFloat(movie.rating) > 0
+                    ? parseFloat(movie.rating).toFixed(1)
+                    : undefined
                 }
                 onClick={() =>
                   navigate({
@@ -268,17 +264,19 @@ export function CategoryGridPage() {
 
             {/* Series items */}
             {processedSeries.map((series) => (
-              <ContentCard
+              <PosterCard
                 key={series.id}
-                image={series.icon || ""}
+                imageUrl={series.icon || ""}
                 title={series.name}
-                subtitle={series.year ? series.year.slice(0, 4) : undefined}
-                badge={
-                  series.rating && parseFloat(series.rating) > 0 ? (
-                    <Badge variant="warning">
-                      {parseFloat(series.rating).toFixed(1)} ★
-                    </Badge>
-                  ) : undefined
+                year={
+                  series.year
+                    ? parseInt(series.year.slice(0, 4), 10)
+                    : undefined
+                }
+                rating={
+                  series.rating && parseFloat(series.rating) > 0
+                    ? parseFloat(series.rating).toFixed(1)
+                    : undefined
                 }
                 onClick={() =>
                   navigate({
@@ -291,11 +289,10 @@ export function CategoryGridPage() {
 
             {/* Live items */}
             {processedLive.map((channel) => (
-              <ContentCard
+              <LandscapeCard
                 key={channel.id}
-                image={channel.icon || ""}
+                imageUrl={channel.icon || ""}
                 title={channel.name}
-                aspectRatio="square"
                 onClick={() =>
                   playStream(channel.id, {
                     streamType: "live",

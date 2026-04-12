@@ -58,18 +58,22 @@ vi.mock("@shared/components/Badge", () => ({
   Badge: ({ children }: any) => <span data-testid="badge">{children}</span>,
 }));
 
-vi.mock("@shared/components/ContentCard", () => ({
-  ContentCard: ({ title, onClick }: any) => (
-    <div
-      data-testid="content-card"
-      onClick={onClick}
-      role="button"
-      aria-label={title}
-    >
-      {title}
-    </div>
-  ),
-}));
+vi.mock("@/design-system", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/design-system")>();
+  return {
+    ...actual,
+    PosterCard: ({ title, onClick }: any) => (
+      <div
+        data-testid="content-card"
+        role="button"
+        aria-label={title}
+        onClick={onClick}
+      >
+        {title}
+      </div>
+    ),
+  };
+});
 
 vi.mock("@features/vod/components/SortFilterBar", () => ({
   SortFilterBar: ({ sort, onSortChange }: any) => (

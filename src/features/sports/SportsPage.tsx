@@ -1,8 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useSportsChannels } from "@features/language/api";
 import { ContentRail } from "@shared/components/ContentRail";
-import { FocusableCard } from "@shared/components/FocusableCard";
-import { ContentCard } from "@shared/components/ContentCard";
+import { ChannelCard } from "@/design-system";
 import { SkeletonGrid } from "@shared/components/Skeleton";
 import { EmptyState } from "@shared/components/EmptyState";
 import { PageTransition } from "@shared/components/PageTransition";
@@ -239,11 +238,11 @@ export function SportsPage() {
                   </p>
                   <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
                     {processedChannels.map((channel) => (
-                      <ContentCard
+                      <ChannelCard
                         key={channel.id}
-                        image={channel.icon || ""}
-                        title={channel.name}
-                        aspectRatio="landscape"
+                        channelName={channel.name}
+                        logoUrl={channel.icon || ""}
+                        isLive={true}
                         onClick={() => handlePlay(channel)}
                       />
                     ))}
@@ -259,12 +258,12 @@ export function SportsPage() {
                     flat
                   >
                     {rail.items.map((item) => (
-                      <FocusableCard
+                      <ChannelCard
                         key={item.id}
                         focusKey={`sports-${item.id}`}
-                        image={item.icon || ""}
-                        title={item.name}
-                        aspectRatio="landscape"
+                        channelName={item.name}
+                        logoUrl={item.icon || ""}
+                        isLive={true}
                         onClick={() => handlePlay(item)}
                       />
                     ))}

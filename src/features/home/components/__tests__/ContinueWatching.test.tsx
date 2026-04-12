@@ -56,6 +56,24 @@ vi.mock("@shared/components/FocusableCard", () => ({
   ),
 }));
 
+vi.mock("@/design-system", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/design-system")>();
+  return {
+    ...actual,
+    FocusableCard: ({ children, onEnterPress }: any) => (
+      <div data-testid="cw-card" onClick={onEnterPress}>
+        {children}
+      </div>
+    ),
+    LandscapeCard: ({ title, subtitle, onClick, progress }: any) => (
+      <div data-testid="landscape-card" onClick={onClick} data-progress={progress}>
+        <span>{title}</span>
+        <span data-testid="subtitle">{subtitle}</span>
+      </div>
+    ),
+  };
+});
+
 // ── mock router ───────────────────────────────────────────────────────────────
 
 const mockNavigate = vi.fn();
@@ -226,7 +244,7 @@ describe("ContinueWatching — playback by type", () => {
 describe("ContinueWatching — remove handler", () => {
   it("calls removeHistoryItem.mutate when remove button is clicked", () => {
     renderContinueWatching();
-    const removeButtons = screen.getAllByTestId("remove-btn");
+    const removeButtons = screen.getAllByLabelText("Remove from continue watching");
     fireEvent.click(removeButtons[0]!);
     expect(mockRemoveHistoryMutate).toHaveBeenCalledTimes(1);
     expect(mockRemoveHistoryMutate).toHaveBeenCalledWith({

@@ -42,6 +42,25 @@ vi.mock("@shared/components/EmptyState", () => ({
 
 // ── mock formatDuration / formatTimeAgo ───────────────────────────────────────
 
+vi.mock("@/design-system", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/design-system")>();
+  return {
+    ...actual,
+    LandscapeCard: ({ progress, onClick, focusKey, subtitle }: any) => (
+      <div
+        data-testid="landscape-card"
+        data-focus-key={focusKey}
+        onClick={onClick}
+      >
+        {subtitle && <span data-testid="lc-subtitle">{subtitle}</span>}
+        {progress !== undefined && progress > 0 && (
+          <div style={{ width: `${progress}%` }} />
+        )}
+      </div>
+    ),
+  };
+});
+
 vi.mock("@shared/utils/formatDuration", () => ({
   formatDuration: (secs: number) => `${Math.floor(secs / 60)}m`,
   formatTimeAgo: (iso: string) => {
@@ -295,11 +314,13 @@ describe("HistoryPage — empty state", () => {
 describe("HistoryPage — item click / resume playback", () => {
   it("clicking a VOD history item navigates to /vod/$vodId", () => {
     renderHistoryPage();
-    const baahubaliRow = screen
+    const baahubaliWrapper = screen
       .getByText("Baahubali")
-      .closest('[class*="rounded-lg"]');
-    expect(baahubaliRow).toBeTruthy();
-    fireEvent.click(baahubaliRow!);
+      .closest('[data-testid="history-item"]');
+    expect(baahubaliWrapper).toBeTruthy();
+    const baahubaliCard = baahubaliWrapper!.querySelector('[data-testid="landscape-card"]');
+    expect(baahubaliCard).toBeTruthy();
+    fireEvent.click(baahubaliCard!);
     expect(mockNavigate).toHaveBeenCalledWith({
       to: "/vod/$vodId",
       params: { vodId: "301" },
@@ -308,11 +329,13 @@ describe("HistoryPage — item click / resume playback", () => {
 
   it("clicking a series history item navigates to /series/$seriesId", () => {
     renderHistoryPage();
-    const sacredGamesRow = screen
+    const sacredGamesWrapper = screen
       .getByText("Sacred Games")
-      .closest('[class*="rounded-lg"]');
-    expect(sacredGamesRow).toBeTruthy();
-    fireEvent.click(sacredGamesRow!);
+      .closest('[data-testid="history-item"]');
+    expect(sacredGamesWrapper).toBeTruthy();
+    const sacredGamesCard = sacredGamesWrapper!.querySelector('[data-testid="landscape-card"]');
+    expect(sacredGamesCard).toBeTruthy();
+    fireEvent.click(sacredGamesCard!);
     expect(mockNavigate).toHaveBeenCalledWith({
       to: "/series/$seriesId",
       params: { seriesId: "401" },
@@ -321,11 +344,13 @@ describe("HistoryPage — item click / resume playback", () => {
 
   it("clicking a channel history item calls playStream and navigates to /live", () => {
     renderHistoryPage();
-    const starMaaRow = screen
+    const starMaaWrapper = screen
       .getByText("Star Maa")
-      .closest('[class*="rounded-lg"]');
-    expect(starMaaRow).toBeTruthy();
-    fireEvent.click(starMaaRow!);
+      .closest('[data-testid="history-item"]');
+    expect(starMaaWrapper).toBeTruthy();
+    const starMaaCard = starMaaWrapper!.querySelector('[data-testid="landscape-card"]');
+    expect(starMaaCard).toBeTruthy();
+    fireEvent.click(starMaaCard!);
     expect(mockNavigate).toHaveBeenCalledWith({
       to: "/live",
       search: { play: "201" },

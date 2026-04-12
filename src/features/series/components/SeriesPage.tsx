@@ -7,7 +7,7 @@ import {
 } from "@shared/hooks/useSpatialNav";
 import { useSeriesByLanguage, type SeriesWithChannel } from "../api";
 import { ContentRail } from "@shared/components/ContentRail";
-import { FocusableCard } from "@shared/components/FocusableCard";
+import { PosterCard } from "@/design-system";
 import { PageTransition } from "@shared/components/PageTransition";
 import { isNewContent } from "@shared/utils/isNewContent";
 
@@ -83,20 +83,20 @@ export function SeriesPage() {
                 focusKey={`series-channel-${channel.id}`}
               >
                 {channel.items.map((item) => (
-                  <FocusableCard
-                    key={item.id}
-                    focusKey={`series-${item.id}`}
-                    image={item.icon || ""}
-                    title={item.name}
-                    aspectRatio="poster"
-                    isNew={isNewContent(item.added ?? undefined)}
-                    onClick={() =>
-                      navigate({
-                        to: "/series/$seriesId",
-                        params: { seriesId: item.id },
-                      })
-                    }
-                  />
+                  <div key={item.id} className="rail-item flex-shrink-0">
+                    <PosterCard
+                      focusKey={`series-${item.id}`}
+                      imageUrl={item.icon || ""}
+                      title={item.name}
+                      isNew={isNewContent(item.added ?? undefined)}
+                      onClick={() =>
+                        navigate({
+                          to: "/series/$seriesId",
+                          params: { seriesId: item.id },
+                        })
+                      }
+                    />
+                  </div>
                 ))}
               </ContentRail>
             ))

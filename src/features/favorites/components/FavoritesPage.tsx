@@ -7,7 +7,7 @@ import {
 } from "@shared/hooks/useSpatialNav";
 import { usePageFocus } from "@shared/hooks/usePageFocus";
 import { useFavorites, useRemoveFavorite } from "../api";
-import { ContentCard } from "@shared/components/ContentCard";
+import { PosterCard, ChannelCard } from "@/design-system";
 import { EmptyState } from "@shared/components/EmptyState";
 import { SkeletonGrid } from "@shared/components/Skeleton";
 import { PageTransition } from "@shared/components/PageTransition";
@@ -105,16 +105,6 @@ export function FavoritesPage() {
     removeFavorite.mutate({ contentId: String(contentId), content_type });
   }
 
-  function getAspectRatio(type: ContentType) {
-    switch (type) {
-      case "live":
-        return "square" as const;
-      case "vod":
-      case "series":
-        return "poster" as const;
-    }
-  }
-
   return (
     <PageTransition>
       <FocusContext.Provider value={focusKey}>
@@ -158,22 +148,31 @@ export function FavoritesPage() {
             />
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-              {filtered.map((fav) => (
-                <ContentCard
-                  key={`${fav.content_type}-${fav.content_id}`}
-                  image={fav.content_icon || ""}
-                  title={
-                    fav.content_name || `${fav.content_type} ${fav.content_id}`
-                  }
-                  subtitle={fav.category_name || undefined}
-                  isFavorite={true}
-                  onFavoriteToggle={() =>
-                    handleRemove(fav.content_id, fav.content_type)
-                  }
-                  onClick={() => handleClick(fav)}
-                  aspectRatio={getAspectRatio(fav.content_type)}
-                />
-              ))}
+              {filtered.map((fav) =>
+                fav.content_type === "live" ? (
+                  <ChannelCard
+                    key={`${fav.content_type}-${fav.content_id}`}
+                    channelName={fav.content_name || ""}
+                    channelNumber={fav.content_id}
+                    logoUrl={fav.content_icon || ""}
+                    focusKey={`fav-${fav.content_type}-${fav.content_id}`}
+                    onClick={() => handleClick(fav)}
+                    {...({ onFavoriteToggle: () => handleRemove(fav.content_id, fav.content_type) } as any)}
+                  />
+                ) : (
+                  <PosterCard
+                    key={`${fav.content_type}-${fav.content_id}`}
+                    title={fav.content_name || `${fav.content_type} ${fav.content_id}`}
+                    imageUrl={fav.content_icon || ""}
+                    isFavorite={true}
+                    onFavoriteToggle={() =>
+                      handleRemove(fav.content_id, fav.content_type)
+                    }
+                    focusKey={`fav-${fav.content_type}-${fav.content_id}`}
+                    onClick={() => handleClick(fav)}
+                  />
+                ),
+              )}
             </div>
           )}
         </div>

@@ -1,4 +1,4 @@
-import { ContentCard } from "@shared/components/ContentCard";
+import { PosterCard, ChannelCard } from "@/design-system";
 import { useSpatialContainer, FocusContext } from "@shared/hooks/useSpatialNav";
 import type {
   XtreamLiveStream,
@@ -56,16 +56,12 @@ export function SearchResultsList({
             )}
             <div className={CARD_GRID}>
               {filteredData.live.map((stream) => (
-                <ContentCard
+                <ChannelCard
                   key={`live-${stream.id}`}
-                  image={stream.icon || ""}
-                  title={stream.name}
-                  aspectRatio="square"
-                  badge={
-                    <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase bg-red-500/90 text-white rounded">
-                      Live
-                    </span>
-                  }
+                  channelName={stream.name}
+                  logoUrl={stream.icon || ""}
+                  isLive={true}
+                  focusKey={`search-live-${stream.id}`}
                   onClick={() => onLiveClick(stream)}
                 />
               ))}
@@ -84,12 +80,12 @@ export function SearchResultsList({
             )}
             <div className={CARD_GRID}>
               {filteredData.vod.map((movie) => (
-                <ContentCard
+                <PosterCard
                   key={`vod-${movie.id}`}
-                  image={movie.icon || ""}
                   title={movie.name}
-                  subtitle={movie.rating ? `${movie.rating}/10` : undefined}
-                  aspectRatio="poster"
+                  imageUrl={movie.icon || ""}
+                  rating={movie.rating ? String(movie.rating) : undefined}
+                  focusKey={`search-vod-${movie.id}`}
                   onClick={() => onVodClick(movie.id)}
                 />
               ))}
@@ -108,12 +104,11 @@ export function SearchResultsList({
             )}
             <div className={CARD_GRID}>
               {filteredData.series.map((show) => (
-                <ContentCard
+                <PosterCard
                   key={`series-${show.id}`}
-                  image={show.icon || ""}
                   title={show.name}
-                  subtitle={show.genre || undefined}
-                  aspectRatio="poster"
+                  imageUrl={show.icon || ""}
+                  focusKey={`search-series-${show.id}`}
                   onClick={() => onSeriesClick(show.id)}
                 />
               ))}

@@ -2,11 +2,10 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useVODCategories, useVODStreams } from "../api";
 import { SortFilterBar } from "./SortFilterBar";
-import { ContentCard } from "@shared/components/ContentCard";
+import { PosterCard } from "@/design-system";
 import { CategoryGrid } from "@shared/components/CategoryGrid";
 import { SkeletonGrid } from "@shared/components/Skeleton";
 import { EmptyState } from "@shared/components/EmptyState";
-import { Badge } from "@shared/components/Badge";
 import {
   sortContent,
   SORT_OPTIONS,
@@ -185,18 +184,13 @@ export function VODPage() {
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
               {processedStreams.map((movie) => (
-                <ContentCard
+                <PosterCard
                   key={movie.id}
-                  image={movie.icon || ""}
                   title={movie.name}
-                  subtitle={undefined}
-                  badge={
-                    movie.rating && parseFloat(movie.rating) > 0 ? (
-                      <Badge variant="warning">
-                        {parseFloat(movie.rating).toFixed(1)} ★
-                      </Badge>
-                    ) : undefined
-                  }
+                  imageUrl={movie.icon || ""}
+                  rating={movie.rating ? String(movie.rating) : undefined}
+                  year={movie.year ? parseInt(movie.year) || undefined : undefined}
+                  focusKey={`vod-${movie.id}`}
                   onClick={() =>
                     navigate({
                       to: "/vod/$vodId",

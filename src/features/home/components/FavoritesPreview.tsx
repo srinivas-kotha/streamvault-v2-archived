@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useFavorites } from "../api";
 import { usePlayerStore } from "@lib/store";
-import { ContentCard } from "@shared/components/ContentCard";
+import { PosterCard } from "@/design-system";
 
 export function FavoritesPreview() {
   const { data: favorites, isLoading } = useFavorites();
@@ -47,13 +47,11 @@ export function FavoritesPreview() {
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
         {preview.map((item) => (
-          <ContentCard
+          <PosterCard
             key={`${item.content_type}-${item.content_id}`}
-            image={item.content_icon ?? ""}
+            imageUrl={item.content_icon ?? ""}
             title={item.content_name ?? "Unknown"}
-            subtitle={item.category_name ?? undefined}
             isFavorite
-            aspectRatio="poster"
             onClick={() => handleClick(item)}
           />
         ))}

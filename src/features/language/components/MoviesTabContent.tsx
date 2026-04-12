@@ -2,8 +2,7 @@ import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useLanguageMovieRails, useLanguageAllMovies } from "../api";
 import { ContentRail } from "@shared/components/ContentRail";
-import { FocusableCard } from "@shared/components/FocusableCard";
-import { ContentCard } from "@shared/components/ContentCard";
+import { FocusableCard, PosterCard } from "@/design-system";
 import { SkeletonGrid } from "@shared/components/Skeleton";
 import { EmptyState } from "@shared/components/EmptyState";
 import { useDebounce } from "@shared/hooks/useDebounce";
@@ -368,18 +367,23 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
                 <FocusableCard
                   key={item.id}
                   focusKey={`vod-latest-${item.id}`}
-                  image={item.icon || ""}
-                  title={item.name}
-                  subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
-                  isNew={isNewContent(item.added ?? undefined)}
-                  aspectRatio="poster"
-                  onClick={() =>
-                    navigate({
-                      to: "/vod/$vodId",
-                      params: { vodId: item.id },
-                    })
+                  onEnterPress={() =>
+                    navigate({ to: "/vod/$vodId", params: { vodId: item.id } })
                   }
-                />
+                >
+                  <PosterCard
+                    imageUrl={item.icon || ""}
+                    title={item.name}
+                    rating={item.rating || undefined}
+                    isNew={isNewContent(item.added ?? undefined)}
+                    onClick={() =>
+                      navigate({
+                        to: "/vod/$vodId",
+                        params: { vodId: item.id },
+                      })
+                    }
+                  />
+                </FocusableCard>
               ))}
             </ContentRail>
           )}
@@ -394,18 +398,23 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
                 <FocusableCard
                   key={item.id}
                   focusKey={`vod-${item.id}`}
-                  image={item.icon || ""}
-                  title={item.name}
-                  subtitle={item.rating ? `⭐ ${item.rating}` : undefined}
-                  isNew={isNewContent(item.added ?? undefined)}
-                  aspectRatio="poster"
-                  onClick={() =>
-                    navigate({
-                      to: "/vod/$vodId",
-                      params: { vodId: item.id },
-                    })
+                  onEnterPress={() =>
+                    navigate({ to: "/vod/$vodId", params: { vodId: item.id } })
                   }
-                />
+                >
+                  <PosterCard
+                    imageUrl={item.icon || ""}
+                    title={item.name}
+                    rating={item.rating || undefined}
+                    isNew={isNewContent(item.added ?? undefined)}
+                    onClick={() =>
+                      navigate({
+                        to: "/vod/$vodId",
+                        params: { vodId: item.id },
+                      })
+                    }
+                  />
+                </FocusableCard>
               ))}
             </ContentRail>
           ))}
@@ -448,11 +457,11 @@ export function MoviesTabContent({ language, lang }: MoviesTabContentProps) {
 
               <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
                 {processedMovies.map((movie) => (
-                  <ContentCard
+                  <PosterCard
                     key={movie.id}
-                    image={movie.icon || ""}
+                    imageUrl={movie.icon || ""}
                     title={movie.name}
-                    subtitle={movie.rating ? `⭐ ${movie.rating}` : undefined}
+                    rating={movie.rating || undefined}
                     onClick={() =>
                       navigate({
                         to: "/vod/$vodId",

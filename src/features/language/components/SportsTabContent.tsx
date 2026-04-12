@@ -1,8 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useSportsChannels } from "../api";
 import { ContentRail } from "@shared/components/ContentRail";
-import { FocusableCard } from "@shared/components/FocusableCard";
-import { ContentCard } from "@shared/components/ContentCard";
+import { FocusableCard, LandscapeCard } from "@/design-system";
 import { SkeletonGrid } from "@shared/components/Skeleton";
 import { EmptyState } from "@shared/components/EmptyState";
 import { useDebounce } from "@shared/hooks/useDebounce";
@@ -233,11 +232,10 @@ export function SportsTabContent() {
             </p>
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
               {processedChannels.map((channel) => (
-                <ContentCard
+                <LandscapeCard
                   key={channel.id}
-                  image={channel.icon || ""}
+                  imageUrl={channel.icon || ""}
                   title={channel.name}
-                  aspectRatio="landscape"
                   onClick={() => handlePlay(channel)}
                 />
               ))}
@@ -256,11 +254,14 @@ export function SportsTabContent() {
                 <FocusableCard
                   key={item.id}
                   focusKey={`sports-${item.id}`}
-                  image={item.icon || ""}
-                  title={item.name}
-                  aspectRatio="landscape"
-                  onClick={() => handlePlay(item)}
-                />
+                  onEnterPress={() => handlePlay(item)}
+                >
+                  <LandscapeCard
+                    imageUrl={item.icon || ""}
+                    title={item.name}
+                    onClick={() => handlePlay(item)}
+                  />
+                </FocusableCard>
               ))}
             </ContentRail>
           ))}

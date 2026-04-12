@@ -30,38 +30,60 @@ vi.mock("@shared/components/PageTransition", () => ({
 
 // ── mock shared components ────────────────────────────────────────────────────
 
-vi.mock("@shared/components/ContentCard", () => ({
-  ContentCard: ({
-    title,
-    onClick,
-    onFavoriteToggle,
-    isFavorite,
-    aspectRatio,
-  }: any) => (
-    <div
-      data-testid="content-card"
-      data-aspect={aspectRatio}
-      data-is-favorite={String(isFavorite)}
-      role="button"
-      aria-label={title}
-      onClick={onClick}
-    >
-      {title}
-      {onFavoriteToggle && (
-        <button
-          data-testid="remove-favorite-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onFavoriteToggle();
-          }}
-          aria-label={`Remove ${title} from favorites`}
-        >
-          Remove
-        </button>
-      )}
-    </div>
-  ),
-}));
+vi.mock("@/design-system", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/design-system")>();
+  return {
+    ...actual,
+    PosterCard: ({ title, onClick, onFavoriteToggle, isFavorite }: any) => (
+      <div
+        data-testid="fav-card"
+        data-type="poster"
+        data-is-favorite={String(!!isFavorite)}
+        role="button"
+        aria-label={title}
+        onClick={onClick}
+      >
+        {title}
+        {onFavoriteToggle && (
+          <button
+            data-testid="remove-favorite-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onFavoriteToggle();
+            }}
+            aria-label={`Remove ${title} from favorites`}
+          >
+            Remove
+          </button>
+        )}
+      </div>
+    ),
+    ChannelCard: ({ channelName, onClick, onFavoriteToggle }: any) => (
+      <div
+        data-testid="fav-card"
+        data-type="channel"
+        data-is-favorite="true"
+        role="button"
+        aria-label={channelName}
+        onClick={onClick}
+      >
+        {channelName}
+        {onFavoriteToggle && (
+          <button
+            data-testid="remove-favorite-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onFavoriteToggle();
+            }}
+            aria-label={`Remove ${channelName} from favorites`}
+          >
+            Remove
+          </button>
+        )}
+      </div>
+    ),
+  };
+});
 
 vi.mock("@shared/components/Skeleton", () => ({
   SkeletonGrid: ({ count }: any) => (
@@ -192,25 +214,25 @@ describe("FavoritesPage — heading and tabs", () => {
 describe("FavoritesPage — favorites grid", () => {
   it('renders a card for each favorited item in "All" tab', () => {
     renderFavoritesPage();
-    const cards = screen.getAllByTestId("content-card");
+    const cards = screen.getAllByTestId("fav-card");
     expect(cards.length).toBe(3);
   });
 
   it("channel favorites use square aspect ratio", () => {
     renderFavoritesPage();
     const channelCard = screen.getByLabelText("Star Maa");
-    expect(channelCard.getAttribute("data-aspect")).toBe("square");
+    expect(channelCard.getAttribute("data-type")).toBe("channel");
   });
 
   it("vod favorites use poster aspect ratio", () => {
     renderFavoritesPage();
     const vodCard = screen.getByLabelText("Baahubali");
-    expect(vodCard.getAttribute("data-aspect")).toBe("poster");
+    expect(vodCard.getAttribute("data-type")).toBe("poster");
   });
 
   it("all cards have isFavorite=true", () => {
     renderFavoritesPage();
-    const cards = screen.getAllByTestId("content-card");
+    const cards = screen.getAllByTestId("fav-card");
     cards.forEach((card) => {
       expect(card.getAttribute("data-is-favorite")).toBe("true");
     });
@@ -221,7 +243,7 @@ describe("FavoritesPage — type filter tabs", () => {
   it("clicking Channels tab shows only channel favorites", () => {
     renderFavoritesPage();
     fireEvent.click(screen.getByText("Channels"));
-    const cards = screen.getAllByTestId("content-card");
+    const cards = screen.getAllByTestId("fav-card");
     expect(cards.length).toBe(1);
     expect(screen.getByText("Star Maa")).toBeTruthy();
     expect(screen.queryByText("Baahubali")).toBeNull();
@@ -231,7 +253,7 @@ describe("FavoritesPage — type filter tabs", () => {
   it("clicking Movies tab shows only VOD favorites", () => {
     renderFavoritesPage();
     fireEvent.click(screen.getByText("Movies"));
-    const cards = screen.getAllByTestId("content-card");
+    const cards = screen.getAllByTestId("fav-card");
     expect(cards.length).toBe(1);
     expect(screen.getByText("Baahubali")).toBeTruthy();
   });
@@ -239,7 +261,7 @@ describe("FavoritesPage — type filter tabs", () => {
   it("clicking Series tab shows only series favorites", () => {
     renderFavoritesPage();
     fireEvent.click(screen.getByText("Series"));
-    const cards = screen.getAllByTestId("content-card");
+    const cards = screen.getAllByTestId("fav-card");
     expect(cards.length).toBe(1);
     expect(screen.getByText("Sacred Games")).toBeTruthy();
   });
@@ -248,7 +270,7 @@ describe("FavoritesPage — type filter tabs", () => {
     renderFavoritesPage();
     fireEvent.click(screen.getByText("Movies"));
     fireEvent.click(screen.getByText("All"));
-    const cards = screen.getAllByTestId("content-card");
+    const cards = screen.getAllByTestId("fav-card");
     expect(cards.length).toBe(3);
   });
 });
