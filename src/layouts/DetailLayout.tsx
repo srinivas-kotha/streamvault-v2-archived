@@ -73,14 +73,14 @@ export function DetailLayout({
         />
 
         {/* Metadata overlay — bottom-left, TV safe zone */}
-        <div className="absolute bottom-0 left-0 right-0 px-6 lg:px-10 pb-8 pt-24">
+        <div className="absolute bottom-0 left-0 right-0 px-6 lg:px-12 pb-8 pt-24">
           {metadata}
         </div>
       </section>
 
       {/* Related content rails */}
       {children && (
-        <div className="flex flex-col gap-8 py-8 px-6 lg:px-10">{children}</div>
+        <div className="flex flex-col gap-8 py-8 px-6 lg:px-12">{children}</div>
       )}
     </div>
   );
