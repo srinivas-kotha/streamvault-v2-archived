@@ -15,8 +15,10 @@ import { lazy, Suspense, useEffect } from "react";
 // PlayerShell renders nothing when status==="idle", so deferring it has
 // zero visual impact on first page load. The chunk is prefetched immediately
 // after the initial render, so it is ready before the user plays anything.
-const PlayerShell = lazy(
-  () => import("@features/player/components/PlayerShell"),
+const PlayerShell = lazy(() =>
+  import("@features/player/components/PlayerShell").then((m) => ({
+    default: m.PlayerShell,
+  })),
 );
 
 export const Route = createRootRoute({
