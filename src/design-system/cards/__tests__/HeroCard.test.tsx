@@ -97,6 +97,29 @@ describe("HeroCard — image fallback", () => {
   });
 });
 
+describe("HeroCard — genre and meta", () => {
+  it("renders genre label when provided", () => {
+    renderHeroCard({ genre: "Action" });
+    expect(screen.getByText("Action")).toBeTruthy();
+  });
+
+  it("renders year when provided", () => {
+    renderHeroCard({ year: 2024 });
+    expect(screen.getByText("2024")).toBeTruthy();
+  });
+
+  it("renders rating badge when provided", () => {
+    renderHeroCard({ rating: "PG-13" });
+    expect(screen.getByText("PG-13")).toBeTruthy();
+  });
+
+  it("does not render meta row when neither year nor rating provided", () => {
+    const { container } = renderHeroCard();
+    // No meta row — only title heading present in content area
+    expect(screen.queryByText(/PG|TV-/)).toBeNull();
+  });
+});
+
 describe("HeroCard — className", () => {
   it("applies additional className", () => {
     const { container } = renderHeroCard({ className: "my-hero-class" });
@@ -109,7 +132,7 @@ describe("HeroCard — layout", () => {
   it("has minimum height classes", () => {
     const { container } = renderHeroCard();
     const root = container.firstElementChild!;
-    expect(root.className).toContain("min-h-[200px]");
+    expect(root.className).toContain("min-h-[220px]");
   });
 
   it("has overflow-hidden", () => {
