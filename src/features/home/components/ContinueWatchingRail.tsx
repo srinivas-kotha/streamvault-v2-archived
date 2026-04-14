@@ -1,9 +1,3 @@
-export function ContinueWatchingRail() {
-  return (
-    <section data-testid="continue-watching-rail">
-      <h2 className="text-base font-semibold text-text-primary px-4 mb-2">
-        Continue Watching
-      </h2>
-    </section>
-  );
-}
+// Re-export the real ContinueWatching implementation so HomePage uses the
+// component that has full spatial-nav, focus memory, and D-pad support.
+export { ContinueWatching as ContinueWatchingRail } from "./ContinueWatching";

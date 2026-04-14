@@ -131,12 +131,34 @@ export const ContentCard = memo(function ContentCard({
     focusKey: cardKey,
     onEnterPress,
     onFocus: (layout) => {
-      // Auto-scroll into view when focused via D-pad
-      layout.node?.scrollIntoView({
-        behavior: "instant",
-        block: "nearest",
-        inline: "nearest",
-      });
+      // Scroll focused card to center of its rail (D-pad TV UX).
+      // Walk up the DOM to find the nearest horizontally-scrollable ancestor
+      // (the HorizontalScroll container) and center the card within it.
+      const node = layout.node;
+      if (!node) return;
+      const rail = node.closest<HTMLElement>(
+        '[data-testid="horizontal-scroll"]',
+      );
+      if (rail) {
+        const railRect = rail.getBoundingClientRect();
+        const cardRect = node.getBoundingClientRect();
+        const targetScrollLeft =
+          rail.scrollLeft +
+          (cardRect.left - railRect.left) -
+          railRect.width / 2 +
+          cardRect.width / 2;
+        rail.scrollTo({
+          left: Math.max(0, targetScrollLeft),
+          behavior: "smooth",
+        });
+      } else {
+        // Fallback: standard nearest scroll for non-rail contexts
+        node.scrollIntoView({
+          behavior: "instant",
+          block: "nearest",
+          inline: "nearest",
+        });
+      }
     },
   });
 

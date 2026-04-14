@@ -1,6 +1,5 @@
 import { HomeLayout } from "@/layouts/HomeLayout";
 import { CinematicHero } from "./CinematicHero";
-import { ContentRail } from "./ContentRail";
 import { ContinueWatchingRail } from "./ContinueWatchingRail";
 import { FeaturedRail } from "./FeaturedRail";
 import { CategoryRail } from "./CategoryRail";
@@ -26,18 +25,15 @@ export function HomePage() {
         />
       }
     >
-      {/* Continue Watching */}
+      {/* Continue Watching — spatially navigable, focus memory, D-pad */}
       <ContinueWatchingRail />
 
-      {/* Featured */}
+      {/* Featured — recently-added VOD content */}
       <FeaturedRail />
 
       {/* Category rails */}
       <CategoryRail title="Action Movies" category="action" />
       <CategoryRail title="Comedy Series" category="comedy" />
-
-      {/* Generic content rail example */}
-      <ContentRail title="Trending Now" items={[]} renderCard={() => null} />
     </HomeLayout>
   );
 }
