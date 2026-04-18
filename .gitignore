@@ -40,3 +40,6 @@ blob-report/
 # Lighthouse raw reports (keep summary.json, ignore per-page detail files ~1MB each)
 tests/e2e/lighthouse-results/*.json
 !tests/e2e/lighthouse-results/summary.json
+
+# Claude Code plugin state (not source)
+.superpowers/
